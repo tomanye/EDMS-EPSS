@@ -1,0 +1,1453 @@
+# MASTER AI SOFTWARE DEVELOPMENT INSTRUCTION
+# EPSS ENTERPRISE DOCUMENT AND RECORDS MANAGEMENT SYSTEM (EDRMS)
+
+## 1. ROLE AND RESPONSIBILITY
+
+Act as a Senior Enterprise Software Architect, Senior Full-Stack Developer, Database Architect, Cybersecurity Engineer, UI/UX Designer, DevOps Engineer, and Quality Assurance Engineer.
+
+Your responsibility is to design, develop, test, document, and deploy a complete Enterprise Electronic Document and Records Management System (EDRMS) for the Ethiopian Pharmaceutical Supply Service (EPSS).
+
+You must work as an autonomous software engineering agent.
+
+Do not merely provide recommendations, sample code, screenshots, wireframes, or conceptual demonstrations. Build the actual working application, implement the database, develop the business logic, connect all interfaces, and verify that the implemented functionality works.
+
+The final deliverable must be a production-ready enterprise application.
+
+## 2. PROJECT OBJECTIVES
+
+Develop a centralized electronic document and correspondence management platform that enables EPSS to:
+
+1. Register and manage all incoming and outgoing correspondence.
+2. Digitize and manage official letters, applications, memorandums, reports, contracts, and other documents.
+3. Automate document routing, assignment, reviewing, approval, and dispatch.
+4. Track physical and electronic document movements.
+5. Monitor document processing time and accountability.
+6. Provide organization-wide document search and retrieval.
+7. Maintain a centralized electronic document repository.
+8. Support electronic signatures and approvals.
+9. Manage document retention, archiving, and disposal.
+10. Provide organization-wide dashboards and management reports.
+11. Integrate with existing enterprise applications.
+12. Support the EPSS Head Office and all 19 branches.
+13. Provide secure access according to organizational hierarchy and user permissions.
+14. Reduce paper-based administrative processes and manual document handling.
+
+The system must support the complete document lifecycle, from initial registration through processing, approval, dispatch, archival, and eventual authorized disposal.
+
+## 3. MANDATORY TECHNOLOGY STACK
+
+Do not replace the specified technologies with alternative frameworks without explicit authorization.
+
+### 3.1 Frontend
+
+- Next.js using the latest stable, production-supported version.
+- React.js.
+- TypeScript.
+- Tailwind CSS.
+- Shadcn/UI or an equivalent reusable enterprise component library.
+- React Hook Form.
+- Zod validation.
+- TanStack Query for server-state management.
+- TanStack Table for advanced data tables.
+- Recharts for dashboards and analytics.
+- Next.js internationalization solution for English and Amharic.
+- PDF.js or equivalent for document preview.
+- SignalR client for real-time notifications.
+
+Frontend requirements:
+
+- Modern enterprise user interface.
+- Responsive desktop, tablet, and mobile layouts.
+- Consistent design system.
+- Light and dark themes.
+- Reusable components.
+- Accessible navigation.
+- Dynamic menus based on user permissions.
+- Server-side rendering where appropriate.
+- Client-side interactions where appropriate.
+- Secure backend API integration.
+
+Next.js must remain the presentation layer. Do not implement the core document-processing business logic in the frontend.
+
+### 3.2 Backend
+
+Use:
+
+- ASP.NET Core MVC.
+- ASP.NET Core Web API.
+- C#.
+- Entity Framework Core.
+- Microsoft SQL Server.
+- ASP.NET Core Identity or an appropriate enterprise identity integration.
+- SignalR.
+- Hangfire or equivalent background job processing.
+- FluentValidation.
+- Serilog structured logging.
+- Swagger/OpenAPI.
+- Redis where required.
+
+Backend responsibilities:
+
+- Business logic.
+- Document registration.
+- Workflow management.
+- Approval processing.
+- Document routing.
+- Authentication and authorization.
+- Document numbering.
+- Audit logging.
+- Notifications.
+- Reporting.
+- Integration services.
+- File management.
+- Search indexing.
+- Background processing.
+
+ASP.NET Core MVC and Web API must be part of the backend solution. MVC may provide server-side application responsibilities and administrative endpoints, while the Web API exposes versioned REST interfaces to Next.js and external systems.
+
+### 3.3 Database
+
+Use Microsoft SQL Server as the primary relational database.
+
+Requirements:
+
+- Entity Framework Core.
+- Database migrations.
+- Referential integrity.
+- Proper indexing.
+- Transaction management.
+- Soft deletion where appropriate.
+- Database auditing.
+- Stored procedures only where justified.
+- Optimized queries.
+- Connection pooling.
+- Automated backup and restoration.
+
+Do not use SQLite as the production database.
+
+### 3.4 Supporting infrastructure
+
+Use the following where appropriate:
+
+| Component | Technology |
+|---|---|
+| Database | Microsoft SQL Server |
+| Cache | Redis |
+| Search | Elasticsearch or OpenSearch |
+| File repository | NAS or S3-compatible object storage |
+| Background processing | Hangfire |
+| Real-time communication | SignalR |
+| Authentication | OpenID Connect / OAuth 2.0 |
+| Containerization | Docker |
+| Reverse proxy | IIS or NGINX |
+| Logging | Serilog |
+| Monitoring | Prometheus / Grafana or equivalent |
+| Version control | Git |
+| API documentation | Swagger / OpenAPI |
+
+## 4. APPLICATION ARCHITECTURE
+
+Implement a maintainable Clean Architecture with a Modular Monolith as the initial deployment architecture.
+
+Do not create unnecessary microservices. Modules must be logically independent, with clear interfaces, allowing future extraction into separate services if required.
+
+Organize the solution as follows:
+
+### Frontend structure
+
+    frontend/
+      src/
+        app/
+        components/
+        layouts/
+        features/
+          dashboard/
+          incoming-documents/
+          outgoing-documents/
+          internal-memos/
+          applications/
+          workflow/
+          document-tracking/
+          document-search/
+          archive/
+          records-management/
+          notifications/
+          reports/
+          administration/
+          integrations/
+        hooks/
+        services/
+        lib/
+        types/
+        schemas/
+        locales/
+          en/
+          am/
+
+### Backend structure
+
+    backend/
+      EPSS.EDRMS.sln
+
+      src/
+        EPSS.EDRMS.Domain/
+        EPSS.EDRMS.Application/
+        EPSS.EDRMS.Infrastructure/
+        EPSS.EDRMS.WebApi/
+        EPSS.EDRMS.Web/
+        EPSS.EDRMS.Worker/
+
+      tests/
+        EPSS.EDRMS.UnitTests/
+        EPSS.EDRMS.IntegrationTests/
+        EPSS.EDRMS.ArchitectureTests/
+
+### Architecture responsibilities
+
+**Domain Layer**
+- Core entities.
+- Business rules.
+- Enumerations.
+- Domain events.
+- Value objects.
+
+**Application Layer**
+- Use cases.
+- Commands and queries.
+- DTOs.
+- Interfaces.
+- Validation.
+- Authorization requirements.
+
+**Infrastructure Layer**
+- Database implementation.
+- File storage.
+- Email and SMS providers.
+- Search indexing.
+- Authentication integrations.
+- External system connectors.
+
+**Web API Layer**
+- RESTful API controllers.
+- Authentication.
+- Authorization.
+- Request validation.
+- API versioning.
+- Exception handling.
+- Swagger documentation.
+
+**MVC Layer**
+- Backend MVC application responsibilities.
+- Administrative functionality where needed.
+- Server-side backend operations.
+
+**Worker Layer**
+- Background processing.
+- OCR jobs.
+- Notifications.
+- Scheduled tasks.
+- Document indexing.
+- Retention and archival jobs.
+
+## 5. FUNCTIONAL MODULES TO DEVELOP
+
+Develop all the following modules as real, interconnected application features.
+
+### MODULE 1: Organization and Department Management
+
+Implement:
+
+- Organization profile.
+- Head Office.
+- Branch management.
+- Cluster management.
+- Department management.
+- Directorate management.
+- Team management.
+- Employee management.
+- Organizational hierarchy.
+- Reporting relationships.
+- Employee positions.
+- Employee transfer.
+- Employee account activation and deactivation.
+- Delegation and acting assignments.
+
+The organization structure must be configurable by administrators.
+
+Initialize the organization with the EPSS Head Office and 19 branch records, but allow administrators to configure their actual names, locations, and cluster assignments.
+
+### MODULE 2: User and Access Management
+
+Implement:
+
+- User registration.
+- User account management.
+- User activation and deactivation.
+- Password management.
+- Role management.
+- Permission management.
+- Department-based permissions.
+- Branch-based permissions.
+- Document-level permissions.
+- Workflow-stage permissions.
+- User groups.
+- Delegation.
+- Account lockout.
+- Login history.
+- Session management.
+- MFA integration.
+- Active Directory integration.
+- Single Sign-On support.
+
+Implement granular RBAC.
+
+A user must not access documents simply because the user belongs to the organization.
+
+Access must depend on assigned permissions, document classification, department, branch, workflow stage, and authorized relationships.
+
+### MODULE 3: Incoming Correspondence Management
+
+Implement:
+
+- Incoming document registration.
+- Sender management.
+- External organization management.
+- Reference number registration.
+- Received date.
+- Registration date and time.
+- Subject.
+- Document description.
+- Priority.
+- Confidentiality classification.
+- Document type.
+- Attachments.
+- Scanned document upload.
+- QR code generation.
+- Automatic registration numbering.
+- Department assignment.
+- User assignment.
+- Acknowledgement of receipt.
+- Forwarding.
+- Document status.
+- Processing history.
+- Response tracking.
+- Closure.
+
+Each incoming document must have a unique identifier.
+
+Support the following statuses:
+
+- Received.
+- Registered.
+- Under Review.
+- Assigned.
+- In Progress.
+- Pending Information.
+- Forwarded.
+- Awaiting Approval.
+- Approved.
+- Response Prepared.
+- Dispatched.
+- Completed.
+- Archived.
+- Cancelled.
+
+Implement configurable status transitions.
+
+### MODULE 4: Outgoing Correspondence Management
+
+Implement:
+
+- Outgoing letter creation.
+- Letter templates.
+- Recipient management.
+- Subject.
+- Reference number.
+- Department reference.
+- Letter date.
+- Attachments.
+- Review.
+- Approval.
+- Digital signature.
+- Dispatch.
+- Delivery confirmation.
+- Dispatch register.
+- Response tracking.
+- Correspondence history.
+
+Automatically generate outgoing reference numbers according to configurable EPSS numbering rules.
+
+Support Amharic and English letter templates.
+
+Approved letters must be protected from unauthorized modification.
+
+### MODULE 5: Internal Memorandum Management
+
+Implement:
+
+- Internal memo creation.
+- Circulars.
+- Management directives.
+- Departmental instructions.
+- Employee notifications.
+- Internal correspondence.
+- Memo approval.
+- Memo distribution.
+- Acknowledgement of receipt.
+- Read/unread tracking.
+- Confidential memorandums.
+- Organization-wide circulation.
+- Branch-wise circulation.
+
+### MODULE 6: Application Management
+
+Implement a configurable application-processing platform.
+
+Features:
+
+- Application registration.
+- Application reference number.
+- Applicant information.
+- Application type.
+- Supporting documents.
+- Submission date.
+- Verification.
+- Evaluation.
+- Approval.
+- Rejection.
+- Return for correction.
+- Status tracking.
+- Processing deadlines.
+- Applicant notifications.
+- Application closure.
+- Application history.
+
+Support configurable application forms and processing workflows.
+
+### MODULE 7: Workflow Management Engine
+
+This is one of the most important modules.
+
+Develop a configurable workflow engine, not a collection of hardcoded approval screens.
+
+Support:
+
+- Sequential workflows.
+- Parallel workflows.
+- Conditional workflows.
+- Multi-level approval.
+- Department-to-department routing.
+- User-to-user assignment.
+- Automatic assignment rules.
+- Manual assignment.
+- Review.
+- Recommendation.
+- Approval.
+- Rejection.
+- Return for correction.
+- Forwarding.
+- Delegation.
+- Escalation.
+- Reassignment.
+- Workflow cancellation.
+
+Workflow configuration must include:
+
+- Workflow name.
+- Document type.
+- Workflow stages.
+- Responsible roles.
+- Responsible departments.
+- Approval sequence.
+- Required actions.
+- Mandatory fields.
+- SLA duration.
+- Escalation rules.
+- Notification rules.
+- Final completion condition.
+
+Each workflow instance must maintain:
+
+- Current stage.
+- Previous stage.
+- Assigned user.
+- Assigned department.
+- Assignment date.
+- Action date.
+- Processing duration.
+- Comments.
+- Attachments.
+- Approval decisions.
+- Complete transaction history.
+
+Every workflow transaction must be recorded.
+
+Users must not bypass mandatory approval stages.
+
+### MODULE 8: Physical Document Tracking
+
+This module must distinguish electronic documents from physical original documents.
+
+Implement:
+
+- Physical file registration.
+- Physical document identification.
+- QR/barcode labels.
+- File location management.
+- File movement.
+- Receiving acknowledgement.
+- Sending acknowledgement.
+- Responsible employee.
+- Department location.
+- Archive location.
+- Expected return date.
+- Physical document handover.
+- Missing document reporting.
+- Document movement history.
+
+The system must show the last known physical location and responsible custodian.
+
+### MODULE 9: Document Repository and Version Management
+
+Implement:
+
+- Centralized file repository.
+- Document upload.
+- Multiple attachments.
+- Document preview.
+- Version control.
+- Document locking.
+- Check-in/check-out.
+- File metadata.
+- File integrity verification.
+- Duplicate detection.
+- Document relationships.
+- Original document preservation.
+- Document access history.
+- Secure downloads.
+
+Use file storage for document binaries rather than storing large file contents directly in SQL Server.
+
+Store metadata and references in SQL Server.
+
+Validate file extensions, MIME types, actual file signatures, file sizes, and malware scanning results before allowing files into the repository.
+
+### MODULE 10: Advanced Search Engine
+
+Implement a comprehensive search platform.
+
+Search using:
+
+- Registration number.
+- Reference number.
+- Subject.
+- Sender.
+- Recipient.
+- Department.
+- Branch.
+- Employee.
+- Document type.
+- Registration date.
+- Received date.
+- Keywords.
+- Document status.
+- Workflow stage.
+- Confidentiality level.
+- Full document text.
+
+Support:
+
+- Advanced search.
+- Multiple filters.
+- Date ranges.
+- Exact phrase search.
+- Partial search.
+- Amharic search.
+- English search.
+- OCR-based search.
+- Saved searches.
+- Search history.
+- Search result export.
+
+Search results must respect user authorization. Never expose document titles, metadata, or file contents to unauthorized users.
+
+### MODULE 11: OCR and AI Document Processing
+
+Implement an extensible OCR integration layer.
+
+Required functionality:
+
+- Extract text from scanned PDFs.
+- Extract text from images.
+- Support English OCR.
+- Support Amharic OCR.
+- Extract reference numbers.
+- Extract document dates.
+- Identify sender and recipient.
+- Identify document subjects.
+- Suggest document categories.
+- Detect duplicate documents.
+- Index extracted content.
+- Enable full-text search.
+- Provide AI-assisted document summaries.
+- Recommend appropriate departments.
+
+OCR and AI-generated results must be subject to human verification.
+
+Never automatically approve, reject, or dispatch official correspondence based solely on AI recommendations.
+
+### MODULE 12: Digital Signature and Approval
+
+Implement an extensible digital signature integration architecture.
+
+Features:
+
+- Electronic approval.
+- Digital signature integration.
+- Multiple signatories.
+- Sequential signing.
+- Signature verification.
+- Signed document preservation.
+- Certificate validation.
+- Approval history.
+- Timestamp records.
+- Organizational seals where legally supported.
+
+Do not implement a visual signature image as a substitute for a legally recognized digital signature.
+
+### MODULE 13: Notification and Escalation
+
+Implement:
+
+- In-app notifications.
+- Email notifications.
+- SMS integration.
+- SignalR real-time notifications.
+- Assignment notifications.
+- Approval notifications.
+- Rejection notifications.
+- Reminder notifications.
+- Overdue notifications.
+- Escalation notifications.
+- Delegation notifications.
+- Completion notifications.
+
+Allow administrators to configure notification templates and escalation rules.
+
+### MODULE 14: Records Management and Electronic Archiving
+
+Implement:
+
+- Records classification.
+- Records schedules.
+- Retention periods.
+- Archive categories.
+- Archive locations.
+- Electronic archive.
+- Physical archive.
+- Legal hold.
+- Archive retrieval.
+- Archive transfer.
+- Disposal approval.
+- Authorized disposal.
+- Disposal history.
+- Archival audit trail.
+
+Documents must not be permanently deleted without authorized retention and disposal procedures.
+
+### MODULE 15: Management Dashboard and Analytics
+
+Develop dashboards for:
+
+**Executive Management**
+- Total incoming letters.
+- Total outgoing letters.
+- Pending correspondence.
+- Overdue correspondence.
+- Completed documents.
+- Departmental performance.
+- Branch-wise performance.
+- Average processing time.
+- Approval delays.
+- Critical documents.
+
+**Department Heads**
+- Assigned documents.
+- Pending approvals.
+- Overdue tasks.
+- Employee workloads.
+- Documents awaiting response.
+- Completed transactions.
+
+**Document Registry**
+- Daily incoming documents.
+- Daily outgoing documents.
+- Unassigned documents.
+- Document movement.
+- Registration statistics.
+
+**System Administrator**
+- Active users.
+- Inactive users.
+- Login activities.
+- System health.
+- Storage usage.
+- Failed jobs.
+- Integration status.
+
+All dashboard figures must come from actual database records, not static demonstration values.
+
+### MODULE 16: Reporting
+
+Implement:
+
+- Incoming correspondence register.
+- Outgoing correspondence register.
+- Department-wise report.
+- Branch-wise report.
+- Employee-wise report.
+- Document movement report.
+- Pending documents report.
+- Overdue documents report.
+- Processing time report.
+- Workflow performance report.
+- Approval report.
+- Rejection report.
+- Archive report.
+- User activity report.
+- Audit report.
+
+Support PDF, Excel, and CSV export.
+
+### MODULE 17: Enterprise Integration
+
+Create a dedicated integration layer.
+
+Prepare connectors for:
+
+- Microsoft Active Directory.
+- LDAP.
+- SAP S/4HANA.
+- Organizational email.
+- SMTP.
+- SMS gateway.
+- Digital signature providers.
+- QR/barcode services.
+- OCR engines.
+- External government systems.
+
+Use documented REST APIs and secure integration credentials.
+
+Do not assume that an external system is connected until its credentials, endpoints, and connectivity have been configured and tested.
+
+## 6. DATABASE DESIGN
+
+Design a normalized, scalable SQL Server database.
+
+Create appropriate entities and relationships.
+
+At minimum, include the following tables or equivalent domain entities:
+
+### Organization
+
+- Organizations
+- Branches
+- Clusters
+- Departments
+- Directorates
+- Teams
+- Employees
+- Positions
+
+### Identity and Security
+
+- Users
+- Roles
+- Permissions
+- UserRoles
+- RolePermissions
+- UserDepartments
+- UserBranches
+- UserDelegations
+- LoginHistories
+- UserSessions
+
+### Document Management
+
+- Documents
+- DocumentTypes
+- DocumentCategories
+- DocumentClassifications
+- DocumentPriorities
+- DocumentStatuses
+- DocumentMetadata
+- DocumentAttachments
+- DocumentVersions
+- DocumentRelationships
+- DocumentTags
+- DocumentAccessLogs
+
+### Correspondence
+
+- IncomingCorrespondences
+- OutgoingCorrespondences
+- InternalMemorandums
+- ExternalOrganizations
+- CorrespondenceRecipients
+- DispatchRecords
+- DeliveryConfirmations
+
+### Workflow
+
+- WorkflowDefinitions
+- WorkflowStages
+- WorkflowTransitions
+- WorkflowRules
+- WorkflowInstances
+- WorkflowTasks
+- WorkflowActions
+- WorkflowApprovals
+- WorkflowComments
+- WorkflowDelegations
+- WorkflowEscalations
+- WorkflowHistory
+
+### Physical Tracking
+
+- PhysicalFiles
+- PhysicalLocations
+- PhysicalMovements
+- PhysicalCustodians
+- PhysicalHandoverRecords
+
+### Application Management
+
+- Applications
+- ApplicationTypes
+- ApplicationForms
+- ApplicationFields
+- ApplicationResponses
+- ApplicationDocuments
+- ApplicationHistory
+
+### Records Management
+
+- RecordsSchedules
+- RetentionPolicies
+- ArchiveRecords
+- LegalHolds
+- DisposalRequests
+- DisposalApprovals
+
+### System Administration
+
+- Notifications
+- NotificationTemplates
+- SystemConfigurations
+- NumberingSequences
+- AuditLogs
+- BackgroundJobs
+- IntegrationConfigurations
+
+Define:
+
+- Primary keys.
+- Foreign keys.
+- Unique constraints.
+- Indexes.
+- Relationships.
+- Appropriate data types.
+- CreatedBy.
+- CreatedAt.
+- ModifiedBy.
+- ModifiedAt.
+- Tenant/organization scope where needed.
+
+Use UTC for stored timestamps and convert to the Ethiopian local time zone for display.
+
+Document numbering must be transaction-safe and prevent duplicate reference numbers under concurrent registration.
+
+Create database migrations and initial seed data.
+
+## 7. USER INTERFACE AND DESIGN REQUIREMENTS
+
+The application must look like a modern enterprise information management platform.
+
+Do not create a basic administrative template or generic CRUD application.
+
+### Design direction
+
+- Professional enterprise design.
+- Clean and modern interface.
+- Light background by default.
+- Dark mode option.
+- Clear typography.
+- Consistent spacing.
+- Professional icons.
+- Readable tables.
+- Attractive dashboards.
+- Responsive layouts.
+- Professional modal dialogs.
+- Intuitive forms.
+- Consistent status indicators.
+- User-friendly notifications.
+
+### Main application layout
+
+Create:
+
+1. Left navigation sidebar.
+2. Top navigation bar.
+3. Global search.
+4. Notification center.
+5. User profile menu.
+6. Breadcrumb navigation.
+7. Main content area.
+8. Dashboard widgets.
+9. Responsive mobile navigation.
+
+### Main navigation menu
+
+- Dashboard
+- Incoming Correspondence
+- Outgoing Correspondence
+- Internal Memorandums
+- Applications
+- Workflow Management
+- Document Tracking
+- Document Search
+- Document Repository
+- Records and Archives
+- Reports and Analytics
+- Organization Management
+- User Management
+- Role and Permission Management
+- System Administration
+- Integration Management
+- Audit and Security
+
+Menus must appear dynamically based on assigned permissions.
+
+### Document registration interface
+
+Provide a professional registration form with:
+
+- Automatic registration number.
+- Document type.
+- Sender.
+- Recipient.
+- Subject.
+- Description.
+- Reference number.
+- Received date.
+- Priority.
+- Confidentiality.
+- Department.
+- Assigned employee.
+- Attachments.
+- QR code.
+- Save as draft.
+- Register and forward.
+
+Implement client-side and server-side validation.
+
+### Document details interface
+
+Display:
+
+- Document information.
+- Original scanned document.
+- Attachments.
+- Current status.
+- Current location.
+- Responsible employee.
+- Assigned department.
+- Workflow progress.
+- Processing timeline.
+- Previous actions.
+- Comments.
+- Approval history.
+- Document versions.
+- Audit history.
+
+Provide authorized action buttons depending on the current workflow stage.
+
+## 8. SECURITY REQUIREMENTS
+
+Security must be implemented throughout the application, not added at the end.
+
+Follow:
+
+- OWASP Top 10.
+- OWASP API Security Top 10.
+- Secure coding practices.
+- Least privilege principle.
+- Defense in depth.
+
+Mandatory controls:
+
+1. Secure authentication.
+2. RBAC and resource-level authorization.
+3. MFA support.
+4. HTTPS.
+5. Secure cookies.
+6. CSRF protection where applicable.
+7. XSS prevention.
+8. SQL injection prevention.
+9. Input validation.
+10. Rate limiting.
+11. Secure file uploads.
+12. Malware scanning.
+13. File access authorization.
+14. Password hashing.
+15. Audit logging.
+16. Session expiration.
+17. Secure secret management.
+18. API authorization.
+19. Encryption at rest.
+20. Backup security.
+
+Sensitive document access, download, approval, modification, and administrative actions must be auditable.
+
+Never hardcode passwords, API keys, certificates, or production secrets.
+
+## 9. NON-FUNCTIONAL REQUIREMENTS
+
+Target the following requirements, subject to infrastructure sizing and performance testing:
+
+| Requirement | Target |
+|---|---|
+| Concurrent users | Minimum 2,000 |
+| Availability | 99.9% |
+| API response time | Under 2 seconds for 95% of normal requests |
+| Search performance | Under 3 seconds for normal indexed searches |
+| Languages | English and Amharic |
+| Deployment | On-premises / private cloud |
+| Architecture | Modular and independently deployable layers |
+| Browser support | Chrome, Edge, Firefox |
+| Mobile support | Responsive Android and iOS browsers |
+| Database | SQL Server |
+| Backup | Automated and verified |
+| Audit | Comprehensive and tamper-resistant |
+| Scalability | Horizontal and vertical scaling capability |
+
+Define and test specific Recovery Point Objective (RPO) and Recovery Time Objective (RTO) with EPSS.
+
+## 10. DEVELOPMENT METHODOLOGY
+
+Develop the application in controlled phases.
+
+Do not attempt to generate the entire application in a single code-generation operation.
+
+Each phase must result in working, tested functionality.
+
+### Phase 1 – Project foundation
+
+- Inspect the development environment.
+- Create the frontend project.
+- Create the backend solution.
+- Configure SQL Server.
+- Establish Clean Architecture.
+- Configure Entity Framework Core.
+- Configure API documentation.
+- Configure environment variables.
+- Establish logging.
+- Create initial database migrations.
+- Implement health checks.
+- Establish Git repository structure.
+
+Deliverable: Working frontend, backend, and database connectivity.
+
+### Phase 2 – Identity and organization
+
+- Organization structure.
+- Branch management.
+- Department management.
+- Employee management.
+- Authentication.
+- Authorization.
+- Role management.
+- Permission management.
+- User administration.
+
+Deliverable: Functional login and organizational administration.
+
+### Phase 3 – Document registration
+
+- Incoming correspondence.
+- Outgoing correspondence.
+- Internal memorandums.
+- Application registration.
+- Document numbering.
+- Attachment management.
+- QR code generation.
+
+Deliverable: Fully functional document registration modules.
+
+### Phase 4 – Workflow engine
+
+- Workflow designer.
+- Workflow configuration.
+- Assignment.
+- Forwarding.
+- Review.
+- Approval.
+- Rejection.
+- Delegation.
+- Escalation.
+- Workflow history.
+
+Deliverable: Fully operational document processing and approval workflows.
+
+### Phase 5 – Tracking and search
+
+- Physical document tracking.
+- Electronic document tracking.
+- Advanced search.
+- Full-text indexing.
+- QR/barcode tracking.
+- Processing timeline.
+
+Deliverable: End-to-end document tracking and retrieval.
+
+### Phase 6 – Repository and records management
+
+- Version control.
+- Archiving.
+- Retention.
+- Legal holds.
+- Disposal authorization.
+- File integrity.
+
+Deliverable: Complete electronic records management.
+
+### Phase 7 – Notifications and AI
+
+- SignalR notifications.
+- Email integration.
+- SMS integration.
+- OCR integration.
+- AI classification.
+- AI document summaries.
+- Intelligent search.
+
+Deliverable: Automated document intelligence capabilities.
+
+### Phase 8 – Dashboard and reporting
+
+- Executive dashboard.
+- Department dashboard.
+- Branch dashboard.
+- Registry dashboard.
+- Operational reporting.
+- Excel/PDF export.
+
+Deliverable: Complete management reporting platform.
+
+### Phase 9 – Enterprise integration
+
+- Active Directory.
+- SAP S/4HANA integration.
+- Email.
+- SMS.
+- Digital signature.
+- External APIs.
+
+Deliverable: Tested enterprise integration interfaces.
+
+### Phase 10 – Security, performance and deployment
+
+- Security testing.
+- Performance testing.
+- Load testing.
+- Vulnerability assessment.
+- Backup and restoration testing.
+- Disaster recovery testing.
+- User acceptance testing.
+- Production deployment.
+- Administrator documentation.
+- User training documentation.
+
+Deliverable: Production deployment package.
+
+## 11. TESTING REQUIREMENTS
+
+Implement automated tests throughout development.
+
+### Unit testing
+
+Test:
+
+- Document numbering.
+- Workflow transitions.
+- Authorization.
+- Business rules.
+- Approval logic.
+- SLA calculations.
+- Validation.
+- Retention rules.
+
+### Integration testing
+
+Test:
+
+- Database operations.
+- API endpoints.
+- Authentication.
+- File uploads.
+- File downloads.
+- Workflow execution.
+- Notifications.
+- Search indexing.
+- Background processing.
+
+### End-to-end testing
+
+Test complete scenarios:
+
+**Scenario 1: Incoming letter**
+
+Register → Scan → Assign → Forward → Review → Approve → Respond → Dispatch → Close → Archive.
+
+**Scenario 2: Outgoing letter**
+
+Create → Review → Approve → Sign → Dispatch → Confirm delivery → Archive.
+
+**Scenario 3: Internal memorandum**
+
+Create → Approve → Distribute → Acknowledge → Monitor → Close.
+
+**Scenario 4: Application**
+
+Submit → Register → Verify → Evaluate → Approve/Reject → Notify → Close.
+
+**Scenario 5: Physical document**
+
+Register physical file → Assign custodian → Handover → Track movement → Return → Archive.
+
+Verify that unauthorized users cannot perform restricted operations.
+
+## 12. INITIAL CONFIGURATION AND DEMONSTRATION DATA
+
+Create initial seed data for development and testing.
+
+Include:
+
+- EPSS Head Office.
+- 19 configurable branches.
+- Sample departments.
+- Sample employees.
+- Sample document types.
+- Sample document categories.
+- Sample workflow definitions.
+- Sample roles and permissions.
+- Sample correspondence records.
+- Sample dashboard data.
+
+Create a secure initial administrator account through a controlled setup process.
+
+Do not commit default production passwords.
+
+Clearly distinguish demonstration records from real organizational data.
+
+## 13. API DEVELOPMENT STANDARDS
+
+All frontend/backend communications must use documented ASP.NET Core Web APIs.
+
+Use:
+
+- RESTful resource naming.
+- API versioning.
+- DTOs.
+- Pagination.
+- Sorting.
+- Filtering.
+- Consistent response structures.
+- Centralized exception handling.
+- Authorization policies.
+- Swagger documentation.
+
+Example API structure:
+
+    /api/v1/authentication
+    /api/v1/organizations
+    /api/v1/branches
+    /api/v1/departments
+    /api/v1/users
+    /api/v1/roles
+    /api/v1/permissions
+
+    /api/v1/incoming-correspondence
+    /api/v1/outgoing-correspondence
+    /api/v1/internal-memorandums
+    /api/v1/applications
+
+    /api/v1/documents
+    /api/v1/document-attachments
+    /api/v1/document-versions
+    /api/v1/document-search
+    /api/v1/document-tracking
+
+    /api/v1/workflows
+    /api/v1/workflow-tasks
+    /api/v1/approvals
+    /api/v1/delegations
+
+    /api/v1/archives
+    /api/v1/retention
+    /api/v1/reports
+    /api/v1/notifications
+    /api/v1/audit
+
+These are endpoint naming guidelines. Implement the actual controllers, application services, validation, and authorization policies.
+
+## 14. DEPLOYMENT REQUIREMENTS
+
+Prepare Dockerfiles and deployment configurations for:
+
+- Next.js frontend.
+- ASP.NET Core Web API.
+- ASP.NET Core MVC.
+- Background worker.
+- SQL Server.
+- Redis.
+- Search engine.
+- Reverse proxy.
+
+Provide:
+
+- Development configuration.
+- Testing configuration.
+- Production configuration.
+- Environment variable templates.
+- Database migration scripts.
+- Initial setup instructions.
+- Backup scripts.
+- Restoration procedures.
+- Deployment documentation.
+- Monitoring configuration.
+
+The application must support deployment on EPSS on-premises infrastructure.
+
+Docker Compose may be used for development and testing. Production deployment must include persistent storage, secrets management, database backup, monitoring, and high availability planning.
+
+## 15. REQUIRED PROJECT DOCUMENTATION
+
+Create and continuously update the following documents:
+
+1. README.md
+2. PROJECT_ARCHITECTURE.md
+3. DATABASE_DESIGN.md
+4. DATABASE_SCHEMA.md
+5. API_DOCUMENTATION.md
+6. MODULES_AND_FEATURES.md
+7. WORKFLOW_DESIGN.md
+8. SECURITY_DOCUMENTATION.md
+9. INSTALLATION_GUIDE.md
+10. DEPLOYMENT_GUIDE.md
+11. ADMINISTRATOR_GUIDE.md
+12. USER_GUIDE.md
+13. TESTING_REPORT.md
+14. PROJECT_STATUS.md
+15. IMPLEMENTATION_ROADMAP.md
+16. KNOWN_ISSUES.md
+
+Maintain PROJECT_STATUS.md after every development phase.
+
+Record:
+
+- Completed modules.
+- Partially completed modules.
+- Pending modules.
+- Known bugs.
+- Test results.
+- Database migration status.
+- API implementation status.
+- Outstanding technical decisions.
+
+## 16. STRICT DEVELOPMENT RULES
+
+These rules are mandatory.
+
+1. Do not build a frontend-only prototype.
+2. Do not use static or hardcoded dashboard statistics.
+3. Do not create buttons that have no functional action.
+4. Do not use mock API responses in production functionality.
+5. Do not implement fake document approvals.
+6. Do not bypass backend authorization.
+7. Do not store uploaded files in temporary folders as the permanent repository.
+8. Do not hardcode organization structures or workflow rules that administrators should configure.
+9. Do not expose confidential documents through search results.
+10. Do not implement fake digital signatures.
+11. Do not claim integrations are functional without testing them.
+12. Do not leave incomplete placeholder modules while declaring the project complete.
+13. Do not disable security checks to make development easier.
+14. Do not generate duplicate database entities or inconsistent API contracts.
+15. Do not overwrite existing working code without first inspecting it.
+16. Do not introduce unnecessary dependencies.
+17. Do not create microservices unless explicitly justified and approved.
+18. Do not proceed with a database-breaking change without migration and backup considerations.
+19. Do not mark a feature complete until its frontend, backend, database, authorization, and tests are implemented.
+20. Do not compromise maintainability for rapid code generation.
+
+If an external integration is not yet available, implement a documented integration interface and clearly identify the pending configuration. Do not pretend it is connected.
+
+## 17. DEFINITION OF DONE
+
+A module is complete only when:
+
+- Its database entities and migrations exist.
+- Its backend business logic works.
+- Its API endpoints are implemented.
+- Its frontend screens are connected to real APIs.
+- Its validation works on both frontend and backend.
+- Its authorization policies are enforced.
+- Its audit records are generated where required.
+- Its error handling works.
+- Its automated tests pass.
+- Its documentation is updated.
+
+The complete application is considered ready for production only after successful end-to-end testing, security testing, load testing, backup restoration testing, and EPSS user acceptance testing.
+
+## 18. FIRST EXECUTION INSTRUCTION
+
+START NOW.
+
+First, inspect the available development environment and determine whether an existing project or codebase needs to be preserved.
+
+Then:
+
+1. Create the project directory structure.
+2. Initialize the Git repository.
+3. Create the Next.js frontend.
+4. Create the ASP.NET Core MVC and Web API backend solution.
+5. Configure SQL Server connectivity.
+6. Establish Clean Architecture.
+7. Implement the initial organization and identity modules.
+8. Create database migrations.
+9. Build the first functional login page.
+10. Build the initial administration dashboard.
+11. Test frontend-to-backend-to-database connectivity.
+12. Update PROJECT_STATUS.md.
+
+After completing the foundation, continue through the implementation phases in order.
+
+Do not stop after generating the architecture document or initial dashboard.
+
+Continue implementing the actual application until all required modules have been developed and tested.
+
+When a decision is required, choose the most secure, maintainable, and practical enterprise solution. Document significant architectural decisions.
+
+If you encounter an error, investigate and fix it before proceeding.
+
+At the end of each phase, provide a concise implementation report with:
+
+- Features implemented.
+- Files created or modified.
+- Database changes.
+- APIs implemented.
+- Tests executed and results.
+- Remaining work.
+- Next development phase.
+
+**FINAL OBJECTIVE: Deliver a complete, secure, scalable, maintainable, and production-ready EPSS Enterprise Electronic Document and Records Management System using Next.js, ASP.NET Core MVC, ASP.NET Core Web API, and Microsoft SQL Server.**

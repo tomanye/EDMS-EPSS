@@ -1,0 +1,1110 @@
+{
+  "branches": [
+    {
+      "id": "br-hq",
+      "code": "EPSS-HQ",
+      "nameEn": "EPSS Head Office",
+      "nameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "city": "Addis Ababa",
+      "region": "Addis Ababa",
+      "cluster": "Central",
+      "isHeadOffice": true,
+      "phone": "+251 11 275 8614",
+      "email": "info@epss.gov.et",
+      "address": "Arat Kilo / Lideta Sub-city, Addis Ababa",
+      "managerName": "Dr. Abdulkadir Gelgelo (Director General)"
+    },
+    {
+      "id": "br-01",
+      "code": "EPSS-AAC",
+      "nameEn": "Addis Ababa Central Hub",
+      "nameAm": "የአዲስ አበባ ማዕከላዊ ቅርንጫፍ",
+      "city": "Addis Ababa",
+      "region": "Addis Ababa",
+      "cluster": "Central",
+      "isHeadOffice": false,
+      "phone": "+251 11 440 2211",
+      "email": "aacentral@epss.gov.et",
+      "address": "Kaliti Industrial Zone, Addis Ababa",
+      "managerName": "Mulugeta Kebede"
+    },
+    {
+      "id": "br-02",
+      "code": "EPSS-ADA",
+      "nameEn": "Adama Branch Hub",
+      "nameAm": "የአዳማ ቅርንጫፍ ማዕከል",
+      "city": "Adama",
+      "region": "Oromia",
+      "cluster": "Central",
+      "isHeadOffice": false,
+      "phone": "+251 22 111 4501",
+      "email": "adama@epss.gov.et",
+      "address": "Expressway corridor, Adama",
+      "managerName": "Girma Wondimu"
+    },
+    {
+      "id": "br-03",
+      "code": "EPSS-BDR",
+      "nameEn": "Bahir Dar Branch Hub",
+      "nameAm": "የባሕር ዳር ቅርንጫፍ ማዕከል",
+      "city": "Bahir Dar",
+      "region": "Amhara",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 58 220 1845",
+      "email": "bahirdar@epss.gov.et",
+      "address": "Kebele 14, Bahir Dar",
+      "managerName": "Abebe Belay"
+    },
+    {
+      "id": "br-04",
+      "code": "EPSS-HAW",
+      "nameEn": "Hawassa Branch Hub",
+      "nameAm": "የሐዋሳ ቅርንጫፍ ማዕከል",
+      "city": "Hawassa",
+      "region": "Sidama",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 46 220 5410",
+      "email": "hawassa@epss.gov.et",
+      "address": "Tabor Sub-city, Hawassa",
+      "managerName": "Yonas Alemu"
+    },
+    {
+      "id": "br-05",
+      "code": "EPSS-MEK",
+      "nameEn": "Mekelle Branch Hub",
+      "nameAm": "የመቐለ ቅርንጫፍ ማዕከል",
+      "city": "Mekelle",
+      "region": "Tigray",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 34 440 8820",
+      "email": "mekelle@epss.gov.et",
+      "address": "Quiha Road, Mekelle",
+      "managerName": "Berhane Gebre"
+    },
+    {
+      "id": "br-06",
+      "code": "EPSS-DIR",
+      "nameEn": "Dire Dawa Branch Hub",
+      "nameAm": "የድሬዳዋ ቅርንጫፍ ማዕከል",
+      "city": "Dire Dawa",
+      "region": "Dire Dawa",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 25 111 7630",
+      "email": "diredawa@epss.gov.et",
+      "address": "Sabian Area, Dire Dawa",
+      "managerName": "Ahmed Mohammed"
+    },
+    {
+      "id": "br-07",
+      "code": "EPSS-JIM",
+      "nameEn": "Jimma Branch Hub",
+      "nameAm": "የጅማ ቅርንጫፍ ማዕከል",
+      "city": "Jimma",
+      "region": "Oromia",
+      "cluster": "Western",
+      "isHeadOffice": false,
+      "phone": "+251 47 111 3902",
+      "email": "jimma@epss.gov.et",
+      "address": "Hospital Road, Jimma",
+      "managerName": "Fekadu Tulu"
+    },
+    {
+      "id": "br-08",
+      "code": "EPSS-DES",
+      "nameEn": "Dessie Branch Hub",
+      "nameAm": "የደሴ ቅርንጫፍ ማዕከል",
+      "city": "Dessie",
+      "region": "Amhara",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 33 111 6540",
+      "email": "dessie@epss.gov.et",
+      "address": "Hote Kebele, Dessie",
+      "managerName": "Kassahun Melaku"
+    },
+    {
+      "id": "br-09",
+      "code": "EPSS-GON",
+      "nameEn": "Gondar Branch Hub",
+      "nameAm": "የጎንደር ቅርንጫፍ ማዕከል",
+      "city": "Gondar",
+      "region": "Amhara",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 58 111 2309",
+      "email": "gondar@epss.gov.et",
+      "address": "Azezo Ring Road, Gondar",
+      "managerName": "Tewodros Assefa"
+    },
+    {
+      "id": "br-10",
+      "code": "EPSS-NEK",
+      "nameEn": "Nekemte Branch Hub",
+      "nameAm": "የነቀምቴ ቅርንጫፍ ማዕከል",
+      "city": "Nekemte",
+      "region": "Oromia",
+      "cluster": "Western",
+      "isHeadOffice": false,
+      "phone": "+251 57 661 1024",
+      "email": "nekemte@epss.gov.et",
+      "address": "Bake Jama, Nekemte",
+      "managerName": "Tolosa Dibaba"
+    },
+    {
+      "id": "br-11",
+      "code": "EPSS-ASO",
+      "nameEn": "Assosa Branch Hub",
+      "nameAm": "የአሶሳ ቅርንጫፍ ማዕከል",
+      "city": "Assosa",
+      "region": "Benishangul-Gumuz",
+      "cluster": "Western",
+      "isHeadOffice": false,
+      "phone": "+251 57 775 0418",
+      "email": "assosa@epss.gov.et",
+      "address": "Main Highway, Assosa",
+      "managerName": "Hassan Nur"
+    },
+    {
+      "id": "br-12",
+      "code": "EPSS-GAM",
+      "nameEn": "Gambella Branch Hub",
+      "nameAm": "የጋምቤላ ቅርንጫፍ ማዕከል",
+      "city": "Gambella",
+      "region": "Gambella",
+      "cluster": "Western",
+      "isHeadOffice": false,
+      "phone": "+251 47 551 0293",
+      "email": "gambella@epss.gov.et",
+      "address": "Baro River road, Gambella",
+      "managerName": "Ochalla Othow"
+    },
+    {
+      "id": "br-13",
+      "code": "EPSS-SEM",
+      "nameEn": "Semera Branch Hub",
+      "nameAm": "የሰመራ ቅርንጫፍ ማዕከል",
+      "city": "Semera",
+      "region": "Afar",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 33 666 0192",
+      "email": "semera@epss.gov.et",
+      "address": "Airport Road, Semera",
+      "managerName": "Ali Humed"
+    },
+    {
+      "id": "br-14",
+      "code": "EPSS-JIJ",
+      "nameEn": "Jijiga Branch Hub",
+      "nameAm": "የጅጅጋ ቅርንጫፍ ማዕከል",
+      "city": "Jijiga",
+      "region": "Somali",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 25 775 3011",
+      "email": "jijiga@epss.gov.et",
+      "address": "Garacad Boulevard, Jijiga",
+      "managerName": "Mukhtar Farah"
+    },
+    {
+      "id": "br-15",
+      "code": "EPSS-ROB",
+      "nameEn": "Robe Branch Hub",
+      "nameAm": "የሮቤ ቅርንጫፍ ማዕከል",
+      "city": "Robe",
+      "region": "Oromia",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 22 665 0891",
+      "email": "robe@epss.gov.et",
+      "address": "Bale Robe Central, Robe",
+      "managerName": "Badada Guyo"
+    },
+    {
+      "id": "br-16",
+      "code": "EPSS-WLS",
+      "nameEn": "Wolaita Sodo Branch Hub",
+      "nameAm": "የወላይታ ሶዶ ቅርንጫፍ ማዕከል",
+      "city": "Wolaita Sodo",
+      "region": "South Ethiopia",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 46 551 2470",
+      "email": "sodo@epss.gov.et",
+      "address": "Hospital corridor, Sodo",
+      "managerName": "Tadesse Markos"
+    },
+    {
+      "id": "br-17",
+      "code": "EPSS-ARB",
+      "nameEn": "Arba Minch Branch Hub",
+      "nameAm": "የአርባ ምንጭ ቅርንጫፍ ማዕከል",
+      "city": "Arba Minch",
+      "region": "Gamo / South Ethiopia",
+      "cluster": "SouthernEastern",
+      "isHeadOffice": false,
+      "phone": "+251 46 881 1290",
+      "email": "arbaminch@epss.gov.et",
+      "address": "Sikela sub-city, Arba Minch",
+      "managerName": "Hailemariam Waza"
+    },
+    {
+      "id": "br-18",
+      "code": "EPSS-DBM",
+      "nameEn": "Debre Markos Branch Hub",
+      "nameAm": "የደብረ ማርቆስ ቅርንጫፍ ማዕከል",
+      "city": "Debre Markos",
+      "region": "Amhara",
+      "cluster": "Northern",
+      "isHeadOffice": false,
+      "phone": "+251 58 771 1432",
+      "email": "debremarkos@epss.gov.et",
+      "address": "Kebele 05, Debre Markos",
+      "managerName": "Getachew Mengistu"
+    },
+    {
+      "id": "br-19",
+      "code": "EPSS-HOS",
+      "nameEn": "Hosanna Branch Hub",
+      "nameAm": "የሆሳዕና ቅርንጫፍ ማዕከል",
+      "city": "Hosanna",
+      "region": "Central Ethiopia",
+      "cluster": "Central",
+      "isHeadOffice": false,
+      "phone": "+251 46 555 1928",
+      "email": "hosanna@epss.gov.et",
+      "address": "Bobicho Road, Hosanna",
+      "managerName": "Samuel Shanko"
+    }
+  ],
+  "departments": [
+    {
+      "id": "dept-proc",
+      "code": "DIR-PROC",
+      "nameEn": "Pharmaceuticals & Medical Supplies Procurement Directorate",
+      "nameAm": "የመድኃኒትና ህክምና መገልገያዎች ግዥ ዳይሬክቶሬት",
+      "directorateEn": "Procurement & Supply Operations",
+      "directorateAm": "የግዥና አቅርቦት ዘርፍ",
+      "headNameEn": "Dawit Tefera"
+    },
+    {
+      "id": "dept-store",
+      "code": "DIR-STORE",
+      "nameEn": "Storage & Distribution Directorate",
+      "nameAm": "የመድኃኒት ክምችትና ስርጭት ዳይሬክቶሬት",
+      "directorateEn": "Warehousing & Logistics",
+      "directorateAm": "የክምችትና ሎጂስቲክስ ዘርፍ",
+      "headNameEn": "Hiwot Tadesse"
+    },
+    {
+      "id": "dept-qa",
+      "code": "DIR-QA",
+      "nameEn": "Quality Assurance & Regulatory Affairs Directorate",
+      "nameAm": "የጥራት ማረጋገጫና ቁጥጥር ዳይሬክቶሬት",
+      "directorateEn": "Regulatory & Quality Compliance",
+      "directorateAm": "የቁጥጥርና ጥራት ዘርፍ",
+      "headNameEn": "Dr. Meron Kassaye"
+    },
+    {
+      "id": "dept-fin",
+      "code": "DIR-FIN",
+      "nameEn": "Fund Management & Finance Directorate",
+      "nameAm": "የፈንድ አስተዳደርና ፋይናንስ ዳይሬክቶሬት",
+      "directorateEn": "Finance & Accounts",
+      "directorateAm": "የፋይናንስና ሂሳብ ዘርፍ",
+      "headNameEn": "Solomon Worku"
+    },
+    {
+      "id": "dept-reg",
+      "code": "DIR-REG",
+      "nameEn": "Central Registry, Documentation & Archive Directorate",
+      "nameAm": "የማዕከላዊ ሰነድ ምዝገባና ማህደር ዳይሬክቶሬት",
+      "directorateEn": "Corporate Services",
+      "directorateAm": "የኮርፖሬት አገልግሎት",
+      "headNameEn": "Selamawit Bekele"
+    },
+    {
+      "id": "dept-it",
+      "code": "DIR-IT",
+      "nameEn": "Information Communication Technology & EDRMS Directorate",
+      "nameAm": "የኢንፎርሜሽን ኮሙኒኬሽን ቴክኖሎጂና ሥርዓት አስተዳደር ዳይሬክቶሬት",
+      "directorateEn": "Digital Transformation",
+      "directorateAm": "የዲጂታል ትራንስፎርሜሽን ዘርፍ",
+      "headNameEn": "Ephrem Kebede"
+    },
+    {
+      "id": "dept-hr",
+      "code": "DIR-HR",
+      "nameEn": "Human Resource Management & Development Directorate",
+      "nameAm": "የሰው ኃብት አስተዳደርና ልማት ዳይሬክቶሬት",
+      "directorateEn": "Corporate Services",
+      "directorateAm": "የኮርፖሬት አገልግሎት",
+      "headNameEn": "Almaz Wolde"
+    },
+    {
+      "id": "dept-audit",
+      "code": "DIR-AUDIT",
+      "nameEn": "Internal Audit & Inspection Directorate",
+      "nameAm": "የውስጥ ኦዲትና ኢንስፔክሽን ዳይሬክቶሬት",
+      "directorateEn": "Executive Oversight",
+      "directorateAm": "የበላይ አመራር ክትትል",
+      "headNameEn": "Tigist Haile"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-dg",
+      "fullNameEn": "Dr. Abdulkadir Gelgelo",
+      "fullNameAm": "ዶ/ር አብዱልቃድር ጌልጌሎ",
+      "email": "director.general@epss.gov.et",
+      "role": "DirectorGeneral",
+      "branchId": "br-hq",
+      "branchNameEn": "EPSS Head Office",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "departmentId": "dept-reg",
+      "departmentNameEn": "Director General Office",
+      "departmentNameAm": "የዋና ዳይሬክተር ጽሕፈት ቤት",
+      "position": "Director General / ዋና ዳይሬክተር",
+      "permissions": [
+        "*"
+      ]
+    },
+    {
+      "id": "usr-reg",
+      "fullNameEn": "Selamawit Bekele",
+      "fullNameAm": "ሰላማዊት በቀለ",
+      "email": "selamawit.b@epss.gov.et",
+      "role": "RegistryOfficer",
+      "branchId": "br-hq",
+      "branchNameEn": "EPSS Head Office",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "departmentId": "dept-reg",
+      "departmentNameEn": "Central Registry, Documentation & Archive",
+      "departmentNameAm": "የማዕከላዊ ሰነድ ምዝገባና ማህደር",
+      "position": "Senior Records & Registry Supervisor",
+      "permissions": [
+        "read:all",
+        "create:incoming",
+        "create:outgoing",
+        "track:physical",
+        "manage:archive"
+      ]
+    },
+    {
+      "id": "usr-proc",
+      "fullNameEn": "Dawit Tefera",
+      "fullNameAm": "ዳዊት ተፈራ",
+      "email": "dawit.t@epss.gov.et",
+      "role": "Director",
+      "branchId": "br-hq",
+      "branchNameEn": "EPSS Head Office",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "departmentId": "dept-proc",
+      "departmentNameEn": "Procurement Directorate",
+      "departmentNameAm": "የግዥ ዳይሬክቶሬት",
+      "position": "Director of Pharmaceuticals Procurement",
+      "permissions": [
+        "read:all",
+        "approve:workflow",
+        "forward:workflow",
+        "create:outgoing",
+        "create:memo"
+      ]
+    },
+    {
+      "id": "usr-store",
+      "fullNameEn": "Hiwot Tadesse",
+      "fullNameAm": "ሕይወት ታደሰ",
+      "email": "hiwot.t@epss.gov.et",
+      "role": "Director",
+      "branchId": "br-hq",
+      "branchNameEn": "EPSS Head Office",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "departmentId": "dept-store",
+      "departmentNameEn": "Storage & Distribution Directorate",
+      "departmentNameAm": "የክምችትና ስርጭት ዳይሬክቶሬት",
+      "position": "Director of Warehousing & Distribution",
+      "permissions": [
+        "read:all",
+        "approve:workflow",
+        "forward:workflow",
+        "create:outgoing",
+        "create:memo"
+      ]
+    },
+    {
+      "id": "usr-bm-haw",
+      "fullNameEn": "Yonas Alemu",
+      "fullNameAm": "ዮናስ አለሙ",
+      "email": "yonas.a@epss.gov.et",
+      "role": "BranchManager",
+      "branchId": "br-04",
+      "branchNameEn": "Hawassa Branch Hub",
+      "branchNameAm": "የሐዋሳ ቅርንጫፍ ማዕከል",
+      "departmentId": "dept-store",
+      "departmentNameEn": "Regional Branch Management",
+      "departmentNameAm": "የቅርንጫፍ አስተዳደር",
+      "position": "Regional Hub Manager",
+      "permissions": [
+        "read:branch",
+        "create:incoming",
+        "create:outgoing",
+        "track:physical"
+      ]
+    },
+    {
+      "id": "usr-audit",
+      "fullNameEn": "Tigist Haile",
+      "fullNameAm": "ትዕግሥት ኃይሌ",
+      "email": "tigist.h@epss.gov.et",
+      "role": "Auditor",
+      "branchId": "br-hq",
+      "branchNameEn": "EPSS Head Office",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት",
+      "departmentId": "dept-audit",
+      "departmentNameEn": "Internal Audit & Inspection",
+      "departmentNameAm": "የውስጥ ኦዲትና ኢንስፔክሽን",
+      "position": "Lead Compliance & Document Auditor",
+      "permissions": [
+        "read:all",
+        "read:audit",
+        "export:reports"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-1794159028173-63lzp",
+      "registrationNumber": "EPSS/IN/2026/00103",
+      "referenceNumber": "REF-1883",
+      "type": "IncomingLetter",
+      "subjectEn": "WHO Direct Shipment Notification for Polio Vaccines",
+      "subjectAm": "የዓለም ጤና ድርጅት የፖሊዮ ክትባቶች ቀጥታ ጭነት ማሳወቂያ",
+      "descriptionEn": "",
+      "descriptionAm": "",
+      "senderOrganization": "World Health Organization (WHO)",
+      "senderPerson": "",
+      "recipientOrganization": "EPSS",
+      "recipientPerson": "",
+      "receivedDate": "2026-11-08T17:30:28.173Z",
+      "registrationDate": "2026-11-08T17:30:28.173Z",
+      "priority": "Urgent",
+      "confidentiality": "Internal",
+      "status": "Received",
+      "branchId": "br-hq",
+      "departmentId": "dept-reg",
+      "attachments": [],
+      "workflowHistory": [
+        {
+          "id": "wf-1794159028213",
+          "timestamp": "2026-11-08T17:30:28.173Z",
+          "actorId": "usr-dg",
+          "actorName": "Dr. Abdulkadir Gelgelo",
+          "actorRole": "DirectorGeneral",
+          "action": "Registered",
+          "comments": "Initial registration into EDRMS by Dr. Abdulkadir Gelgelo (DirectorGeneral)."
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-199",
+        "building": "Block B - Central Registry",
+        "floor": "Ground Floor",
+        "room": "Intake Vault G-02",
+        "shelfNumber": "Rack 1 - Shelf A",
+        "boxNumber": "BOX-2026",
+        "currentCustodianId": "usr-dg",
+        "currentCustodianName": "Dr. Abdulkadir Gelgelo",
+        "lastMovedDate": "2026-11-08T17:30:28.173Z",
+        "movementsCount": 1
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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",
+      "tags": [
+        "EPSS",
+        "IN"
+      ],
+      "isArchived": false,
+      "retentionYears": 10,
+      "retentionExpiryDate": "2036-11-05T17:30:28.214Z",
+      "legalHold": false
+    },
+    {
+      "id": "doc-001",
+      "registrationNumber": "EPSS/IN/2026/00101",
+      "referenceNumber": "EFDA/04/1892/2026",
+      "type": "IncomingLetter",
+      "subjectEn": "Batch Clearance Certificate for Pediatric Antibiotics & Essential Oncology Medications",
+      "subjectAm": "ለህፃናት አንቲባዮቲክስ እና ለአስፈላጊ የካንሰር ህክምና መድኃኒቶች የጥራት ማረጋገጫ የምስክር ወረቀት",
+      "descriptionEn": "Official batch release and laboratory safety clearance for 45,000 vials of Amoxicillin and Cisplatin arrived at Bole International Airport customs terminal.",
+      "descriptionAm": "በቦሌ ዓለም አቀፍ አውሮፕላን ማረፊያ ለደረሱ 45,000 የህፃናት አሞክሲሲሊን እና ሲስፕላቲን መድኃኒቶች የተሰጠ የላቦራቶሪ ምርመራ እና የጥራት ፈቃድ።",
+      "senderOrganization": "Ethiopian Food and Drug Authority (EFDA)",
+      "senderPerson": "Dr. Heran Gerba (Director General, EFDA)",
+      "recipientOrganization": "EPSS - Quality Assurance & Regulatory Directorate",
+      "recipientPerson": "Dr. Meron Kassaye",
+      "receivedDate": "2026-11-04T08:30:00Z",
+      "registrationDate": "2026-11-04T09:15:00Z",
+      "dueDate": "2026-11-12T17:00:00Z",
+      "priority": "VeryUrgent",
+      "confidentiality": "Internal",
+      "status": "InProgress",
+      "branchId": "br-hq",
+      "departmentId": "dept-qa",
+      "assignedUserId": "usr-proc",
+      "assignedUserName": "Dawit Tefera",
+      "assignedDepartmentName": "Pharmaceuticals Procurement Directorate",
+      "tags": [
+        "EFDA",
+        "BatchClearance",
+        "Oncology",
+        "BoleCustoms"
+      ],
+      "isArchived": false,
+      "retentionYears": 15,
+      "retentionExpiryDate": "2041-11-04T00:00:00Z",
+      "legalHold": false,
+      "attachments": [
+        {
+          "id": "att-01",
+          "fileName": "EFDA_Release_Cert_Batch_2026_04.pdf",
+          "fileSize": 2450890,
+          "mimeType": "application/pdf",
+          "uploadDate": "2026-11-04T09:15:00Z",
+          "uploadedBy": "Selamawit Bekele",
+          "fileUrl": "/assets/sample-docs/efda_batch_release.pdf",
+          "version": 1
+        }
+      ],
+      "workflowHistory": [
+        {
+          "id": "wf-001",
+          "timestamp": "2026-11-04T09:15:00Z",
+          "actorId": "usr-reg",
+          "actorName": "Selamawit Bekele",
+          "actorRole": "RegistryOfficer",
+          "action": "Registered",
+          "comments": "Received original letter with customs seal. Digitized and assigned reference EPSS/IN/2026/00101."
+        },
+        {
+          "id": "wf-002",
+          "timestamp": "2026-11-04T11:00:00Z",
+          "actorId": "usr-dg",
+          "actorName": "Dr. Abdulkadir Gelgelo",
+          "actorRole": "DirectorGeneral",
+          "action": "Forwarded",
+          "forwardedToDepartmentId": "dept-qa",
+          "forwardedToDepartmentName": "Quality Assurance Directorate",
+          "comments": "Immediate priority: Verify cold chain inspection logs and expedite warehouse quarantine release."
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-089",
+        "building": "Block B - Central Registry",
+        "floor": "Ground Floor",
+        "room": "Room G-04 (Intake Vault)",
+        "shelfNumber": "Rack 3 - Shelf A",
+        "boxNumber": "BOX-QA-2026",
+        "currentCustodianId": "usr-proc",
+        "currentCustodianName": "Dawit Tefera",
+        "expectedReturnDate": "2026-11-15T17:00:00Z",
+        "lastMovedDate": "2026-11-04T11:20:00Z",
+        "movementsCount": 2
+      },
+      "aiExtracted": {
+        "summaryEn": "EFDA issued full safety clearance for 45,000 vials of pediatric amoxicillin and oncology medications, authorizing transfer to EPSS central cold storage.",
+        "summaryAm": "የኢትዮጵያ ምግብና መድኃኒት ባለስልጣን ለ45,000 አሞክሲሲሊን እና የካንሰር መድኃኒቶች የደህንነት ማረጋገጫ የሰጠ ሲሆን ወደ ማዕከላዊ ማከማቻ እንዲገቡ ፈቅዷል።",
+        "suggestedCategory": "Regulatory Clearance",
+        "suggestedDepartment": "Quality Assurance Directorate",
+        "confidence": 0.98
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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"
+    },
+    {
+      "id": "doc-002",
+      "registrationNumber": "EPSS/IN/2026/00102",
+      "referenceNumber": "MoH/EMERG/889/26",
+      "type": "IncomingLetter",
+      "subjectEn": "Urgent Allocation Request: Cholera Response & IV Fluid Kits for Somali and Afar Hubs",
+      "subjectAm": "አስቸኳይ የመድኃኒት ጥያቄ፦ ለሶማሌ እና አፋር ቅርንጫፎች የኮሌራ መከላከያና የደም ሥር ፈሳሾች ድልድል",
+      "descriptionEn": "Ministry of Health national disaster coordination desk requests immediate dispatch of 200,000 Ringer Lactate bags and water purification tablets to Semera and Jijiga hubs.",
+      "descriptionAm": "የጤና ሚኒስቴር የአደጋ መከላከል አስተባባሪ ዴስክ 200,000 ሪንገር ላክቴት እና የውሃ ማከሚያ ኬሚካሎች በአስቸኳይ ለሰመራ እና ጅጅጋ ቅርንጫፎች እንዲላኩ ያቀረበው መመሪያ።",
+      "senderOrganization": "Federal Ministry of Health (MoH)",
+      "senderPerson": "State Minister of Health Operations",
+      "recipientOrganization": "EPSS - Office of the Director General",
+      "recipientPerson": "Dr. Abdulkadir Gelgelo",
+      "receivedDate": "2026-11-05T10:00:00Z",
+      "registrationDate": "2026-11-05T10:25:00Z",
+      "dueDate": "2026-11-08T18:00:00Z",
+      "priority": "VeryUrgent",
+      "confidentiality": "Internal",
+      "status": "AwaitingApproval",
+      "branchId": "br-hq",
+      "departmentId": "dept-store",
+      "assignedUserId": "usr-store",
+      "assignedUserName": "Hiwot Tadesse",
+      "assignedDepartmentName": "Storage & Distribution Directorate",
+      "tags": [
+        "MoH",
+        "Emergency",
+        "Cholera",
+        "Semera",
+        "Jijiga",
+        "IVFluids"
+      ],
+      "isArchived": false,
+      "retentionYears": 10,
+      "retentionExpiryDate": "2036-11-05T00:00:00Z",
+      "legalHold": false,
+      "attachments": [
+        {
+          "id": "att-02",
+          "fileName": "MoH_Emergency_Directive_Cholera_Nov2026.pdf",
+          "fileSize": 1845120,
+          "mimeType": "application/pdf",
+          "uploadDate": "2026-11-05T10:25:00Z",
+          "uploadedBy": "Selamawit Bekele",
+          "fileUrl": "/assets/sample-docs/moh_emergency_directive.pdf",
+          "version": 1
+        }
+      ],
+      "workflowHistory": [
+        {
+          "id": "wf-003",
+          "timestamp": "2026-11-05T10:25:00Z",
+          "actorId": "usr-reg",
+          "actorName": "Selamawit Bekele",
+          "actorRole": "RegistryOfficer",
+          "action": "Registered",
+          "comments": "Emergency flag attached. Hand delivered by MoH liaison officer."
+        },
+        {
+          "id": "wf-004",
+          "timestamp": "2026-11-05T11:45:00Z",
+          "actorId": "usr-store",
+          "actorName": "Hiwot Tadesse",
+          "actorRole": "Director",
+          "action": "Reviewed",
+          "comments": "Adama and Kaliti warehouses verified adequate inventory. Distribution plan drafted for DG approval."
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-092",
+        "building": "Block A - Executive Tower",
+        "floor": "3rd Floor",
+        "room": "Room 302 (Director General Office)",
+        "shelfNumber": "Urgent Red Folder Tray",
+        "boxNumber": "DESK-DG",
+        "currentCustodianId": "usr-dg",
+        "currentCustodianName": "Dr. Abdulkadir Gelgelo",
+        "expectedReturnDate": "2026-11-07T17:00:00Z",
+        "lastMovedDate": "2026-11-05T14:10:00Z",
+        "movementsCount": 3
+      },
+      "aiExtracted": {
+        "summaryEn": "Emergency distribution request from MoH for 200,000 IV bags and water purification supplies to Semera and Jijiga hubs to counteract cholera outbreak.",
+        "summaryAm": "የጤና ሚኒስቴር ለሰመራ እና ጅጅጋ ቅርንጫፎች 200,000 የደም ሥር ፈሳሾች እና የውሃ ማከሚያዎች በአስቸኳይ እንዲላኩ ያቀረበው የአደጋ ጊዜ ጥያቄ።",
+        "suggestedCategory": "Emergency Response",
+        "suggestedDepartment": "Storage & Distribution Directorate",
+        "confidence": 0.99
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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"
+    },
+    {
+      "id": "doc-003",
+      "registrationNumber": "EPSS/OUT/2026/00045",
+      "referenceNumber": "EPSS/PROC/INTL/904/26",
+      "type": "OutgoingLetter",
+      "subjectEn": "Award Notification & Contract Finalization: Global Pharmaceutical Supply Tender No. ICB/EPSS/08/2026",
+      "subjectAm": "የጨረታ አሸናፊነት ማሳወቂያ እና የውል ፊርማ ጥሪ፦ ዓለም አቀፍ መድኃኒት አቅርቦት ግዥ ቁጥር ICB/EPSS/08/2026",
+      "descriptionEn": "Formal award letter addressed to international pre-qualified manufacturers for the delivery of essential maternal health and diabetes insulin consignments.",
+      "descriptionAm": "ለእናቶች ጤና እና ለስኳር ህመም የኢንሱሊን መድኃኒቶች አቅርቦት ላሸነፉ ዓለም አቀፍ አምራች ኩባንያዎች የተላከ ይፋዊ የውል ፊርማ እና የጨረታ ውጤት ማሳወቂያ።",
+      "senderOrganization": "Ethiopian Pharmaceutical Supply Service (EPSS)",
+      "senderPerson": "Dr. Abdulkadir Gelgelo (Director General)",
+      "recipientOrganization": "Pre-qualified Global Pharmaceutical Consortium (Geneva / Mumbai)",
+      "recipientPerson": "Global Supply Lead",
+      "receivedDate": "2026-11-02T09:00:00Z",
+      "registrationDate": "2026-11-02T14:30:00Z",
+      "dueDate": "2026-11-16T17:00:00Z",
+      "priority": "Normal",
+      "confidentiality": "Confidential",
+      "status": "Approved",
+      "branchId": "br-hq",
+      "departmentId": "dept-proc",
+      "assignedUserId": "usr-proc",
+      "assignedUserName": "Dawit Tefera",
+      "assignedDepartmentName": "Pharmaceuticals Procurement Directorate",
+      "tags": [
+        "TenderAward",
+        "Insulin",
+        "ICB",
+        "ProcurementContract"
+      ],
+      "isArchived": false,
+      "retentionYears": 10,
+      "retentionExpiryDate": "2036-11-02T00:00:00Z",
+      "legalHold": false,
+      "attachments": [
+        {
+          "id": "att-03",
+          "fileName": "EPSS_Tender_Award_Letter_ICB_08_2026.pdf",
+          "fileSize": 1120400,
+          "mimeType": "application/pdf",
+          "uploadDate": "2026-11-02T14:30:00Z",
+          "uploadedBy": "Dawit Tefera",
+          "fileUrl": "/assets/sample-docs/tender_award_epss.pdf",
+          "version": 2
+        }
+      ],
+      "workflowHistory": [
+        {
+          "id": "wf-005",
+          "timestamp": "2026-11-02T11:00:00Z",
+          "actorId": "usr-proc",
+          "actorName": "Dawit Tefera",
+          "actorRole": "Director",
+          "action": "Registered",
+          "comments": "Drafted award letter based on evaluation committee recommendation."
+        },
+        {
+          "id": "wf-006",
+          "timestamp": "2026-11-03T16:00:00Z",
+          "actorId": "usr-dg",
+          "actorName": "Dr. Abdulkadir Gelgelo",
+          "actorRole": "DirectorGeneral",
+          "action": "Approved",
+          "comments": "Approved and signed with official digital key. Release to diplomatic dispatch registry.",
+          "digitalSignature": {
+            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
+            "certificateSerial": "ET-PKI-EPSS-DG-2026-8819",
+            "timestamp": "2026-11-03T16:02:11Z",
+            "verified": true
+          }
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-074",
+        "building": "Block B - Central Registry",
+        "floor": "Ground Floor",
+        "room": "Dispatch Room 102",
+        "shelfNumber": "Rack 1 - Dispatch Outbox",
+        "boxNumber": "DISPATCH-INTL-2026",
+        "currentCustodianId": "usr-reg",
+        "currentCustodianName": "Selamawit Bekele",
+        "expectedReturnDate": "2026-11-10T17:00:00Z",
+        "lastMovedDate": "2026-11-03T16:30:00Z",
+        "movementsCount": 2
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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"
+    },
+    {
+      "id": "doc-004",
+      "registrationNumber": "EPSS/MEMO/2026/00021",
+      "referenceNumber": "EPSS/DG/DIR/2026/014",
+      "type": "InternalMemo",
+      "subjectEn": "Executive Directive: Nationwide Implementation of EDRMS and Deprecation of Unsigned Paper Correspondence",
+      "subjectAm": "የአመራር መመሪያ፦ የሰነድና መዛግብት ኤሌክትሮኒክስ ሥርዓት (EDRMS) አጠቃቀም እና ያልተፈቀዱ የወረቀት ዝውውሮችን ማቆም",
+      "descriptionEn": "All 19 regional branch hubs and central directorates are mandated to execute correspondence intake, approval, and physical movement logging exclusively via the new EPSS EDRMS.",
+      "descriptionAm": "ሁሉም 19 የክልል ቅርንጫፍ ማዕከላት እና የማዕከላዊ ዳይሬክቶሬቶች የደብዳቤ መቀበል፣ ማጽደቅ እና የአካላዊ ሰነድ ዝውውርን በአዲሱ የኢ.መ.አ.አ የኤሌክትሮኒክስ ሥርዓት ብቻ እንዲያከናውኑ የሚያዝ መመሪያ።",
+      "senderOrganization": "EPSS - Office of the Director General",
+      "senderPerson": "Dr. Abdulkadir Gelgelo",
+      "recipientOrganization": "All 19 Regional Branch Managers & Directorate Heads",
+      "receivedDate": "2026-11-01T08:00:00Z",
+      "registrationDate": "2026-11-01T08:30:00Z",
+      "priority": "Urgent",
+      "confidentiality": "Public",
+      "status": "Completed",
+      "branchId": "br-hq",
+      "departmentId": "dept-it",
+      "assignedUserId": "usr-dg",
+      "assignedUserName": "Dr. Abdulkadir Gelgelo",
+      "assignedDepartmentName": "Director General Office",
+      "tags": [
+        "ExecutiveDirective",
+        "EDRMSPolicy",
+        "DigitalTransition",
+        "All19Branches"
+      ],
+      "isArchived": false,
+      "retentionYears": 20,
+      "retentionExpiryDate": "2046-11-01T00:00:00Z",
+      "legalHold": true,
+      "attachments": [
+        {
+          "id": "att-04",
+          "fileName": "EPSS_Directive_EDRMS_Rollout_2026.pdf",
+          "fileSize": 840200,
+          "mimeType": "application/pdf",
+          "uploadDate": "2026-11-01T08:30:00Z",
+          "uploadedBy": "Selamawit Bekele",
+          "fileUrl": "/assets/sample-docs/edrms_directive.pdf",
+          "version": 1
+        }
+      ],
+      "workflowHistory": [
+        {
+          "id": "wf-007",
+          "timestamp": "2026-11-01T08:30:00Z",
+          "actorId": "usr-dg",
+          "actorName": "Dr. Abdulkadir Gelgelo",
+          "actorRole": "DirectorGeneral",
+          "action": "Approved",
+          "comments": "Issued to all 19 branches. Mandatory read acknowledgement required by branch managers.",
+          "digitalSignature": {
+            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
+            "certificateSerial": "ET-PKI-EPSS-DG-2026-8801",
+            "timestamp": "2026-11-01T08:35:00Z",
+            "verified": true
+          }
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-001",
+        "building": "Block B - Central Registry",
+        "floor": "Ground Floor",
+        "room": "Historical Archive Room 101",
+        "shelfNumber": "Rack Directives - Shelf 1",
+        "boxNumber": "BOX-DIRECTIVES-2026",
+        "currentCustodianId": "usr-reg",
+        "currentCustodianName": "Selamawit Bekele",
+        "lastMovedDate": "2026-11-01T09:00:00Z",
+        "movementsCount": 1
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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"
+    },
+    {
+      "id": "doc-005",
+      "registrationNumber": "EPSS/APP/2026/00012",
+      "referenceNumber": "APP/CADILA/ETH/2026/08",
+      "type": "Application",
+      "subjectEn": "Application for Annual Good Distribution Practice (GDP) Warehouse Inspection & Re-Certification",
+      "subjectAm": "የዓመታዊ የመልካም መድኃኒት ስርጭት ልምድ (GDP) የመጋዘን ፍተሻ እና የምስክር ወረቀት ዕድሳት ማመልከቻ",
+      "descriptionEn": "Cadila Pharmaceuticals Ethiopia PLC submits pre-audit compliance checklist and fee payment receipt for renewal of central pharmaceutical storage clearance.",
+      "descriptionAm": "ካዲላ ፋርማሲዩቲካልስ ኢትዮጵያ ኃ.የተ.የግ.ማህበር ለማዕከላዊ መድኃኒት ማከማቻ ፍተሻ እና የፍቃድ ዕድሳት ያቀረበው ማመልከቻና የክፍያ ማረጋገጫ።",
+      "senderOrganization": "Cadila Pharmaceuticals Ethiopia PLC",
+      "senderPerson": "Regulatory & Government Affairs Director",
+      "recipientOrganization": "EPSS - Quality Assurance & Inspection Directorate",
+      "receivedDate": "2026-11-06T11:20:00Z",
+      "registrationDate": "2026-11-06T11:45:00Z",
+      "dueDate": "2026-11-20T17:00:00Z",
+      "priority": "Normal",
+      "confidentiality": "Internal",
+      "status": "UnderReview",
+      "branchId": "br-01",
+      "departmentId": "dept-qa",
+      "assignedUserId": "usr-proc",
+      "assignedUserName": "Dawit Tefera",
+      "assignedDepartmentName": "Quality Assurance Directorate",
+      "tags": [
+        "Application",
+        "Cadila",
+        "GDPInspection",
+        "StorageLicense"
+      ],
+      "isArchived": false,
+      "retentionYears": 5,
+      "retentionExpiryDate": "2031-11-06T00:00:00Z",
+      "legalHold": false,
+      "attachments": [
+        {
+          "id": "att-05",
+          "fileName": "Cadila_GDP_Application_Dossier_2026.pdf",
+          "fileSize": 3200100,
+          "mimeType": "application/pdf",
+          "uploadDate": "2026-11-06T11:45:00Z",
+          "uploadedBy": "Selamawit Bekele",
+          "fileUrl": "/assets/sample-docs/cadila_application.pdf",
+          "version": 1
+        }
+      ],
+      "workflowHistory": [
+        {
+          "id": "wf-008",
+          "timestamp": "2026-11-06T11:45:00Z",
+          "actorId": "usr-reg",
+          "actorName": "Selamawit Bekele",
+          "actorRole": "RegistryOfficer",
+          "action": "Registered",
+          "comments": "Application fee receipt verified. Forwarded to inspection team."
+        }
+      ],
+      "physicalTracking": {
+        "fileCode": "EPSS-PHY-2026-105",
+        "building": "Block C - Regulatory Lab",
+        "floor": "2nd Floor",
+        "room": "Inspection Desk Room 210",
+        "shelfNumber": "Desk In-Basket",
+        "boxNumber": "APP-INSPECT-2026",
+        "currentCustodianId": "usr-proc",
+        "currentCustodianName": "Dawit Tefera",
+        "expectedReturnDate": "2026-11-20T17:00:00Z",
+        "lastMovedDate": "2026-11-06T12:00:00Z",
+        "movementsCount": 1
+      },
+      "qrCodeDataUrl": "data:image/png;base64,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"
+    }
+  ],
+  "retentionSchedules": [
+    {
+      "id": "ret-01",
+      "documentCategory": "International Pharmaceutical Procurement Contracts",
+      "retentionPeriodYears": 10,
+      "disposalAction": "PermanentArchive",
+      "governingLegislation": "Ethiopian Public Procurement & Property Authority Directive No. 42/2011",
+      "notes": "Preserve permanent digital copy and authenticated physical counter-signatures."
+    },
+    {
+      "id": "ret-02",
+      "documentCategory": "Regulatory Drug Clearance & EFDA Certifications",
+      "retentionPeriodYears": 15,
+      "disposalAction": "PermanentArchive",
+      "governingLegislation": "Ethiopian Food and Drug Authority Proclamation No. 1112/2019",
+      "notes": "Must be retained past the shelf life of each imported batch lot."
+    },
+    {
+      "id": "ret-03",
+      "documentCategory": "Regional Hub Consignment Waybills and Goods Received Vouchers",
+      "retentionPeriodYears": 7,
+      "disposalAction": "ReviewAtMaturity",
+      "governingLegislation": "Ministry of Finance Financial Administration Directive",
+      "notes": "Audited annually; retain until post-audit clearance certificate is issued."
+    },
+    {
+      "id": "ret-04",
+      "documentCategory": "Internal Administrative Circulars & Meeting Minutes",
+      "retentionPeriodYears": 5,
+      "disposalAction": "AuthorizedDestruction",
+      "governingLegislation": "National Archives and Library Agency (NALA) Record Schedule",
+      "notes": "Subject to Director General authorization before certified paper shredding."
+    }
+  ],
+  "handovers": [],
+  "auditLogs": [
+    {
+      "id": "audit-1794159028214-heiahe",
+      "timestamp": "2026-11-08T17:30:28.214Z",
+      "userId": "usr-dg",
+      "userName": "Dr. Abdulkadir Gelgelo",
+      "userRole": "DirectorGeneral",
+      "branchName": "EPSS Head Office",
+      "action": "Created IncomingLetter",
+      "resourceType": "Document",
+      "resourceId": "EPSS/IN/2026/00103",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Subject: WHO Direct Shipment Notification for Polio Vaccines"
+    }
+  ],
+  "sequenceNumbers": {
+    "IN_2026": 103,
+    "OUT_2026": 45,
+    "MEMO_2026": 21,
+    "APP_2026": 12
+  },
+  "notifications": [
+    {
+      "id": "notif-1",
+      "titleEn": "Emergency Directive Assigned",
+      "titleAm": "የአስቸኳይ ጊዜ መመሪያ ተመድቧል",
+      "messageEn": "Ministry of Health Cholera Response Directive EPSS/IN/2026/00102 routed to Storage & Distribution.",
+      "messageAm": "የጤና ሚኒስቴር የኮሌራ መከላከያ መድኃኒት መመሪያ EPSS/IN/2026/00102 ለክምችትና ስርጭት ተመድቧል።",
+      "timestamp": "2026-11-08T08:30:00Z",
+      "type": "Assignment",
+      "isRead": false,
+      "documentId": "doc-002",
+      "registrationNumber": "EPSS/IN/2026/00102"
+    },
+    {
+      "id": "notif-2",
+      "titleEn": "Approval Endorsement Required",
+      "titleAm": "የዲጂታል ፊርማ ማጽደቂያ ይጠበቃል",
+      "messageEn": "International Tender Award Letter EPSS/OUT/2026/00045 pending Director General PKI signature.",
+      "messageAm": "ዓለም አቀፍ የጨረታ ውጤት ደብዳቤ EPSS/OUT/2026/00045 የዋና ዳይሬክተሩን ፊርማ በመጠባበቅ ላይ ነው።",
+      "timestamp": "2026-11-08T07:15:00Z",
+      "type": "Approval",
+      "isRead": false,
+      "documentId": "doc-003",
+      "registrationNumber": "EPSS/OUT/2026/00045"
+    },
+    {
+      "id": "notif-3",
+      "titleEn": "SLA Escalation Alert",
+      "titleAm": "የቀነ-ገደብ ማሳሰቢያ",
+      "messageEn": "Cadila Good Distribution Practice inspection dossier nearing 48-hour deadline.",
+      "messageAm": "የካዲላ መድኃኒት መጋዘን ፍተሻ ማመልከቻ የ48 ሰዓት ቀነ-ገደብ እየተቃረበ ነው።",
+      "timestamp": "2026-11-08T06:00:00Z",
+      "type": "OverdueSLA",
+      "isRead": true,
+      "documentId": "doc-005",
+      "registrationNumber": "EPSS/APP/2026/00012"
+    }
+  ],
+  "connectors": [
+    {
+      "id": "conn-sap",
+      "name": "SAP S/4HANA Pharmaceutical ERP",
+      "type": "SAP_S4HANA",
+      "status": "Connected",
+      "endpoint": "https://sap-gateway.epss.gov.et/sap/opu/odata/EPSS/SUPPLY_SRV",
+      "authMethod": "OAuth2",
+      "lastSyncTimestamp": "2026-11-08T09:15:00Z",
+      "pingLatencyMs": 38,
+      "description": "Bi-directional purchase order, inventory requisition, and consignment GRV synchronization."
+    },
+    {
+      "id": "conn-ad",
+      "name": "EPSS Microsoft Active Directory / LDAP",
+      "type": "ActiveDirectory",
+      "status": "Connected",
+      "endpoint": "ldaps://ad.epss.gov.et:636/DC=epss,DC=gov,DC=et",
+      "authMethod": "LDAP_SSL",
+      "lastSyncTimestamp": "2026-11-08T09:00:00Z",
+      "pingLatencyMs": 14,
+      "description": "Centralized institutional staff directory, SSO credentials, and security groups synchronization."
+    },
+    {
+      "id": "conn-sms",
+      "name": "Ethio Telecom Enterprise SMS Gateway",
+      "type": "EthioTelecom_SMS",
+      "status": "Connected",
+      "endpoint": "https://smsc.ethiotelecom.et/api/v2/dispatch",
+      "authMethod": "API_Key",
+      "lastSyncTimestamp": "2026-11-08T08:50:00Z",
+      "pingLatencyMs": 42,
+      "description": "Automated SMS alerts for emergency drug dispatches, workflow assignments, and courier handovers."
+    },
+    {
+      "id": "conn-efda",
+      "name": "EFDA Regulatory Drug Verification API",
+      "type": "EFDA_API",
+      "status": "Connected",
+      "endpoint": "https://efda.gov.et/api/regulatory/clearance/v1",
+      "authMethod": "Mutual_TLS",
+      "lastSyncTimestamp": "2026-11-08T09:10:00Z",
+      "pingLatencyMs": 55,
+      "description": "Direct verification of import licenses, batch clearance certificates, and GMP status."
+    },
+    {
+      "id": "conn-moh",
+      "name": "Ministry of Health Disaster Response Hub",
+      "type": "MoH_Portal",
+      "status": "Connected",
+      "endpoint": "https://emergency.moh.gov.et/api/v1/epss-allocations",
+      "authMethod": "API_Key",
+      "lastSyncTimestamp": "2026-11-08T07:30:00Z",
+      "pingLatencyMs": 29,
+      "description": "National emergency allocations coordination and regional disease outbreak response tracking."
+    },
+    {
+      "id": "conn-smtp",
+      "name": "EPSS Government Mail Server (mail.epss.gov.et)",
+      "type": "GovernmentSMTP",
+      "status": "Connected",
+      "endpoint": "smtps://mail.epss.gov.et:587",
+      "authMethod": "API_Key",
+      "lastSyncTimestamp": "2026-11-08T09:20:00Z",
+      "pingLatencyMs": 18,
+      "description": "Encrypted government SMTP dispatch for outgoing official letters and acknowledgement receipts."
+    }
+  ]
+}

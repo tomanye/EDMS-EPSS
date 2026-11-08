@@ -1,0 +1,73 @@
+# Docker Compose Orchestration for EPSS On-Premises EDRMS Cluster
+# Ethiopian Pharmaceutical Supply Service (EPSS) - Data Center Deployment
+
+version: '3.8'
+
+services:
+  epss-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: epss/edrms:2.4.0
+    container_name: epss-edrms-application
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - APP_URL=${APP_URL:-https://edrms.epss.gov.et}
+    volumes:
+      - epss_data:/app/data
+    networks:
+      - epss-internal-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: epss-nginx-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - epss_ssl_certs:/etc/nginx/ssl:ro
+    depends_on:
+      - epss-app
+    networks:
+      - epss-internal-network
+
+  prometheus-monitor:
+    image: prom/prometheus:v2.51.0
+    container_name: epss-prometheus-metrics
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - epss_prom_data:/prometheus
+    depends_on:
+      - epss-app
+    networks:
+      - epss-internal-network
+
+volumes:
+  epss_data:
+    name: epss_edrms_persistent_data
+    driver: local
+  epss_ssl_certs:
+    name: epss_edrms_ssl_certificates
+    driver: local
+  epss_prom_data:
+    name: epss_edrms_prometheus_metrics
+    driver: local
+
+networks:
+  epss-internal-network:
+    name: epss-secure-vpc
+    driver: bridge

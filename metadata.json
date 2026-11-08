@@ -1,0 +1,6 @@
+{
+  "name": "EPSS EDRMS - Enterprise Document & Records Management",
+  "description": "Enterprise Document and Records Management System for the Ethiopian Pharmaceutical Supply Service (EPSS), supporting correspondence lifecycle, approvals, and 19 regional hubs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
