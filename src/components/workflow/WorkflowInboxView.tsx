@@ -9,11 +9,13 @@ import {
   MessageSquare,
   Clock,
   ArrowRight,
-  Filter
+  Filter,
+  Fingerprint
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
 import { DocumentItem } from '../../types/index.js';
+import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 
 export const WorkflowInboxView: React.FC = () => {
   const { documents, currentUser, departments, users = [], refreshData, setSelectedDocument, language, t } = useApp() as any;
@@ -25,6 +27,7 @@ export const WorkflowInboxView: React.FC = () => {
   const [forwardDept, setForwardDept] = useState('');
   const [forwardUser, setForwardUser] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBiometricApprovalOpen, setIsBiometricApprovalOpen] = useState(false);
 
   // Filter actionable items: either explicitly assigned to current user, or under review/awaiting approval
   const pendingDocs = documents.filter((d: DocumentItem) => 
@@ -41,15 +44,16 @@ export const WorkflowInboxView: React.FC = () => {
     setForwardUser('');
   };
 
-  const handleExecuteWorkflow = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleExecuteWorkflow = async (e?: React.FormEvent, biometricSignatureVerified?: boolean) => {
+    if (e) e.preventDefault();
     if (!actionModalDoc) return;
 
     try {
       setIsSubmitting(true);
+      const bioSuffix = biometricSignatureVerified ? ' [Biometrically Signed & Sealed via WebAuthn]' : '';
       const payload: any = {
         action: actionType,
-        comments: actionComments || `Workflow decision recorded by ${currentUser?.fullNameEn}`
+        comments: (actionComments || `Workflow decision recorded by ${currentUser?.fullNameEn}`) + bioSuffix
       };
 
       if (actionType === 'Forwarded') {
@@ -59,6 +63,9 @@ export const WorkflowInboxView: React.FC = () => {
 
       if (actionType === 'Approved') {
         payload.digitalSignatureCertificate = `ET-PKI-EPSS-${currentUser?.role.toUpperCase()}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        if (biometricSignatureVerified) {
+          payload.biometricSignatureVerified = true;
+        }
       }
 
       const res = await fetch(`/api/v1/workflows/${actionModalDoc.id}/action`, {
@@ -286,26 +293,55 @@ export const WorkflowInboxView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setActionModalDoc(null)}
-                  className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 rounded-lg font-semibold"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold shadow-xs disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Recording...' : 'Confirm Decision'}
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  {actionType === 'Approved' && (
+                    <button
+                      type="button"
+                      onClick={() => setIsBiometricApprovalOpen(true)}
+                      className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg font-semibold shadow-xs flex items-center gap-1.5 text-xs transition-all ring-1 ring-emerald-500/30"
+                    >
+                      <Fingerprint className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>{language === 'am' ? 'በጣት አሻራ አጽድቅ' : 'Sign with Biometrics'}</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActionModalDoc(null)}
+                    className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 rounded-lg font-semibold"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold shadow-xs disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Recording...' : 'Confirm Decision'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* WebAuthn Biometric Verification Modal for Approvals */}
+      <BiometricVerificationModal
+        isOpen={isBiometricApprovalOpen}
+        onClose={() => setIsBiometricApprovalOpen(false)}
+        onVerified={() => {
+          setIsBiometricApprovalOpen(false);
+          handleExecuteWorkflow(undefined, true);
+        }}
+        documentTitle={language === 'am' ? (actionModalDoc?.subjectAm || actionModalDoc?.subjectEn) : actionModalDoc?.subjectEn}
+        registrationNumber={actionModalDoc?.registrationNumber}
+        confidentialityLevel={actionModalDoc?.confidentiality}
+        actionReason={`Executive Biometric Seal Approval for ${actionModalDoc?.registrationNumber || 'Document'}`}
+      />
     </div>
   );
 };

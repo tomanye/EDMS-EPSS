@@ -10,10 +10,12 @@ import {
   FileText,
   Bell,
   Check,
-  ArrowRight
+  ArrowRight,
+  Fingerprint
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
+import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 
 export const Header: React.FC = () => {
   const { 
@@ -34,6 +36,7 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isBiometricTestOpen, setIsBiometricTestOpen] = useState(false);
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-8 sticky top-0 z-30 transition-colors">
@@ -176,6 +179,16 @@ export const Header: React.FC = () => {
           )}
         </div>
 
+        {/* Biometric Security Hardware Status */}
+        <button
+          onClick={() => setIsBiometricTestOpen(true)}
+          className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          title="EPSS Biometric Hardware Security (WebAuthn / FIDO2)"
+        >
+          <Fingerprint className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+        </button>
+
         {/* Theme Switcher */}
         <button
           onClick={toggleTheme}
@@ -210,6 +223,17 @@ export const Header: React.FC = () => {
           <span>{t('register')}</span>
         </button>
       </div>
+
+      {/* Header Biometric Sensor Test & Enrollment Modal */}
+      <BiometricVerificationModal
+        isOpen={isBiometricTestOpen}
+        onClose={() => setIsBiometricTestOpen(false)}
+        onVerified={() => setIsBiometricTestOpen(false)}
+        documentTitle="EPSS Staff Biometric Security Enrollment & FIDO2 Diagnostics"
+        registrationNumber={`STAFF-${currentUser?.id?.toUpperCase() || 'USER'}`}
+        confidentialityLevel="Secret"
+        actionReason="Staff Identity Verification & Biometric Sensor Readiness"
+      />
     </header>
   );
 };

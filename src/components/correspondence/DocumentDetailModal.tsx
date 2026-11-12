@@ -29,17 +29,26 @@ import {
   printVerificationCertificate 
 } from '../../lib/qrVerification.js';
 import { VerificationStatusModal } from '../verification/VerificationStatusModal.js';
+import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
+import { Fingerprint, Scan, LockKeyhole } from 'lucide-react';
 
 export const DocumentDetailModal: React.FC = () => {
   const { selectedDocument, setSelectedDocument, currentUser, departments, refreshData, language, t } = useApp();
   const [minuteText, setMinuteText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [isBiometricModalOpen, setIsBiometricModalOpen] = useState(false);
+  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState(false);
   const [liveQrCodeUrl, setLiveQrCodeUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const isSensitiveRecord = selectedDocument?.confidentiality === 'Confidential' || 
+    selectedDocument?.confidentiality === 'Secret' || 
+    selectedDocument?.priority === 'VeryUrgent';
+
   useEffect(() => {
     if (selectedDocument) {
+      setIsBiometricUnlocked(!isSensitiveRecord);
       generateVerificationQrCode(selectedDocument, { size: 280, darkColor: '#0f766e' }).then(url => {
         setLiveQrCodeUrl(url);
       });
@@ -174,6 +183,55 @@ export const DocumentDetailModal: React.FC = () => {
               <span>Due: <strong className="font-mono text-slate-800 dark:text-slate-200">{doc.dueDate ? formatEthiopianDate(doc.dueDate, language) : 'None'}</strong></span>
             </div>
           </div>
+
+          {/* Sensitive Record Biometric Protection Banner */}
+          {isSensitiveRecord && (
+            <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+              isBiometricUnlocked
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl shrink-0 ${
+                  isBiometricUnlocked 
+                    ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300' 
+                    : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                }`}>
+                  <Fingerprint className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs flex items-center gap-1.5">
+                    <span>
+                      {isBiometricUnlocked 
+                        ? (language === 'am' ? 'የባዮሜትሪክ ማረጋገጫ ተከናውኗል — ሰነዱ ክፍት ነው' : 'Biometric Authentication Cleared') 
+                        : (language === 'am' ? 'ሚስጥራዊ የህክምና ሰነድ — የባዮሜትሪክ ማረጋገጫ ይፈልጋል' : 'Sensitive Record — WebAuthn Biometric Protection Active')}
+                    </span>
+                    {isBiometricUnlocked && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                  </div>
+                  <p className="text-[11px] opacity-80 mt-0.5">
+                    {isBiometricUnlocked
+                      ? (language === 'am' ? 'የጣት አሻራ / የፊት ገጽታ ማረጋገጫ ተረጋግጧል። ፋይሎችንና ውሳኔዎችን ማስተናገድ ይችላሉ።' : 'Hardware security assertion verified for this session. Dossier data and files unlocked.')
+                      : (language === 'am' ? 'ደህንነቱ የተጠበቀ ሰነድ ነው። ዝርዝር መረጃዎችንና አባሪዎችን ለማየት የጣት አሻራዎን ይቃኙ።' : 'Confidential pharmaceutical tender & batch record guarded by FIDO2 platform biometrics.')}
+                  </p>
+                </div>
+              </div>
+
+              {!isBiometricUnlocked ? (
+                <button
+                  type="button"
+                  onClick={() => setIsBiometricModalOpen(true)}
+                  className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs rounded-xl shadow-xs flex items-center gap-1.5 shrink-0 self-start sm:self-auto transition-colors"
+                >
+                  <Fingerprint className="w-4 h-4" />
+                  <span>{language === 'am' ? 'በጣት አሻራ / በFace ID ክፈት' : 'Unlock with Biometrics'}</span>
+                </button>
+              ) : (
+                <span className="text-[10px] font-mono font-bold px-2 py-1 bg-emerald-100 dark:bg-emerald-900/60 rounded text-emerald-800 dark:text-emerald-200 shrink-0">
+                  FIDO2 VERIFIED
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Description & AI Summary */}
           {doc.descriptionEn && (
@@ -319,28 +377,62 @@ export const DocumentDetailModal: React.FC = () => {
 
           {/* Attachments Section */}
           <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-slate-100">
-              Attached Digitized Documents ({doc.attachments.length})
-            </h3>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {doc.attachments.map((att) => (
-                <div key={att.id} className="py-2 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-teal-600 shrink-0" />
-                    <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{att.fileName}</span>
-                    <span className="text-[11px] text-slate-400">({(att.fileSize / 1024 / 1024).toFixed(2)} MB)</span>
-                  </div>
-                  <a
-                    href={att.fileUrl}
-                    download={att.fileName}
-                    className="p-1 text-slate-600 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300"
-                    title="Download attachment"
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                </div>
-              ))}
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>Attached Digitized Documents ({doc.attachments.length})</span>
+                {isSensitiveRecord && (
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isBiometricUnlocked ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'}`}>
+                    {isBiometricUnlocked ? 'Biometrically Unlocked' : 'Biometric Gated'}
+                  </span>
+                )}
+              </h3>
             </div>
+
+            {isSensitiveRecord && !isBiometricUnlocked ? (
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-amber-300 dark:border-amber-800/60 text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 mx-auto">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                    {language === 'am' ? 'የተያያዙ ሰነዶች በባዮሜትሪክ የተቆለፉ ናቸው' : 'Pharmaceutical Dossier Files Secured & Gated'}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                    {language === 'am' 
+                      ? 'የመድኃኒት አቅርቦት ትንተና፣ የፍተሻ ሰርተፊኬት እና የጨረታ ፋይሎች በባዮሜትሪክ የተጠበቁ ናቸው።'
+                      : 'Direct access to emergency pharmaceutical dossiers, drug safety audits, and analytical records requires WebAuthn biometric clearance.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsBiometricModalOpen(true)}
+                  className="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold text-xs inline-flex items-center gap-1.5 shadow-xs transition-colors"
+                >
+                  <Fingerprint className="w-4 h-4" />
+                  <span>{language === 'am' ? 'በጣት አሻራ ይክፈቱ' : 'Authenticate with Biometrics'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {doc.attachments.map((att) => (
+                  <div key={att.id} className="py-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 truncate">
+                      <FileText className="w-4 h-4 text-teal-600 shrink-0" />
+                      <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{att.fileName}</span>
+                      <span className="text-[11px] text-slate-400">({(att.fileSize / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                    <a
+                      href={att.fileUrl}
+                      download={att.fileName}
+                      className="p-1 text-slate-600 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300"
+                      title="Download attachment"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Workflow History / Minutes Trail */}
@@ -407,6 +499,20 @@ export const DocumentDetailModal: React.FC = () => {
         isOpen={isVerificationModalOpen}
         onClose={() => setIsVerificationModalOpen(false)}
         language={language}
+      />
+
+      {/* Biometric Verification Modal */}
+      <BiometricVerificationModal
+        isOpen={isBiometricModalOpen}
+        onClose={() => setIsBiometricModalOpen(false)}
+        onVerified={() => {
+          setIsBiometricUnlocked(true);
+          setIsBiometricModalOpen(false);
+        }}
+        documentTitle={doc.subjectEn}
+        registrationNumber={doc.registrationNumber}
+        confidentialityLevel={doc.confidentiality}
+        actionReason="Unlock Confidential Pharmaceutical Record & Authorize Minutes"
       />
     </div>
   );

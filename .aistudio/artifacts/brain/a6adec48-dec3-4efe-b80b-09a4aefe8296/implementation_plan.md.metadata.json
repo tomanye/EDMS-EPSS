@@ -1,6 +1,0 @@
-{
-  "summary":  "Comprehensive architectural implementation plan for the Ethiopian Pharmaceutical Supply Service (EPSS) Enterprise Document and Records Management System (EDRMS), featuring bilingual English/Amharic support, full-stack Clean Architecture with Express REST APIs, Head Office and 19 regional branches, dynamic configurable workflow engine, physical & electronic tracking, QR verification, AI OCR/summarization, and records retention.",
-  "updatedAt":  "2026-11-08T17:04:23.856855327Z",
-  "requestFeedback":  true,
-  "userFacing":  true
-}

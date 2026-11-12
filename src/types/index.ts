@@ -14,6 +14,17 @@ export type UserRole =
   | 'ProcurementOfficer'
   | 'Auditor';
 
+export interface BiometricCredential {
+  id: string;
+  credentialId: string;
+  publicKey?: string;
+  counter: number;
+  deviceName: string;
+  authenticatorAttachment: 'platform' | 'cross-platform';
+  registeredAt: string;
+  lastUsedAt?: string;
+}
+
 export interface User {
   id: string;
   fullNameEn: string;
@@ -29,6 +40,8 @@ export interface User {
   position: string;
   avatarUrl?: string;
   permissions: string[];
+  biometricsEnabled?: boolean;
+  biometricCredentials?: BiometricCredential[];
 }
 
 export type BranchCluster = 'Central' | 'Northern' | 'Western' | 'SouthernEastern';

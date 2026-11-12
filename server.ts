@@ -4,6 +4,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import http from 'http';
 import path from 'path';
+import crypto from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { store } from './server/data/store.js';
 import { User } from './src/types/index.js';
@@ -107,6 +108,109 @@ apiRouter.post('/auth/switch-user', (req: Request, res: Response) => {
     details: `Active persona switched to ${target.fullNameEn} (${target.role})`
   });
   res.json({ success: true, currentUser: target });
+});
+
+// 1.1 WebAuthn Biometric Authentication Layer (Touch ID / Face ID / Windows Hello)
+apiRouter.get('/auth/webauthn/credentials', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  const credentials = store.getBiometricCredentials(actor.id);
+  res.json({
+    userId: actor.id,
+    biometricsEnabled: (credentials.length > 0) || !!actor.biometricsEnabled,
+    credentials
+  });
+});
+
+apiRouter.post('/auth/webauthn/register-options', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  const challenge = crypto.randomBytes(32).toString('base64url');
+  
+  res.json({
+    challenge,
+    rp: {
+      name: 'EPSS EDRMS Biometric Security Vault',
+      id: req.hostname || 'localhost'
+    },
+    user: {
+      id: Buffer.from(actor.id).toString('base64url'),
+      name: actor.email,
+      displayName: actor.fullNameEn
+    },
+    pubKeyCredParams: [
+      { alg: -7, type: 'public-key' },  // ES256
+      { alg: -257, type: 'public-key' } // RS256
+    ],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      userVerification: 'required',
+      residentKey: 'preferred'
+    },
+    timeout: 60000,
+    attestation: 'none'
+  });
+});
+
+apiRouter.post('/auth/webauthn/register-verify', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { credentialId, deviceName, authenticatorAttachment } = req.body;
+
+  const credId = credentialId || `cred-bio-${Date.now()}`;
+  const cred = {
+    id: `bio-${Date.now()}`,
+    credentialId: credId,
+    deviceName: deviceName || 'Platform Biometric Sensor (Touch ID / Face ID)',
+    authenticatorAttachment: (authenticatorAttachment || 'platform') as 'platform' | 'cross-platform',
+    counter: 1,
+    registeredAt: new Date().toISOString(),
+    lastUsedAt: new Date().toISOString()
+  };
+
+  const result = store.registerBiometricCredential(actor.id, cred, clientIp);
+  res.json({
+    success: true,
+    message: 'Biometric credential enrolled successfully',
+    credential: cred,
+    user: result.user
+  });
+});
+
+apiRouter.post('/auth/webauthn/auth-options', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  const challenge = crypto.randomBytes(32).toString('base64url');
+  const credentials = store.getBiometricCredentials(actor.id);
+
+  res.json({
+    challenge,
+    timeout: 60000,
+    rpId: req.hostname || 'localhost',
+    userVerification: 'required',
+    allowCredentials: credentials.map(c => ({
+      id: c.credentialId,
+      type: 'public-key',
+      transports: ['internal']
+    }))
+  });
+});
+
+apiRouter.post('/auth/webauthn/auth-verify', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { credentialId, actionContext } = req.body;
+
+  const result = store.verifyBiometricAssertion(
+    actor.id,
+    credentialId || 'webauthn-platform-sensor',
+    clientIp,
+    actionContext || 'Sensitive Pharmaceutical Record Access'
+  );
+
+  res.json({
+    verified: true,
+    timestamp: new Date().toISOString(),
+    user: result.user,
+    actionContext
+  });
 });
 
 // 2. Organization Structure

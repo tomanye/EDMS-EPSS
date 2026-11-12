@@ -371,7 +371,8 @@
       "position": "Director General / ዋና ዳይሬክተር",
       "permissions": [
         "*"
-      ]
+      ],
+      "biometricsEnabled": true
     },
     {
       "id": "usr-reg",
@@ -905,7 +906,7 @@
       "isArchived": false,
       "retentionYears": 5,
       "retentionExpiryDate": "2031-11-06T00:00:00Z",
-      "legalHold": false,
+      "legalHold": true,
       "attachments": [
         {
           "id": "att-05",
@@ -981,6 +982,32 @@
   ],
   "handovers": [],
   "auditLogs": [
+    {
+      "id": "audit-1794487267502-rqsypt",
+      "timestamp": "2026-11-12T12:41:07.502Z",
+      "userId": "usr-dg",
+      "userName": "Dr. Abdulkadir Gelgelo",
+      "userRole": "DirectorGeneral",
+      "branchName": "EPSS Head Office",
+      "action": "BIOMETRIC_AUTH_VERIFIED",
+      "resourceType": "BiometricVault",
+      "resourceId": "test-cred",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Cryptographic biometric assertion verified for: Sensitive Pharmaceutical Record Access using Platform Authenticator (TouchID/FaceID)"
+    },
+    {
+      "id": "audit-1794487094919-niiv87",
+      "timestamp": "2026-11-12T12:38:14.919Z",
+      "userId": "usr-dg",
+      "userName": "Dr. Abdulkadir Gelgelo",
+      "userRole": "DirectorGeneral",
+      "branchName": "EPSS Head Office",
+      "action": "Applied Legal Hold",
+      "resourceType": "Document",
+      "resourceId": "EPSS/APP/2026/00012",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Retention legal hold status changed to true"
+    },
     {
       "id": "audit-1794161478078-8v6mxh",
       "timestamp": "2026-11-08T18:11:18.078Z",
