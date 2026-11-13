@@ -40,7 +40,7 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
   confidentialityLevel = 'Confidential',
   actionReason = 'Access Sensitive Pharmaceutical Dossier'
 }) => {
-  const { currentUser, language, refreshData } = useApp();
+  const { currentUser, language, refreshData, markMfaVerifiedLocal } = useApp();
   const [scanMode, setScanMode] = useState<ScanMode>('fingerprint');
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -76,8 +76,7 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
     );
 
     try {
-      // Step 1: Scan delay simulation for visual scanner animation
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 600));
       setStatus('analyzing');
       setStatusMessage(
         language === 'am'
@@ -85,7 +84,6 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
           : 'Validating WebAuthn cryptographic signature...'
       );
 
-      // Step 2: Call real WebAuthn authentication layer
       const result = await authenticateWithBiometrics(
         currentUser?.id || 'usr-dg',
         `${actionReason} (${registrationNumber || 'Sensitive Record'})`
@@ -98,11 +96,11 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
             ? 'የባዮሜትሪክ ማንነት በስኬት ተረጋግጧል! ሰነዱ ተከፍቷል።'
             : 'Biometric identity verified successfully! Access granted.'
         );
-
+        markMfaVerifiedLocal();
         await refreshData();
         setTimeout(() => {
           onVerified();
-        }, 900);
+        }, 700);
       } else {
         throw new Error('Biometric signature mismatch');
       }
@@ -126,24 +124,35 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
       return;
     }
 
-    // Fallback authentication
     setStatus('analyzing');
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    setPinError('');
+    try {
+      const res = await fetch('/api/v1/auth/elevate-mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'pin', pin: officerPin.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus('failed');
+        setPinError(data.error || 'Invalid officer authorization PIN');
+        return;
+      }
 
-    // Accepted fallback PINs for authorized personnel
-    if (officerPin === '1234' || officerPin === '2026' || officerPin === '7788' || officerPin.length >= 4) {
       setStatus('success');
       setStatusMessage(
         language === 'am' 
           ? 'የመጠባበቂያ የይለፍ ቃል ተረጋግጧል!'
-          : 'Emergency officer PIN verified. Access authorized.'
+          : 'Officer MFA PIN verified. Access authorized.'
       );
+      markMfaVerifiedLocal();
+      await refreshData();
       setTimeout(() => {
         onVerified();
-      }, 700);
-    } else {
+      }, 600);
+    } catch {
       setStatus('failed');
-      setPinError('Invalid officer authorization code');
+      setPinError('Failed to verify officer authorization PIN');
     }
   };
 

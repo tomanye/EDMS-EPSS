@@ -1,31 +1,35 @@
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  Globe, 
-  Moon, 
-  Sun, 
-  UserCheck, 
-  PlusCircle, 
-  CheckCircle2, 
-  FileText,
+import {
+  Building2,
+  Moon,
+  Sun,
+  PlusCircle,
+  CheckCircle2,
   Bell,
-  Check,
   ArrowRight,
-  Fingerprint
+  Fingerprint,
+  User as UserIcon,
+  KeyRound,
+  ShieldCheck,
+  Users,
+  History,
+  LogOut,
+  ChevronDown
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
 import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
+import { SecurityModalTab, UserSecurityModal } from '../auth/UserSecurityModal.js';
 
 export const Header: React.FC = () => {
-  const { 
-    language, 
-    setLanguage, 
-    theme, 
-    toggleTheme, 
-    currentUser, 
-    availablePersonas, 
-    switchUser,
+  const {
+    language,
+    setLanguage,
+    theme,
+    toggleTheme,
+    currentUser,
+    session,
+    logout,
     openRegisterModal,
     notifications,
     unreadNotificationsCount,
@@ -36,10 +40,19 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isBiometricTestOpen, setIsBiometricTestOpen] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [securityModalTab, setSecurityModalTab] = useState<SecurityModalTab>('profile');
+
+  const openSecurityTab = (tab: SecurityModalTab) => {
+    setSecurityModalTab(tab);
+    setSecurityModalOpen(true);
+    setIsProfileMenuOpen(false);
+  };
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-8 sticky top-0 z-30 transition-colors">
+    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-6 sticky top-0 z-30 transition-colors">
       {/* Zone 1: Brand Wordmark */}
       <div className="flex items-center gap-3 shrink-0">
         <div className="w-9 h-9 rounded-lg bg-teal-700 text-white flex items-center justify-center font-bold text-base shadow-sm">
@@ -55,7 +68,7 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Zone 2: Navigation Links / Hub Status */}
+      {/* Zone 2: Hub Status */}
       <div className="hidden lg:flex items-center gap-6 text-xs text-slate-600 dark:text-slate-300">
         <div className="flex items-center gap-1.5 font-medium">
           <Building2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
@@ -68,8 +81,8 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Zone 3: Controls & Primary Action */}
-      <div className="flex items-center gap-3 shrink-0">
+      {/* Zone 3: Controls, Profile Menu & Primary Action */}
+      <div className="flex items-center gap-2.5 shrink-0">
         {/* Language Toggle */}
         <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700">
           <button
@@ -97,7 +110,10 @@ export const Header: React.FC = () => {
         {/* Notifications Bell & Dropdown */}
         <div className="relative">
           <button
-            onClick={() => setIsNotifOpen(!isNotifOpen)}
+            onClick={() => {
+              setIsNotifOpen(!isNotifOpen);
+              setIsProfileMenuOpen(false);
+            }}
             aria-label="Toggle notifications"
             className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
           >
@@ -139,7 +155,9 @@ export const Header: React.FC = () => {
                       onClick={() => {
                         markNotificationAsRead(n.id);
                         if (n.documentId) {
-                          const target = documents.find(d => d.id === n.documentId || d.registrationNumber === n.registrationNumber);
+                          const target = documents.find(
+                            d => d.id === n.documentId || d.registrationNumber === n.registrationNumber
+                          );
                           if (target) {
                             setSelectedDocument(target);
                             setIsNotifOpen(false);
@@ -179,14 +197,13 @@ export const Header: React.FC = () => {
           )}
         </div>
 
-        {/* Biometric Security Hardware Status */}
+        {/* Biometric Security Step-Up Trigger */}
         <button
           onClick={() => setIsBiometricTestOpen(true)}
           className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-          title="EPSS Biometric Hardware Security (WebAuthn / FIDO2)"
+          title={session?.mfaVerified ? 'MFA Cleared (Step-up Verified)' : 'Elevate Session with Biometric / MFA Verification'}
         >
-          <Fingerprint className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+          <Fingerprint className={`w-4 h-4 ${session?.mfaVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-teal-600 dark:text-teal-400'}`} />
         </button>
 
         {/* Theme Switcher */}
@@ -198,20 +215,100 @@ export const Header: React.FC = () => {
           {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
         </button>
 
-        {/* Persona Switcher Dropdown */}
-        <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-          <UserCheck className="w-4 h-4 text-slate-400" />
-          <select
-            value={currentUser?.id || ''}
-            onChange={(e) => switchUser(e.target.value)}
-            className="text-xs bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium"
+        {/* Authenticated User Profile Menu */}
+        <div className="relative pl-2 border-l border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => {
+              setIsProfileMenuOpen(!isProfileMenuOpen);
+              setIsNotifOpen(false);
+            }}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
           >
-            {availablePersonas.map((p) => (
-              <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-                {language === 'am' ? p.fullNameAm : p.fullNameEn} ({p.role})
-              </option>
-            ))}
-          </select>
+            <div className="w-6 h-6 rounded-md bg-teal-700/10 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 font-bold text-[11px] flex items-center justify-center">
+              {(currentUser?.fullNameEn || 'U').slice(0, 2).toUpperCase()}
+            </div>
+            <div className="hidden md:block leading-tight">
+              <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                {language === 'am' ? currentUser?.fullNameAm : currentUser?.fullNameEn}
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1">
+                <span>{currentUser?.role}</span>
+                {session?.mfaVerified && (
+                  <span className="text-emerald-600 dark:text-emerald-400">· MFA</span>
+                )}
+              </div>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {isProfileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden text-xs py-1">
+              <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  {currentUser?.fullNameEn}
+                </div>
+                <div className="font-mono text-[11px] text-slate-500 truncate">
+                  @{currentUser?.username} · {currentUser?.role}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openSecurityTab('profile')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                <span>My Profile</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openSecurityTab('password')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-slate-400" />
+                <span>Change Password</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openSecurityTab('security')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                <span>Security Settings & Sessions</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openSecurityTab('delegation')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <Users className="w-3.5 h-3.5 text-slate-400" />
+                <span>Acting Delegation</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openSecurityTab('history')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <History className="w-3.5 h-3.5 text-slate-400" />
+                <span>Login History</span>
+              </button>
+
+              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full px-3.5 py-2 text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold flex items-center gap-2.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Secure Logout</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Primary CTA: Register Document */}
@@ -224,15 +321,22 @@ export const Header: React.FC = () => {
         </button>
       </div>
 
-      {/* Header Biometric Sensor Test & Enrollment Modal */}
+      {/* Header Biometric Sensor Test & Step-Up Elevation Modal */}
       <BiometricVerificationModal
         isOpen={isBiometricTestOpen}
         onClose={() => setIsBiometricTestOpen(false)}
         onVerified={() => setIsBiometricTestOpen(false)}
-        documentTitle="EPSS Staff Biometric Security Enrollment & FIDO2 Diagnostics"
-        registrationNumber={`STAFF-${currentUser?.id?.toUpperCase() || 'USER'}`}
+        documentTitle="EPSS Staff Biometric Security Enrollment & MFA Session Step-Up"
+        registrationNumber={`STAFF-${currentUser?.username?.toUpperCase() || 'USER'}`}
         confidentialityLevel="Secret"
-        actionReason="Staff Identity Verification & Biometric Sensor Readiness"
+        actionReason="Staff Identity Verification & Session MFA Elevation"
+      />
+
+      {/* User Account Profile & Security Modal */}
+      <UserSecurityModal
+        isOpen={securityModalOpen}
+        initialTab={securityModalTab}
+        onClose={() => setSecurityModalOpen(false)}
       />
     </header>
   );

@@ -360,7 +360,26 @@ export const SEED_DEPARTMENTS: Department[] = [
 
 export const SEED_USERS: User[] = [
   {
+    id: 'usr-admin',
+    username: 'superadmin',
+    fullNameEn: 'System Security Administrator',
+    fullNameAm: 'የስርዓት ደህንነት አስተዳዳሪ',
+    email: 'superadmin@epss.gov.et',
+    role: 'SuperAdmin',
+    branchId: 'br-hq',
+    branchNameEn: 'EPSS Head Office',
+    branchNameAm: 'የኢ.መ.አ.አ ዋና መሥሪያ ቤት',
+    departmentId: 'dept-reg',
+    departmentNameEn: 'ICT & Security Infrastructure Directorate',
+    departmentNameAm: 'የአይሲቲ እና ደህንነት መሠረተ ልማት ዳይሬክቶሬት',
+    position: 'Principal EDRMS Super Administrator',
+    permissions: ['*'],
+    status: 'Active',
+    mfaRequired: true
+  },
+  {
     id: 'usr-dg',
+    username: 'abdulkadir.g',
     fullNameEn: 'Dr. Abdulkadir Gelgelo',
     fullNameAm: 'ዶ/ር አብዱልቃድር ጌልጌሎ',
     email: 'director.general@epss.gov.et',
@@ -372,10 +391,13 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Director General Office',
     departmentNameAm: 'የዋና ዳይሬክተር ጽሕፈት ቤት',
     position: 'Director General / ዋና ዳይሬክተር',
-    permissions: ['*']
+    permissions: ['*'],
+    status: 'Active',
+    mfaRequired: true
   },
   {
     id: 'usr-reg',
+    username: 'selamawit.b',
     fullNameEn: 'Selamawit Bekele',
     fullNameAm: 'ሰላማዊት በቀለ',
     email: 'selamawit.b@epss.gov.et',
@@ -387,10 +409,13 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Central Registry, Documentation & Archive',
     departmentNameAm: 'የማዕከላዊ ሰነድ ምዝገባና ማህደር',
     position: 'Senior Records & Registry Supervisor',
-    permissions: ['read:all', 'create:incoming', 'create:outgoing', 'track:physical', 'manage:archive']
+    permissions: ['read:documents', 'create:documents', 'edit:documents', 'track:physical', 'manage:workspace', 'manage:archive'],
+    status: 'Active',
+    mfaRequired: false
   },
   {
     id: 'usr-proc',
+    username: 'dawit.t',
     fullNameEn: 'Dawit Tefera',
     fullNameAm: 'ዳዊት ተፈራ',
     email: 'dawit.t@epss.gov.et',
@@ -402,10 +427,13 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Procurement Directorate',
     departmentNameAm: 'የግዥ ዳይሬክቶሬት',
     position: 'Director of Pharmaceuticals Procurement',
-    permissions: ['read:all', 'approve:workflow', 'forward:workflow', 'create:outgoing', 'create:memo']
+    permissions: ['read:documents', 'create:documents', 'approve:workflows', 'manage:workspace', 'share:workspace'],
+    status: 'Active',
+    mfaRequired: true
   },
   {
     id: 'usr-store',
+    username: 'hiwot.t',
     fullNameEn: 'Hiwot Tadesse',
     fullNameAm: 'ሕይወት ታደሰ',
     email: 'hiwot.t@epss.gov.et',
@@ -417,10 +445,13 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Storage & Distribution Directorate',
     departmentNameAm: 'የክምችትና ስርጭት ዳይሬክቶሬት',
     position: 'Director of Warehousing & Distribution',
-    permissions: ['read:all', 'approve:workflow', 'forward:workflow', 'create:outgoing', 'create:memo']
+    permissions: ['read:documents', 'create:documents', 'approve:workflows', 'manage:workspace', 'share:workspace'],
+    status: 'Active',
+    mfaRequired: true
   },
   {
     id: 'usr-bm-haw',
+    username: 'yonas.a',
     fullNameEn: 'Yonas Alemu',
     fullNameAm: 'ዮናስ አለሙ',
     email: 'yonas.a@epss.gov.et',
@@ -432,10 +463,13 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Regional Branch Management',
     departmentNameAm: 'የቅርንጫፍ አስተዳደር',
     position: 'Regional Hub Manager',
-    permissions: ['read:branch', 'create:incoming', 'create:outgoing', 'track:physical']
+    permissions: ['read:documents', 'create:documents', 'track:physical', 'manage:workspace'],
+    status: 'Active',
+    mfaRequired: false
   },
   {
     id: 'usr-audit',
+    username: 'tigist.h',
     fullNameEn: 'Tigist Haile',
     fullNameAm: 'ትዕግሥት ኃይሌ',
     email: 'tigist.h@epss.gov.et',
@@ -447,7 +481,9 @@ export const SEED_USERS: User[] = [
     departmentNameEn: 'Internal Audit & Inspection',
     departmentNameAm: 'የውስጥ ኦዲትና ኢንስፔክሽን',
     position: 'Lead Compliance & Document Auditor',
-    permissions: ['read:all', 'read:audit', 'export:reports']
+    permissions: ['read:documents', 'read:audit', 'export:reports'],
+    status: 'Active',
+    mfaRequired: true
   }
 ];
 

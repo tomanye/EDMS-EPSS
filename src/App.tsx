@@ -26,9 +26,17 @@ import { AuditSecurityView } from './components/admin/AuditSecurityView.js';
 import { EnterpriseIntegrationsView } from './components/integrations/EnterpriseIntegrationsView.js';
 import { DocumentDetailModal } from './components/correspondence/DocumentDetailModal.js';
 import { RegisterDocumentModal } from './components/correspondence/RegisterDocumentModal.js';
+import { LoginView } from './components/auth/LoginView.js';
 
 function MainLayout() {
-  const { activeTab, isLoading, documents, setSelectedDocument } = useApp();
+  const {
+    activeTab,
+    isLoading,
+    documents,
+    setSelectedDocument,
+    isAuthenticated,
+    isAuthChecking
+  } = useApp();
 
   // Handle direct QR code scans / verification URLs (?verifyDoc=EPSS%2FIN%2F...)
   React.useEffect(() => {
@@ -46,6 +54,21 @@ function MainLayout() {
       }
     }
   }, [documents, setSelectedDocument]);
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-slate-500 font-mono">Verifying EPSS Security Session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
