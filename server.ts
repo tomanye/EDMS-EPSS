@@ -1,13 +1,14 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import http from 'http';
 import path from 'path';
 import crypto from 'node:crypto';
 import multer from 'multer';
-import { GoogleGenAI } from '@google/genai';
+import { WebSocketServer, WebSocket } from 'ws';
 import { store } from './server/data/store.js';
+import { extractOcrAndSuggestFields } from './server/lib/geminiService.js';
 import { AuthSession, User, UserRole } from './src/types/index.js';
 
 const app = express();
@@ -15,6 +16,14 @@ const port = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(express.json({ limit: '10mb' }));
+
+// Hardened HTTP security headers (iframe-safe for AI Studio preview)
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 const workspaceUpload = multer({
   storage: multer.memoryStorage(),
@@ -96,7 +105,10 @@ const PUBLIC_API_PATHS = new Set([
   '/auth/password-reset/request',
   '/auth/password-reset/dev-inbox',
   '/auth/password-reset/confirm',
-  '/auth/logout'
+  '/auth/logout',
+  '/integrations/inbound/correspondence',
+  '/public/verify',
+  '/public/verify/samples'
 ]);
 
 apiRouter.use((req: AuthedRequest, res: Response, next) => {
@@ -190,7 +202,9 @@ apiRouter.get('/auth/session', (req: AuthedRequest, res: Response) => {
     currentUser: safeUser,
     session: maskedSession,
     roleMatrix: store.getRoleMatrix(),
-    delegations: store.getDelegations(req.authUser)
+    delegations: store.getDelegations(req.authUser),
+    effectivePermissions: store.getEffectivePermissionsForUser(req.authUser.id),
+    enterpriseRoles: store.getEnterpriseRoles()
   });
 });
 
@@ -604,7 +618,8 @@ apiRouter.post('/organizations/branches', (req: AuthedRequest, res: Response) =>
 
     res.status(201).json(branch);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to create branch' });
+    console.error('Create branch failed:', err);
+    res.status(500).json({ error: 'Unable to create branch. Please try again.' });
   }
 });
 
@@ -621,7 +636,8 @@ apiRouter.put('/organizations/branches/:id', (req: AuthedRequest, res: Response)
     }
     res.json(updated);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to update branch' });
+    console.error('Update branch failed:', err);
+    res.status(500).json({ error: 'Unable to update branch. Please try again.' });
   }
 });
 
@@ -667,7 +683,8 @@ apiRouter.post('/organizations/departments', (req: AuthedRequest, res: Response)
 
     res.status(201).json(dept);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to create directorate' });
+    console.error('Create directorate failed:', err);
+    res.status(500).json({ error: 'Unable to create directorate. Please try again.' });
   }
 });
 
@@ -684,7 +701,8 @@ apiRouter.put('/organizations/departments/:id', (req: AuthedRequest, res: Respon
     }
     res.json(updated);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to update directorate' });
+    console.error('Update directorate failed:', err);
+    res.status(500).json({ error: 'Unable to update directorate. Please try again.' });
   }
 });
 
@@ -740,7 +758,8 @@ apiRouter.post('/organizations/users', (req: AuthedRequest, res: Response) => {
 
     res.status(201).json(newUser);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to create user' });
+    console.error('Create user failed:', err);
+    res.status(500).json({ error: 'Unable to create user account. Please verify inputs and try again.' });
   }
 });
 
@@ -757,7 +776,8 @@ apiRouter.put('/organizations/users/:id', (req: AuthedRequest, res: Response) =>
     }
     res.json(updated);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to update user' });
+    console.error('Update user failed:', err);
+    res.status(500).json({ error: 'Unable to update user account. Please try again.' });
   }
 });
 
@@ -781,18 +801,109 @@ apiRouter.get('/correspondence', (req: AuthedRequest, res: Response) => {
     return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
   }
   const { type, branchId, departmentId, status, searchQuery, confidentiality, priority, isArchived, includeDeleted } = req.query;
-  const docs = store.getDocuments({
-    type: type as string,
-    branchId: branchId as string,
-    departmentId: departmentId as string,
-    status: status as string,
-    searchQuery: searchQuery as string,
-    confidentiality: confidentiality as string,
-    priority: priority as string,
-    isArchived: isArchived === 'true' ? true : isArchived === 'false' ? false : undefined,
-    includeDeleted: includeDeleted === 'true'
-  });
+  const docs = store
+    .getDocuments({
+      type: type as string,
+      branchId: branchId as string,
+      departmentId: departmentId as string,
+      status: status as string,
+      searchQuery: searchQuery as string,
+      confidentiality: confidentiality as string,
+      priority: priority as string,
+      isArchived: isArchived === 'true' ? true : isArchived === 'false' ? false : undefined,
+      includeDeleted: includeDeleted === 'true'
+    })
+    .filter(d => store.canAccessDocument(actor, d, req.authSession).allowed);
   res.json(docs);
+});
+
+// Phase 13: Bulk Operations, CSV Batch Intake & Official Transmittal Manifests
+apiRouter.post('/correspondence/bulk-action', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.bulkUpdateCorrespondence(req.body || {}, actor, req.authSession, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.json(outcome.result);
+});
+
+apiRouter.post('/correspondence/bulk-import', async (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
+  const outcome = await store.bulkImportCorrespondence(rows, actor, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.status(201).json(outcome.result);
+});
+
+apiRouter.get('/correspondence/transmittals', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  res.json(store.getTransmittalManifests());
+});
+
+apiRouter.post('/correspondence/transmittals', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.createTransmittalManifest(req.body || {}, actor, req.authSession, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.status(201).json(outcome.manifest);
+});
+
+apiRouter.post('/correspondence/transmittals/:id/dispatch', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.dispatchTransmittalManifest(req.params.id, actor, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.json(outcome.manifest);
+});
+
+apiRouter.post('/correspondence/transmittals/:id/acknowledge', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.acknowledgeTransmittalManifest(req.params.id, actor, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.json(outcome.manifest);
+});
+
+// Phase 14: Official Bilingual Correspondence Templates (must precede /correspondence/:id)
+apiRouter.get('/correspondence/templates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  res.json(store.getCorrespondenceTemplates());
+});
+
+apiRouter.post('/correspondence/templates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.createCorrespondenceTemplate(req.body || {}, actor, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.status(201).json(outcome.template);
+});
+
+apiRouter.delete('/correspondence/templates/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.deleteCorrespondenceTemplate(req.params.id, actor, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error });
+  }
+  res.json({ success: true });
 });
 
 apiRouter.get('/correspondence/:id', (req: AuthedRequest, res: Response) => {
@@ -863,11 +974,11 @@ apiRouter.post('/correspondence', async (req: AuthedRequest, res: Response) => {
     // Verify branch & department exist
     if (branchId) {
       const bExists = store.getBranches().some(b => b.id === branchId);
-      if (!bExists) return res.status(400).json({ error: `Branch ID '${branchId}' does not exist.` });
+      if (!bExists) return res.status(400).json({ error: 'Selected branch or regional hub does not exist.' });
     }
     if (departmentId) {
       const dExists = store.getDepartments().some(d => d.id === departmentId);
-      if (!dExists) return res.status(400).json({ error: `Department ID '${departmentId}' does not exist.` });
+      if (!dExists) return res.status(400).json({ error: 'Selected directorate or department does not exist.' });
     }
 
     // Received date validation (not future date + 1 day buffer)
@@ -879,11 +990,64 @@ apiRouter.post('/correspondence', async (req: AuthedRequest, res: Response) => {
       }
     }
 
+    // Phase 8 Duplicate Detection guard unless explicitly confirmed by user
+    if (!req.body.confirmDuplicate) {
+      const dupCheck = store.checkDuplicateDocuments(
+        {
+          registrationNumber: req.body.registrationNumber,
+          referenceNumber: req.body.referenceNumber,
+          type,
+          subjectEn,
+          subjectAm: cleanSubjectAm,
+          descriptionEn: req.body.descriptionEn,
+          senderOrganization,
+          ocrTextEn: req.body.ocrTextEn || req.body.aiExtracted?.ocrTextEn
+        },
+        actor,
+        req.authSession,
+        clientIp,
+        false
+      );
+      if (dupCheck.hasDuplicates) {
+        return res.status(409).json({
+          error: 'Potential duplicate document detected. Review matching records or confirm override.',
+          duplicates: dupCheck.matches
+        });
+      }
+    }
+
+    const replyToDocumentId = typeof req.body.replyToDocumentId === 'string' ? req.body.replyToDocumentId.trim() : '';
+    if (replyToDocumentId) {
+      const targetDoc = store.getDocumentById(replyToDocumentId);
+      if (!targetDoc || targetDoc.isDeleted) {
+        return res.status(404).json({ error: 'Referenced reply correspondence record could not be found.' });
+      }
+      const targetAccess = store.canAccessDocument(actor, targetDoc, req.authSession);
+      if (!targetAccess.allowed) {
+        return res.status(403).json({ error: targetAccess.reason, mfaNeeded: targetAccess.mfaNeeded });
+      }
+    }
+
     const newDoc = await store.createDocument(req.body, actor, clientIp);
+    if (replyToDocumentId) {
+      store.createDocumentLink(
+        newDoc.id,
+        {
+          targetDocumentId: replyToDocumentId,
+          linkType: req.body.linkType || 'ReplyTo',
+          notes: typeof req.body.replyNotes === 'string' && req.body.replyNotes.trim()
+            ? req.body.replyNotes.trim()
+            : 'Auto-linked on reply correspondence drafting'
+        },
+        actor,
+        req.authSession,
+        clientIp
+      );
+    }
     res.status(201).json(newDoc);
   } catch (error: any) {
     console.error('Error creating correspondence:', error);
-    res.status(500).json({ error: error.message || 'Failed to create document' });
+    res.status(500).json({ error: 'Failed to register correspondence record. Please try again.' });
   }
 });
 
@@ -922,7 +1086,9 @@ apiRouter.put('/correspondence/:id', (req: AuthedRequest, res: Response) => {
     }
     res.json(updated);
   } catch (error: any) {
-    res.status(error.message?.includes('Legal Hold') ? 423 : 500).json({ error: error.message || 'Failed to update document' });
+    const msg = error.message || 'Failed to update document';
+    const status = msg.includes('Legal Hold') ? 423 : msg.includes('SIGNED_LOCK') ? 409 : 500;
+    res.status(status).json({ error: msg, signedLock: msg.includes('SIGNED_LOCK') });
   }
 });
 
@@ -977,6 +1143,12 @@ apiRouter.delete('/correspondence/:id/permanent', (req: AuthedRequest, res: Resp
 apiRouter.post('/correspondence/:id/attachments', (req: AuthedRequest, res: Response) => {
   try {
     const actor = getCurrentUser(req);
+    const existing = store.getDocumentById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Document not found' });
+    const access = store.canAccessDocument(actor, existing, req.authSession);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+    }
     if (!store.hasPermission(actor, 'edit:documents') && !store.hasPermission(actor, 'create:documents')) {
       return res.status(403).json({ error: 'Forbidden: document modification permission required.' });
     }
@@ -1009,6 +1181,12 @@ apiRouter.post('/correspondence/:id/attachments', (req: AuthedRequest, res: Resp
 apiRouter.put('/correspondence/:id/attachments/:attachmentId', (req: AuthedRequest, res: Response) => {
   try {
     const actor = getCurrentUser(req);
+    const existing = store.getDocumentById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Document not found' });
+    const access = store.canAccessDocument(actor, existing, req.authSession);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+    }
     if (!store.hasPermission(actor, 'edit:documents')) {
       return res.status(403).json({ error: 'Forbidden: edit:documents permission required.' });
     }
@@ -1026,6 +1204,12 @@ apiRouter.put('/correspondence/:id/attachments/:attachmentId', (req: AuthedReque
 apiRouter.delete('/correspondence/:id/attachments/:attachmentId', (req: AuthedRequest, res: Response) => {
   try {
     const actor = getCurrentUser(req);
+    const existing = store.getDocumentById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Document not found' });
+    const access = store.canAccessDocument(actor, existing, req.authSession);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+    }
     if (!store.hasPermission(actor, 'edit:documents')) {
       return res.status(403).json({ error: 'Forbidden: edit:documents permission required.' });
     }
@@ -1038,6 +1222,46 @@ apiRouter.delete('/correspondence/:id/attachments/:attachmentId', (req: AuthedRe
   } catch (err: any) {
     res.status(err.message?.includes('Legal Hold') ? 423 : 500).json({ error: err.message || 'Failed to remove attachment' });
   }
+});
+
+// Phase 14: Case Dossier Cross-Document Linking
+apiRouter.get('/correspondence/:id/links', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const outcome = store.getDocumentLinks(req.params.id, actor, req.authSession);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error, mfaNeeded: outcome.mfaNeeded });
+  }
+  res.json(outcome.links || []);
+});
+
+apiRouter.post('/correspondence/:id/links', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.createDocumentLink(
+    req.params.id,
+    {
+      targetDocumentId: req.body?.targetDocumentId,
+      linkType: req.body?.linkType || 'RelatedDossier',
+      notes: req.body?.notes
+    },
+    actor,
+    req.authSession,
+    clientIp
+  );
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error, mfaNeeded: outcome.mfaNeeded });
+  }
+  res.status(201).json(outcome.link);
+});
+
+apiRouter.delete('/correspondence/:id/links/:linkId', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.deleteDocumentLink(req.params.id, req.params.linkId, actor, req.authSession, clientIp);
+  if (!outcome.success) {
+    return res.status(outcome.statusCode || 400).json({ error: outcome.error, mfaNeeded: outcome.mfaNeeded });
+  }
+  res.json({ success: true });
 });
 
 // 4. Workflow Engine (Definitions, Tasks Inbox, Stage Actions, Escalation)
@@ -1467,9 +1691,85 @@ apiRouter.get('/records/certificates', (_req: Request, res: Response) => {
   res.json(store.getDisposalCertificates());
 });
 
-// 7. Executive Analytics & KPIs
-apiRouter.get('/analytics/kpis', (_req: Request, res: Response) => {
-  res.json(store.getExecutiveKpis());
+// 7. Executive Analytics, Management Reporting & Exports
+apiRouter.get('/analytics/kpis', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getExecutiveKpis(actor, req.authSession));
+});
+
+apiRouter.get('/analytics/management', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  const { dateFrom, dateTo, branchId, cluster, departmentId, type, status, confidentiality } = req.query;
+  const report = store.getManagementAnalyticsReport(
+    {
+      dateFrom: typeof dateFrom === 'string' && dateFrom ? dateFrom : undefined,
+      dateTo: typeof dateTo === 'string' && dateTo ? dateTo : undefined,
+      branchId: typeof branchId === 'string' && branchId ? branchId : undefined,
+      cluster: typeof cluster === 'string' && cluster ? (cluster as any) : undefined,
+      departmentId: typeof departmentId === 'string' && departmentId ? departmentId : undefined,
+      type: typeof type === 'string' && type ? (type as any) : undefined,
+      status: typeof status === 'string' && status ? (status as any) : undefined,
+      confidentiality: typeof confidentiality === 'string' && confidentiality ? (confidentiality as any) : undefined
+    },
+    actor,
+    req.authSession
+  );
+  res.json(report);
+});
+
+apiRouter.get('/reports/templates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  res.json(store.getSavedReportTemplates());
+});
+
+apiRouter.post('/reports/templates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.saveReportTemplate(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(400).json({ error: result.error });
+  }
+  res.status(201).json(result.template);
+});
+
+apiRouter.delete('/reports/templates/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.deleteReportTemplate(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.get('/reports/exports', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  res.json(store.getReportExportHistory(actor));
+});
+
+apiRouter.post('/reports/export', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.exportManagementReport(req.body || {}, actor, req.authSession, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({
+    success: true,
+    exportRecord: result.exportRecord,
+    filename: result.filename,
+    mimeType: result.mimeType,
+    content: result.content
+  });
 });
 
 // 8. Audit Logs
@@ -1481,9 +1781,16 @@ apiRouter.get('/audit/logs', (req: AuthedRequest, res: Response) => {
   res.json(store.getAuditLogs());
 });
 
-// 9. Notifications (SignalR / Live Dispatch Queue)
-apiRouter.get('/notifications', (_req: Request, res: Response) => {
-  res.json(store.getNotifications());
+// 9. Notifications, Real-Time Push, Templates, Preferences & Escalation Rules
+apiRouter.get('/notifications', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getNotifications(actor));
+});
+
+apiRouter.post('/notifications/read-all', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const count = store.markAllNotificationsRead(actor);
+  res.json({ success: true, count });
 });
 
 apiRouter.post('/notifications/:id/read', (req: Request, res: Response) => {
@@ -1491,15 +1798,156 @@ apiRouter.post('/notifications/:id/read', (req: Request, res: Response) => {
   res.json({ success });
 });
 
-// 10. Enterprise Integration Connectors (SAP S/4HANA, Active Directory, SMS, EFDA)
+apiRouter.get('/notifications/config', (_req: Request, res: Response) => {
+  res.json(store.getNotificationConfig());
+});
+
+apiRouter.put('/notifications/config', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateNotificationConfig(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.config);
+});
+
+apiRouter.get('/notifications/templates', (_req: Request, res: Response) => {
+  res.json({
+    templates: store.getNotificationTemplates(),
+    requiredPlaceholders: store.getRequiredPlaceholdersMap(),
+    config: store.getNotificationConfig()
+  });
+});
+
+apiRouter.post('/notifications/templates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.saveNotificationTemplate(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.template);
+});
+
+apiRouter.put('/notifications/templates/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.saveNotificationTemplate(
+    { ...(req.body || {}), id: req.params.id },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.template);
+});
+
+apiRouter.get('/notifications/preferences', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getUserNotificationPreferences(actor));
+});
+
+apiRouter.put('/notifications/preferences', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateUserNotificationPreferences(actor.id, req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.preferences);
+});
+
+apiRouter.put('/notifications/preferences/:userId', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateUserNotificationPreferences(
+    req.params.userId,
+    req.body || {},
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.preferences);
+});
+
+apiRouter.get('/notifications/escalation-rules', (_req: Request, res: Response) => {
+  res.json(store.getEscalationRules());
+});
+
+apiRouter.post('/notifications/escalation-rules', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createEscalationRule(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.rule);
+});
+
+apiRouter.put('/notifications/escalation-rules/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateEscalationRule(req.params.id, req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.rule);
+});
+
+apiRouter.delete('/notifications/escalation-rules/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.deleteEscalationRule(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.post('/notifications/escalations/evaluate', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const outcome = store.evaluateEscalationRules(actor, clientIp);
+  res.json(outcome);
+});
+
+apiRouter.get('/notifications/delivery-logs', (_req: Request, res: Response) => {
+  res.json(store.getNotificationDeliveryLogs());
+});
+
+apiRouter.post('/notifications/test-dispatch', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.sendTestDispatch(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error, log: result.log });
+  }
+  res.json({ success: true, log: result.log });
+});
+
+// 10. Enterprise Integration Connectors, HMAC-SHA256 Webhooks, Scoped API Keys & Inbound Gateway
 apiRouter.get('/integrations/connectors', (_req: Request, res: Response) => {
   res.json(store.getConnectors());
+});
+
+apiRouter.put('/integrations/connectors/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateConnectorConfig(req.params.id, req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.connector);
 });
 
 apiRouter.post('/integrations/connectors/:id/test', (req: AuthedRequest, res: Response) => {
   const actor = getCurrentUser(req);
   const clientIp = req.ip || '127.0.0.1';
-  const updated = store.testConnector(req.params.id);
+  const updated = store.testConnector(req.params.id, actor.fullNameEn);
   if (!updated) {
     return res.status(404).json({ error: 'Connector not found' });
   }
@@ -1513,10 +1961,185 @@ apiRouter.post('/integrations/connectors/:id/test', (req: AuthedRequest, res: Re
     resourceType: 'IntegrationConnector',
     resourceId: updated.id,
     ipAddress: clientIp,
-    details: `Endpoint ${updated.endpoint} ping verified: ${updated.pingLatencyMs}ms`
+    details:
+      updated.status === 'Connected'
+        ? `Endpoint ${updated.endpoint} ping verified: ${updated.pingLatencyMs}ms`
+        : `Endpoint ${updated.endpoint} diagnostic failed: ${updated.lastError || 'Offline'}`
   });
 
   res.json(updated);
+});
+
+apiRouter.post('/integrations/connectors/:id/exchange', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.dispatchConnectorExchange(
+    req.params.id,
+    req.body || {},
+    actor,
+    req.authSession,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json({
+    exchange: result.exchange,
+    connector: result.connector
+  });
+});
+
+apiRouter.get('/integrations/exchanges', (_req: Request, res: Response) => {
+  res.json(store.getConnectorExchangeLogs());
+});
+
+apiRouter.get('/integrations/webhooks', (_req: Request, res: Response) => {
+  res.json(store.getWebhookSubscriptions());
+});
+
+apiRouter.post('/integrations/webhooks', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createWebhookSubscription(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json({
+    subscription: result.subscription,
+    oneTimeSecret: result.oneTimeSecret
+  });
+});
+
+apiRouter.patch('/integrations/webhooks/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const isActive = Boolean(req.body?.isActive);
+  const result = store.toggleWebhookSubscription(req.params.id, isActive, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.subscription);
+});
+
+apiRouter.delete('/integrations/webhooks/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.deleteWebhookSubscription(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.post('/integrations/webhooks/:id/test', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const simulateFailure = Boolean(req.body?.simulateFailure);
+  const result = store.testWebhookSubscription(req.params.id, simulateFailure, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ delivery: result.delivery });
+});
+
+apiRouter.get('/integrations/webhooks/deliveries', (_req: Request, res: Response) => {
+  res.json(store.getWebhookDeliveryLogs());
+});
+
+apiRouter.post('/integrations/webhooks/deliveries/:id/retry', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.retryWebhookDelivery(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ delivery: result.delivery });
+});
+
+apiRouter.get('/integrations/api-keys', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getIntegrationApiKeys(actor));
+});
+
+apiRouter.post('/integrations/api-keys', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createIntegrationApiKey(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json({
+    apiKey: result.apiKey,
+    oneTimePlaintextKey: result.oneTimePlaintextKey
+  });
+});
+
+apiRouter.post('/integrations/api-keys/:id/revoke', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.revokeIntegrationApiKey(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.apiKey);
+});
+
+apiRouter.post('/integrations/inbound/correspondence', async (req: Request, res: Response) => {
+  const headerKey = req.headers['x-epss-api-key'];
+  const authHeader = req.headers.authorization;
+  let rawKey = typeof headerKey === 'string' ? headerKey.trim() : '';
+  if (!rawKey && typeof authHeader === 'string' && authHeader.startsWith('ApiKey ')) {
+    rawKey = authHeader.slice(7).trim();
+  }
+
+  const authCheck = store.authenticateIntegrationApiKey(rawKey, 'correspondence:ingest');
+  if (!authCheck.valid || !authCheck.keyRecord) {
+    return res.status(authCheck.statusCode || 401).json({ error: authCheck.error || 'Unauthorized' });
+  }
+
+  const clientIp = req.ip || '127.0.0.1';
+  const result = await store.ingestInboundCorrespondenceViaApiKey(
+    authCheck.keyRecord,
+    req.body || {},
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+
+  res.status(201).json({
+    success: true,
+    document: result.document,
+    ingestedViaKey: authCheck.keyRecord.keyPrefix
+  });
+});
+
+// 10b. Public External Document Authenticity & QR Verification Portal (Zero-Confidentiality-Leakage)
+const publicVerifyRateWindow = new Map<string, number[]>();
+
+apiRouter.get('/public/verify/samples', (_req: Request, res: Response) => {
+  res.json(store.getPublicVerificationSamples());
+});
+
+apiRouter.get('/public/verify', (req: Request, res: Response) => {
+  const clientIp = req.ip || '127.0.0.1';
+  const now = Date.now();
+  const hits = (publicVerifyRateWindow.get(clientIp) || []).filter(ts => now - ts < 60_000);
+  if (hits.length >= 40) {
+    return res.status(429).json({
+      error: 'Verification rate limit exceeded (40 lookups per minute). Please try again shortly.'
+    });
+  }
+  hits.push(now);
+  publicVerifyRateWindow.set(clientIp, hits);
+
+  const docQuery = typeof req.query.doc === 'string' ? req.query.doc : '';
+  const sealQuery = typeof req.query.seal === 'string' ? req.query.seal : undefined;
+  const outcome = store.verifyDocumentPublicly(docQuery, sealQuery, clientIp);
+  if (!outcome.found || !outcome.result) {
+    return res.status(404).json({ error: outcome.error || 'Document not found.' });
+  }
+  res.json(outcome.result);
 });
 
 // 11. Backup & Disaster Recovery (Section 10 & 14)
@@ -1583,73 +2206,215 @@ apiRouter.post('/admin/restore', (req: AuthedRequest, res: Response) => {
   res.json(result);
 });
 
-// 9. AI Document Processing & Summarization (Gemini API)
-apiRouter.post('/ai/analyze-document', async (req: Request, res: Response) => {
-  const { documentText, subject } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
+// 9. Phase 8: Advanced Search (Bilingual + Amharic), Saved Searches, OCR/AI & Duplicate Detection
+apiRouter.get('/search', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.searchDocuments(
+    {
+      query: typeof req.query.q === 'string' ? req.query.q : undefined,
+      type: typeof req.query.type === 'string' ? req.query.type : undefined,
+      branchId: typeof req.query.branchId === 'string' ? req.query.branchId : undefined,
+      departmentId: typeof req.query.departmentId === 'string' ? req.query.departmentId : undefined,
+      status: typeof req.query.status === 'string' ? req.query.status : undefined,
+      priority: typeof req.query.priority === 'string' ? req.query.priority : undefined,
+      confidentiality: typeof req.query.confidentiality === 'string' ? req.query.confidentiality : undefined,
+      dateFrom: typeof req.query.dateFrom === 'string' ? req.query.dateFrom : undefined,
+      dateTo: typeof req.query.dateTo === 'string' ? req.query.dateTo : undefined,
+      hasAttachmentsOnly: req.query.hasAttachmentsOnly === 'true',
+      legalHoldOnly: req.query.legalHoldOnly === 'true'
+    },
+    actor,
+    req.authSession,
+    clientIp,
+    req.query.audit === 'true'
+  );
+  res.json(result);
+});
 
-  if (apiKey && documentText) {
+apiRouter.post('/search', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.searchDocuments(
+    req.body?.filters || req.body || {},
+    actor,
+    req.authSession,
+    clientIp,
+    Boolean(req.body?.audit)
+  );
+  res.json(result);
+});
+
+apiRouter.get('/search/saved', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getSavedSearches(actor));
+});
+
+apiRouter.post('/search/saved', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createSavedSearch(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.savedSearch);
+});
+
+apiRouter.delete('/search/saved/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.deleteSavedSearch(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.get('/ai/config', (_req: AuthedRequest, res: Response) => {
+  res.json(store.getAiSearchConfig());
+});
+
+apiRouter.put('/ai/config', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateAiSearchConfig(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.config);
+});
+
+apiRouter.post(
+  '/ai/ocr-extract',
+  workspaceUpload.single('file'),
+  async (req: AuthedRequest, res: Response) => {
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are the AI Document Classifier for the Ethiopian Pharmaceutical Supply Service (EPSS).
-Analyze the following official Ethiopian healthcare / pharmaceutical correspondence text:
-"${documentText}" (Subject: "${subject || ''}")
+      const actor = getCurrentUser(req);
+      if (!store.hasPermission(actor, 'create:documents') && !store.hasPermission(actor, 'read:documents')) {
+        return res.status(403).json({ error: 'Forbidden: document intelligence access denied.' });
+      }
+      const clientIp = req.ip || '127.0.0.1';
+      const file = req.file;
+      const rawText = typeof req.body?.rawText === 'string' ? req.body.rawText : '';
+      const subjectHint = typeof req.body?.subject === 'string' ? req.body.subject : '';
 
-Provide a JSON response with:
-1. "summaryEn": A 2-sentence executive summary in English.
-2. "summaryAm": A 2-sentence executive summary in Amharic (አማርኛ).
-3. "suggestedCategory": e.g. "Regulatory Clearance", "Emergency Drug Supply", "Procurement Tender", "Quality Assurance", or "Administrative".
-4. "suggestedDepartment": The best matching EPSS Directorate (e.g. "Pharmaceuticals Procurement Directorate", "Storage & Distribution Directorate", "Quality Assurance Directorate", or "Finance Directorate").
-5. "confidence": Number between 0.85 and 0.99.
+      if (!file && !rawText.trim() && !subjectHint.trim()) {
+        return res.status(400).json({ error: 'Provide a scanned file (PDF/Image/TXT) or raw document text for OCR extraction.' });
+      }
 
-Output ONLY valid JSON.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json'
+      if (file) {
+        const allowedMimes = [
+          'application/pdf',
+          'image/png',
+          'image/jpeg',
+          'image/webp',
+          'image/tiff',
+          'text/plain'
+        ];
+        if (!allowedMimes.includes(file.mimetype)) {
+          return res.status(400).json({ error: `Unsupported file format '${file.mimetype}' for OCR.` });
         }
+        if (file.size > 20 * 1024 * 1024) {
+          return res.status(400).json({ error: 'OCR file size cannot exceed 20 MB.' });
+        }
+      }
+
+      const aiCfg = store.getAiSearchConfig();
+      const extraction = await extractOcrAndSuggestFields({
+        fileBuffer: file?.buffer,
+        mimeType: file?.mimetype,
+        fileName: file?.originalname || req.body?.fileName,
+        rawText,
+        subjectHint,
+        departments: store.getDepartments(),
+        thresholdUsed: aiCfg.ocrConfidenceThreshold,
+        enableGeminiExtraction: aiCfg.enableGeminiExtraction
       });
 
-      const responseText = response.text || '';
-      try {
-        const parsed = JSON.parse(responseText);
-        return res.json(parsed);
-      } catch {
-        // Fallback to text parsing
-      }
-    } catch (err) {
-      console.warn('Gemini API call failed, falling back to intelligent rule-based extraction:', err);
+      store.recordAiAudit(
+        actor,
+        clientIp,
+        'AI_OCR_EXTRACTED',
+        extraction.extractionId,
+        `OCR+AI extraction (${extraction.modelUsed}, lang=${extraction.detectedLanguage}, conf=${Math.round(extraction.ocrConfidence * 100)}%, flagged=${extraction.lowConfidenceFlagged})`
+      );
+
+      res.json(extraction);
+    } catch (error: any) {
+      console.error('OCR extraction failed:', error);
+      res.status(500).json({ error: 'OCR and AI extraction service is temporarily unavailable.' });
     }
   }
+);
 
-  // Fallback intelligent classification based on healthcare keywords
-  const text = ((documentText || '') + ' ' + (subject || '')).toLowerCase();
-  let category = 'Pharmaceutical Supply Correspondence';
-  let department = 'Storage & Distribution Directorate';
+apiRouter.post('/ai/analyze-document', async (req: AuthedRequest, res: Response) => {
+  try {
+    const actor = getCurrentUser(req);
+    const clientIp = req.ip || '127.0.0.1';
+    const { documentText, subject } = req.body || {};
 
-  if (text.includes('tender') || text.includes('procure') || text.includes('bid') || text.includes('award') || text.includes('supplier')) {
-    category = 'Procurement & Tender Contract';
-    department = 'Pharmaceuticals Procurement Directorate';
-  } else if (text.includes('clearance') || text.includes('efda') || text.includes('quality') || text.includes('lab') || text.includes('batch')) {
-    category = 'Regulatory & Batch Clearance';
-    department = 'Quality Assurance Directorate';
-  } else if (text.includes('emergency') || text.includes('outbreak') || text.includes('cholera') || text.includes('malaria') || text.includes('urgent')) {
-    category = 'Emergency Healthcare Response';
-    department = 'Storage & Distribution Directorate';
-  } else if (text.includes('budget') || text.includes('payment') || text.includes('fund') || text.includes('invoice')) {
-    category = 'Financial & Fund Allocation';
-    department = 'Fund Management & Finance Directorate';
+    if (!documentText && !subject) {
+      return res.status(400).json({ error: 'Document text or subject is required for analysis.' });
+    }
+
+    const aiCfg = store.getAiSearchConfig();
+    const extraction = await extractOcrAndSuggestFields({
+      rawText: documentText || '',
+      subjectHint: subject || '',
+      departments: store.getDepartments(),
+      thresholdUsed: aiCfg.ocrConfidenceThreshold,
+      enableGeminiExtraction: aiCfg.enableGeminiExtraction
+    });
+
+    store.recordAiAudit(
+      actor,
+      clientIp,
+      'AI_DOCUMENT_ANALYZED',
+      extraction.extractionId,
+      `Analyzed correspondence snippet (${extraction.modelUsed}, category="${extraction.suggestedCategory}", dept="${extraction.suggestedDepartment}", conf=${Math.round(extraction.ocrConfidence * 100)}%)`
+    );
+
+    res.json({
+      ...extraction,
+      confidence: extraction.ocrConfidence
+    });
+  } catch (error: any) {
+    console.error('AI document analysis failed:', error);
+    res.status(500).json({ error: 'AI document analysis could not be completed. Please try again.' });
   }
+});
 
-  res.json({
-    summaryEn: `Official correspondence concerning ${subject || 'EPSS pharmaceutical operations'}. Priority routing recommended to ${department}.`,
-    summaryAm: `የኢ.መ.አ.አ መድኃኒት አቅርቦት ሥራዎችን የተመለከተ ይፋዊ ደብዳቤ። ጉዳዩ ለ${department} እንዲመራ ይመከራል።`,
-    suggestedCategory: category,
-    suggestedDepartment: department,
-    confidence: 0.94
-  });
+apiRouter.post('/ai/verify-suggestion', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { extractionId, acceptedFields, editedByHuman, outcome } = req.body || {};
+  store.recordAiAudit(
+    actor,
+    clientIp,
+    outcome === 'discarded' ? 'AI_SUGGESTION_DISCARDED' : 'AI_SUGGESTION_VERIFIED',
+    String(extractionId || 'ocr-draft'),
+    `Human verification (${outcome || 'accepted'}): fields=[${Array.isArray(acceptedFields) ? acceptedFields.join(', ') : ''}], humanEdited=${Boolean(editedByHuman)}`
+  );
+  res.json({ success: true });
+});
+
+apiRouter.post('/documents/check-duplicates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.checkDuplicateDocuments(
+    req.body || {},
+    actor,
+    req.authSession,
+    clientIp,
+    true
+  );
+  res.json(result);
 });
 
 // 12. Phase 2: Google Drive-like Workspace API
@@ -1667,9 +2432,14 @@ apiRouter.get('/workspace/items', (req: Request, res: Response) => {
 });
 
 apiRouter.get('/workspace/items/:id', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
   const item = store.getWorkspaceItemById(req.params.id);
   if (!item) {
     return res.status(404).json({ error: 'Workspace item not found' });
+  }
+  const access = store.canAccessWorkspaceItem(actor, item, 'read');
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason });
   }
   const breadcrumbs = store.getWorkspaceBreadcrumbs(item.parentId);
   res.json({ item, breadcrumbs });
@@ -1677,6 +2447,9 @@ apiRouter.get('/workspace/items/:id', (req: Request, res: Response) => {
 
 apiRouter.post('/workspace/folders', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'workspace.create_folder')) {
+    return res.status(403).json({ error: 'Forbidden: workspace.create_folder permission required.' });
+  }
   const clientIp = req.ip || '127.0.0.1';
   const { name, parentId } = req.body;
   const result = store.createWorkspaceFolder(name, parentId || null, actor, clientIp);
@@ -1687,6 +2460,10 @@ apiRouter.post('/workspace/folders', (req: Request, res: Response) => {
 });
 
 apiRouter.post('/workspace/upload', (req: Request, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'workspace.upload')) {
+    return res.status(403).json({ error: 'Forbidden: workspace.upload permission required.' });
+  }
   workspaceUpload.array('files', 20)(req, res, (err: any) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -1695,7 +2472,6 @@ apiRouter.post('/workspace/upload', (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message || 'Multipart upload failed.' });
     }
 
-    const actor = getCurrentUser(req);
     const clientIp = req.ip || '127.0.0.1';
     const files = (req.files as Express.Multer.File[]) || [];
 
@@ -1762,6 +2538,10 @@ apiRouter.get('/workspace/items/:id/download', (req: Request, res: Response) => 
   if (!item || item.itemType !== 'file') {
     return res.status(404).json({ error: 'File not found' });
   }
+  const dlAccess = store.canAccessWorkspaceItem(actor, item, 'download');
+  if (!dlAccess.allowed) {
+    return res.status(403).json({ error: dlAccess.reason });
+  }
   if (item.virusScanStatus !== 'Clean') {
     return res.status(403).json({ error: 'File is quarantined or pending malware scan and cannot be accessed.' });
   }
@@ -1803,6 +2583,10 @@ apiRouter.get('/workspace/items/:id/download', (req: Request, res: Response) => 
 
 apiRouter.put('/workspace/items/:id/rename', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'write');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const clientIp = req.ip || '127.0.0.1';
   const result = store.renameWorkspaceItem(req.params.id, req.body.name, actor, clientIp);
   if (!result.success) {
@@ -1813,6 +2597,10 @@ apiRouter.put('/workspace/items/:id/rename', (req: Request, res: Response) => {
 
 apiRouter.post('/workspace/items/:id/move', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'write');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const clientIp = req.ip || '127.0.0.1';
   const targetParentId = req.body.targetParentId && req.body.targetParentId !== 'null' ? req.body.targetParentId : null;
   const result = store.moveWorkspaceItem(req.params.id, targetParentId, actor, clientIp);
@@ -1824,6 +2612,10 @@ apiRouter.post('/workspace/items/:id/move', (req: Request, res: Response) => {
 
 apiRouter.post('/workspace/items/:id/star', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'read');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const updated = store.toggleStarWorkspaceItem(req.params.id, actor);
   if (!updated) {
     return res.status(404).json({ error: 'Workspace item not found' });
@@ -1833,6 +2625,10 @@ apiRouter.post('/workspace/items/:id/star', (req: Request, res: Response) => {
 
 apiRouter.post('/workspace/items/:id/trash', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'write');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const clientIp = req.ip || '127.0.0.1';
   const updated = store.trashWorkspaceItem(req.params.id, actor, clientIp);
   if (!updated) {
@@ -1843,6 +2639,10 @@ apiRouter.post('/workspace/items/:id/trash', (req: Request, res: Response) => {
 
 apiRouter.post('/workspace/items/:id/restore', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'write');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const clientIp = req.ip || '127.0.0.1';
   const result = store.restoreWorkspaceItem(req.params.id, actor, clientIp);
   if (!result.success) {
@@ -1863,6 +2663,12 @@ apiRouter.delete('/workspace/items/:id/permanent', (req: Request, res: Response)
 
 apiRouter.post('/workspace/items/:id/share', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'share');
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason });
+  }
   const clientIp = req.ip || '127.0.0.1';
   const result = store.shareWorkspaceItem(req.params.id, req.body, actor, clientIp);
   if (!result.success) {
@@ -1873,6 +2679,12 @@ apiRouter.post('/workspace/items/:id/share', (req: Request, res: Response) => {
 
 apiRouter.delete('/workspace/items/:id/share/:shareId', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'share');
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason });
+  }
   const clientIp = req.ip || '127.0.0.1';
   const updated = store.removeShareWorkspaceItem(req.params.id, req.params.shareId, actor, clientIp);
   if (!updated) {
@@ -1883,6 +2695,10 @@ apiRouter.delete('/workspace/items/:id/share/:shareId', (req: Request, res: Resp
 
 apiRouter.post('/workspace/items/:id/versions/:versionNumber/restore', (req: Request, res: Response) => {
   const actor = getCurrentUser(req);
+  const item = store.getWorkspaceItemById(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Workspace item not found' });
+  const access = store.canAccessWorkspaceItem(actor, item, 'write');
+  if (!access.allowed) return res.status(403).json({ error: access.reason });
   const clientIp = req.ip || '127.0.0.1';
   const verNum = Number(req.params.versionNumber);
   if (Number.isNaN(verNum)) {
@@ -1895,7 +2711,343 @@ apiRouter.post('/workspace/items/:id/versions/:versionNumber/restore', (req: Req
   res.json(result.item);
 });
 
+// =========================================================================
+// PHASE 9: PKI SIGNING CERTIFICATES & CRYPTOGRAPHIC VERIFICATION API
+// =========================================================================
+
+apiRouter.get('/pki/certificates', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  res.json(store.getSigningCertificates(actor));
+});
+
+apiRouter.post('/pki/certificates/issue', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { targetUserId, reason } = req.body || {};
+  const result = store.issueSigningCertificate(targetUserId, actor, clientIp, reason);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.certificate);
+});
+
+apiRouter.post('/pki/certificates/:id/revoke', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { reason } = req.body || {};
+  const result = store.revokeSigningCertificate(req.params.id, reason || '', actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.certificate);
+});
+
+apiRouter.get('/correspondence/:id/signatures/verify', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const recordAudit = req.query.audit !== 'false';
+  const verification = store.verifyDocumentSignatures(doc.id, actor, clientIp, recordAudit);
+  if (!verification) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  res.json(verification);
+});
+
+apiRouter.post('/correspondence/:id/sign', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.signDocumentDirectly(doc.id, req.body || {}, actor, req.authSession, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({
+      error: result.error,
+      mfaNeeded: result.mfaNeeded
+    });
+  }
+  res.json({ document: result.document, signature: result.signature });
+});
+
+// =========================================================================
+// PHASE 13: ENTERPRISE ROLE MANAGEMENT, ABAC, SoD & AUTH POLICY API
+// =========================================================================
+
+apiRouter.get('/auth/policy', (req: AuthedRequest, res: Response) => {
+  res.json(store.getAuthPolicy());
+});
+
+apiRouter.put('/auth/policy', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { reason, ...updates } = req.body || {};
+  const result = store.updateAuthPolicy(updates, actor, reason, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.policy);
+});
+
+apiRouter.get('/rbac/permissions', (_req: Request, res: Response) => {
+  res.json(store.getPermissionCatalogue());
+});
+
+apiRouter.post('/rbac/permissions', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createCustomPermission(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.permission);
+});
+
+apiRouter.get('/rbac/permission-sets', (_req: Request, res: Response) => {
+  res.json(store.getPermissionSets());
+});
+
+apiRouter.post('/rbac/permission-sets', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createPermissionSet(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.permissionSet);
+});
+
+apiRouter.get('/rbac/roles', (_req: Request, res: Response) => {
+  res.json(store.getEnterpriseRoles());
+});
+
+apiRouter.post('/rbac/roles', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createEnterpriseRole(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.role);
+});
+
+apiRouter.put('/rbac/roles/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updateEnterpriseRole(req.params.id, req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.role);
+});
+
+apiRouter.post('/rbac/roles/:id/clone', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.cloneEnterpriseRole(req.params.id, req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.role);
+});
+
+apiRouter.post('/rbac/roles/:id/status', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { status, reason } = req.body || {};
+  const result = store.setEnterpriseRoleStatus(req.params.id, status, reason, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.role);
+});
+
+apiRouter.get('/rbac/roles/:id/export', (req: AuthedRequest, res: Response) => {
+  const role = store.getEnterpriseRoles().find(r => r.id === req.params.id || r.code === req.params.id);
+  if (!role) return res.status(404).json({ error: 'Role not found' });
+  res.json(role);
+});
+
+apiRouter.get('/rbac/effective-permissions/:userId', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const targetId = req.params.userId === 'me' ? actor.id : req.params.userId;
+  res.json(store.getEffectivePermissionsForUser(targetId));
+});
+
+apiRouter.get('/rbac/assignments', (req: AuthedRequest, res: Response) => {
+  const userId = req.query.userId ? String(req.query.userId) : undefined;
+  res.json(store.getUserRoleAssignments(userId));
+});
+
+apiRouter.post('/rbac/assignments', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.assignRoleToUser(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.assignment);
+});
+
+apiRouter.post('/rbac/assignments/bulk', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.bulkAssignRoles(req.body || {}, actor, clientIp);
+  if (!result.success && result.succeededCount === 0) {
+    return res.status(result.statusCode || 400).json({ error: result.error, results: result.results });
+  }
+  res.json(result);
+});
+
+apiRouter.post('/rbac/assignments/:id/decision', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { approve, reason } = req.body || {};
+  const result = store.decideRoleAssignment(req.params.id, !!approve, reason, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.assignment);
+});
+
+apiRouter.delete('/rbac/assignments/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const reason = (req.body?.reason || req.query.reason || '') as string;
+  const result = store.revokeRoleAssignment(req.params.id, reason, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.get('/rbac/sod-rules', (_req: Request, res: Response) => {
+  res.json(store.getSodRules());
+});
+
+apiRouter.post('/rbac/sod-rules', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createSodRule(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.rule);
+});
+
+apiRouter.delete('/rbac/sod-rules/:id', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const reason = (req.body?.reason || req.query.reason || '') as string;
+  const result = store.deleteSodRule(req.params.id, reason, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.get('/rbac/sod-violations', (_req: Request, res: Response) => {
+  res.json(store.getOrganizationSodReport());
+});
+
+apiRouter.get('/rbac/break-glass', (_req: Request, res: Response) => {
+  res.json(store.getBreakGlassElevations());
+});
+
+apiRouter.post('/rbac/break-glass', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createBreakGlassElevation(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.elevation);
+});
+
+apiRouter.post('/rbac/break-glass/:id/revoke', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.revokeBreakGlassElevation(req.params.id, req.body?.reason, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.elevation);
+});
+
+apiRouter.get('/rbac/auto-rules', (_req: Request, res: Response) => {
+  res.json(store.getAutoAssignmentRules());
+});
+
+apiRouter.post('/rbac/auto-rules', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createAutoAssignmentRule(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.rule);
+});
+
+apiRouter.post('/rbac/auto-rules/run', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.runAutoAssignmentRules(actor, clientIp);
+  if (!result.success) {
+    return res.status(403).json({ error: result.summary });
+  }
+  res.json(result);
+});
+
+apiRouter.get('/rbac/access-reviews', (_req: Request, res: Response) => {
+  res.json(store.getAccessReviewCampaigns());
+});
+
+apiRouter.post('/rbac/access-reviews', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createAccessReviewCampaign(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.campaign);
+});
+
+apiRouter.post('/rbac/access-reviews/:campaignId/items/:itemId/decide', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { decision, comment } = req.body || {};
+  const result = store.decideAccessReviewItem(req.params.campaignId, req.params.itemId, decision, comment, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.campaign);
+});
+
 app.use('/api/v1', apiRouter);
+
+// Global API Error Middleware: never expose stack traces or raw internals to clients
+app.use('/api/v1', (err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled API error:', err);
+  if (err?.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+    return res.status(400).json({ error: 'Malformed JSON request payload.' });
+  }
+  if (res.headersSent) return;
+  res.status(err?.statusCode || 500).json({
+    error: 'Unexpected server error. Please try again or contact your system administrator.'
+  });
+});
 
 // Serve Frontend
 async function setupServer() {
@@ -1915,6 +3067,58 @@ async function setupServer() {
   }
 
   const server = http.createServer(app);
+
+  // Real-time WebSocket Push Server on same port (/ws/notifications)
+  const wss = new WebSocketServer({ server, path: '/ws/notifications' });
+  const wsClients = new Map<WebSocket, { userId: string; userRole: UserRole }>();
+
+  wss.on('connection', (ws, req) => {
+    try {
+      const urlObj = new URL(req.url || '/ws/notifications', `http://${req.headers.host || 'localhost'}`);
+      const queryToken = urlObj.searchParams.get('token');
+      const cookies = parseCookies(req.headers.cookie);
+      const token = queryToken || cookies.epss_session || null;
+
+      const validated = token ? store.validateSessionToken(token) : null;
+      if (!validated) {
+        ws.close(4001, 'Unauthorized');
+        return;
+      }
+
+      wsClients.set(ws, { userId: validated.user.id, userRole: validated.user.role });
+      const userNotifications = store.getNotifications(validated.user);
+      ws.send(
+        JSON.stringify({
+          type: 'notifications:init',
+          notifications: userNotifications,
+          unreadCount: userNotifications.filter(n => !n.isRead).length
+        })
+      );
+
+      ws.on('close', () => {
+        wsClients.delete(ws);
+      });
+      ws.on('error', () => {
+        wsClients.delete(ws);
+      });
+    } catch {
+      ws.close(4001, 'Unauthorized');
+    }
+  });
+
+  store.setNotificationBroadcaster((event, payload, targetUserId) => {
+    const message = JSON.stringify({ type: event, payload });
+    for (const [client, meta] of wsClients.entries()) {
+      if (client.readyState !== WebSocket.OPEN) continue;
+      if (targetUserId && targetUserId !== 'ALL' && meta.userId !== targetUserId) continue;
+      try {
+        client.send(message);
+      } catch {
+        // Ignore broken pipe
+      }
+    }
+  });
+
   server.listen(port, () => {
     console.log(`EPSS EDRMS server running on port ${port} in ${isProduction ? 'production' : 'development'} mode.`);
   });

@@ -13,7 +13,10 @@ import {
   Network, 
   ShieldAlert,
   Search,
-  Cpu
+  Cpu,
+  Bell,
+  ShieldCheck,
+  Truck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 
@@ -25,24 +28,27 @@ interface NavItem {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, t, kpis, documents } = useApp();
+  const { activeTab, setActiveTab, t, language, kpis, documents, unreadNotificationsCount } = useApp();
 
   const pendingApprovalsCount = kpis?.pendingApprovals || 0;
   const overdueCount = kpis?.overdueCount || 0;
 
-  const navItems: { section: string; items: NavItem[] }[] = [
+  const navItems: { sectionEn: string; sectionAm: string; items: NavItem[] }[] = [
     {
-      section: 'Operations & Registry',
+      sectionEn: 'Operations & Registry',
+      sectionAm: 'የዕለት ተዕለት ሥራ እና መዝገብ',
       items: [
         { id: 'dashboard', labelKey: 'navDashboard', icon: LayoutDashboard },
         { id: 'incoming', labelKey: 'navIncoming', icon: Inbox, badge: documents.filter(d => d.type === 'IncomingLetter').length },
         { id: 'outgoing', labelKey: 'navOutgoing', icon: Send, badge: documents.filter(d => d.type === 'OutgoingLetter').length },
         { id: 'memos', labelKey: 'navMemos', icon: FileText },
         { id: 'applications', labelKey: 'navApplications', icon: FileCheck2 },
+        { id: 'transmittals', labelKey: 'navTransmittals', icon: Truck },
       ]
     },
     {
-      section: 'Workflows & Custody',
+      sectionEn: 'Workflows & Custody',
+      sectionAm: 'የሥራ ፍሰት እና አካላዊ ክትትል',
       items: [
         { id: 'workflows', labelKey: 'navWorkflows', icon: GitBranch, badge: pendingApprovalsCount },
         { id: 'tracking', labelKey: 'navTracking', icon: PackageSearch },
@@ -51,12 +57,15 @@ export const Sidebar: React.FC = () => {
       ]
     },
     {
-      section: 'Governance & Systems',
+      sectionEn: 'Governance & Systems',
+      sectionAm: 'አስተዳደር እና ሲስተሞች',
       items: [
         { id: 'archives', labelKey: 'navArchives', icon: FolderArchive },
+        { id: 'notifications', labelKey: 'navNotifications', icon: Bell, badge: unreadNotificationsCount },
         { id: 'reports', labelKey: 'navReports', icon: BarChart3 },
         { id: 'organization', labelKey: 'navOrganization', icon: Network },
         { id: 'integrations', labelKey: 'navIntegrations', icon: Cpu },
+        { id: 'verify', labelKey: 'navVerify', icon: ShieldCheck },
         { id: 'security', labelKey: 'navSecurity', icon: ShieldAlert },
       ]
     }
@@ -64,18 +73,20 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shrink-0 min-h-[calc(100vh-4rem)]">
-      <nav className="p-4 space-y-6 flex-1 overflow-y-auto">
+      <nav aria-label={t('mainNavigation')} className="p-4 space-y-6 flex-1 overflow-y-auto">
         {navItems.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
-            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              {group.section}
+            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {language === 'am' ? group.sectionAm : group.sectionEn}
             </div>
             {group.items.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
+                  type="button"
                   key={item.id}
+                  aria-current={isActive ? 'page' : undefined}
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-colors text-left ${
                     isActive
@@ -84,7 +95,7 @@ export const Sidebar: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-500 dark:text-slate-400'}`} />
                     <span className="truncate">{t(item.labelKey)}</span>
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (

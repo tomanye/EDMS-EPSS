@@ -25,22 +25,46 @@ import {
   Save,
   AlertTriangle,
   FilePlus,
-  Paperclip
+  Paperclip,
+  KeyRound,
+  FileKey2,
+  GitBranch,
+  Link2,
+  Unlink
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
+import { apiFetch } from '../../lib/apiFetch.js';
+import { localizeErrorMessage } from '../../lib/localizedErrors.js';
+import { useEscapeKey } from '../../lib/useEscapeKey.js';
 import { 
   generateVerificationQrCode, 
   getDocumentVerificationUrl, 
-  downloadQrCodeImage, 
-  printVerificationCertificate 
+  downloadQrCodeImage
 } from '../../lib/qrVerification.js';
 import { VerificationStatusModal } from '../verification/VerificationStatusModal.js';
 import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 import { Fingerprint, Scan, LockKeyhole } from 'lucide-react';
+import {
+  DocumentLinkType,
+  EnrichedDocumentLink,
+  SigningCertificate
+} from '../../types/index.js';
 
 export const DocumentDetailModal: React.FC = () => {
-  const { selectedDocument, setSelectedDocument, currentUser, session, departments, branches, refreshData, language, t } = useApp();
+  const {
+    selectedDocument,
+    setSelectedDocument,
+    currentUser,
+    session,
+    departments,
+    branches,
+    documents,
+    openRegisterModal,
+    refreshData,
+    language,
+    t
+  } = useApp();
   const [minuteText, setMinuteText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -48,6 +72,17 @@ export const DocumentDetailModal: React.FC = () => {
   const [isBiometricUnlocked, setIsBiometricUnlocked] = useState(false);
   const [liveQrCodeUrl, setLiveQrCodeUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [pendingDeleteAttId, setPendingDeleteAttId] = useState<string | null>(null);
+
+  // Direct PKI Electronic Signing Modal State
+  const [isSignModalOpen, setIsSignModalOpen] = useState(false);
+  const [signMeaning, setSignMeaning] = useState('Executive Counter-Signature & Attestation');
+  const [signComments, setSignComments] = useState('');
+  const [signStepUpPin, setSignStepUpPin] = useState('');
+  const [pendingBioSignRetry, setPendingBioSignRetry] = useState(false);
+  const [myCertificates, setMyCertificates] = useState<SigningCertificate[]>([]);
+  const [isIssuingCert, setIsIssuingCert] = useState(false);
 
   // Edit Document Modal State
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -60,6 +95,8 @@ export const DocumentDetailModal: React.FC = () => {
   const [editConfidentiality, setEditConfidentiality] = useState<any>('Internal');
   const [editDeptId, setEditDeptId] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
+  const [editOverrideSignedLock, setEditOverrideSignedLock] = useState(false);
+  const [editOverrideReason, setEditOverrideReason] = useState('');
 
   // Delete Modals State
   const [isSoftDeleteOpen, setIsSoftDeleteOpen] = useState(false);
@@ -78,6 +115,15 @@ export const DocumentDetailModal: React.FC = () => {
   const [isLegalHoldModalOpen, setIsLegalHoldModalOpen] = useState(false);
   const [legalHoldReasonInput, setLegalHoldReasonInput] = useState('');
   const [legalHoldError, setLegalHoldError] = useState('');
+
+  // Phase 14: Case Dossier Cross-Document Linking State
+  const [documentLinks, setDocumentLinks] = useState<EnrichedDocumentLink[]>([]);
+  const [linksLoading, setLinksLoading] = useState(false);
+  const [isLinkFormOpen, setIsLinkFormOpen] = useState(false);
+  const [linkTargetDocId, setLinkTargetDocId] = useState('');
+  const [linkType, setLinkType] = useState<DocumentLinkType>('RelatedDossier');
+  const [linkNotes, setLinkNotes] = useState('');
+  const [pendingUnlinkId, setPendingUnlinkId] = useState<string | null>(null);
 
   const isSensitiveRecord = selectedDocument?.confidentiality === 'Confidential' || 
     selectedDocument?.confidentiality === 'Secret' || 
@@ -99,39 +145,177 @@ export const DocumentDetailModal: React.FC = () => {
       setEditConfidentiality(selectedDocument.confidentiality || 'Internal');
       setEditDeptId(selectedDocument.departmentId || '');
       setEditDueDate(selectedDocument.dueDate ? selectedDocument.dueDate.split('T')[0] : '');
+      setEditOverrideSignedLock(false);
+      setEditOverrideReason('');
+      setActionFeedback(null);
+      setPendingDeleteAttId(null);
+      setIsLinkFormOpen(false);
+      setLinkTargetDocId('');
+      setLinkNotes('');
+      setPendingUnlinkId(null);
+
+      setLinksLoading(true);
+      apiFetch(`/api/v1/correspondence/${selectedDocument.id}/links`)
+        .then(r => (r.ok ? r.json() : []))
+        .then((rows: EnrichedDocumentLink[]) => {
+          setDocumentLinks(Array.isArray(rows) ? rows : []);
+        })
+        .catch(() => setDocumentLinks([]))
+        .finally(() => setLinksLoading(false));
     }
   }, [selectedDocument, session?.mfaVerified, isSensitiveRecord]);
+
+  useEffect(() => {
+    if (!isSignModalOpen || !currentUser) return;
+    apiFetch('/api/v1/pki/certificates')
+      .then(r => (r.ok ? r.json() : []))
+      .then((list: SigningCertificate[]) => {
+        setMyCertificates(list.filter(c => c.userId === currentUser.id));
+      })
+      .catch(() => {});
+  }, [isSignModalOpen, currentUser?.id]);
+
+  const hasSubModalOpen =
+    isSignModalOpen ||
+    isEditOpen ||
+    isSoftDeleteOpen ||
+    isHardDeleteOpen ||
+    isLegalHoldModalOpen ||
+    isVerificationModalOpen ||
+    isBiometricModalOpen ||
+    isAddAttachmentOpen ||
+    Boolean(editingAttId);
+
+  useEscapeKey(Boolean(editingAttId), () => setEditingAttId(null));
+  useEscapeKey(isAddAttachmentOpen, () => setIsAddAttachmentOpen(false));
+  useEscapeKey(isLegalHoldModalOpen, () => setIsLegalHoldModalOpen(false));
+  useEscapeKey(isHardDeleteOpen, () => setIsHardDeleteOpen(false));
+  useEscapeKey(isSoftDeleteOpen, () => setIsSoftDeleteOpen(false));
+  useEscapeKey(isEditOpen, () => setIsEditOpen(false));
+  useEscapeKey(isSignModalOpen && !isBiometricModalOpen, () => setIsSignModalOpen(false));
+  useEscapeKey(Boolean(selectedDocument) && !hasSubModalOpen, () => setSelectedDocument(null));
 
   if (!selectedDocument) return null;
 
   const doc = selectedDocument;
   const isImmutableRecord = !!doc.legalHold || doc.status === 'Disposed';
+  const activeSignaturesCount = (doc.workflowHistory || []).filter(
+    h => h.digitalSignature && !h.digitalSignature.invalidated
+  ).length;
+  const activeCertificate = myCertificates.find(c => c.status === 'Active') || null;
+  const canSignDoc =
+    !isImmutableRecord &&
+    !doc.isDeleted &&
+    !!currentUser &&
+    (currentUser.role === 'SuperAdmin' ||
+      currentUser.permissions.includes('*') ||
+      currentUser.permissions.includes('approve:workflows') ||
+      currentUser.permissions.includes('edit:documents'));
+
+  const handleIssueMyCert = async () => {
+    setActionFeedback(null);
+    setIsIssuingCert(true);
+    try {
+      const res = await apiFetch('/api/v1/pki/certificates/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Direct document PKI attestation activation' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage(data.error || 'Failed to issue signing certificate.', language)
+        });
+        return;
+      }
+      setMyCertificates(prev => [data, ...prev.map(c => (c.status === 'Active' ? { ...c, status: 'Revoked' as const } : c))]);
+      setActionFeedback({ type: 'success', text: `Issued active PKI certificate ${data.serialNumber}.` });
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Network error while issuing signing certificate.', language)
+      });
+    } finally {
+      setIsIssuingCert(false);
+    }
+  };
+
+  const executeDirectSign = async (biometricVerified = false) => {
+    setActionFeedback(null);
+    try {
+      setIsSubmitting(true);
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/sign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signingMeaning: signMeaning,
+          comments: signComments.trim() || undefined,
+          stepUpPin: signStepUpPin.trim() || undefined,
+          biometricSignatureVerified: biometricVerified
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.mfaNeeded) {
+          setPendingBioSignRetry(true);
+          setIsBiometricModalOpen(true);
+          return;
+        }
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage(data.error || 'Failed to apply PKI signature.', language)
+        });
+        return;
+      }
+      setSelectedDocument(data.document);
+      setIsSignModalOpen(false);
+      setSignComments('');
+      setSignStepUpPin('');
+      setActionFeedback({
+        type: 'success',
+        text: `Cryptographic RSA-SHA256 signature applied (${data.signature?.certificateSerial || 'PKI'}).`
+      });
+      await refreshData();
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Network error while applying PKI digital signature.', language)
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAddMinute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!minuteText.trim()) return;
+    setActionFeedback(null);
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/workflows/${doc.id}/action`, {
+      const res = await apiFetch(`/api/v1/workflows/${doc.id}/action`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'MinuteAdded',
           comments: minuteText
         })
       });
-      if (!res.ok) throw new Error('Failed to record minute');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to record minute');
+      }
       const updated = await res.json();
       setSelectedDocument(updated);
       setMinuteText('');
+      setActionFeedback({ type: 'success', text: 'Official directorate minute recorded.' });
       await refreshData();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to add minute note');
+    } catch (err: any) {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage(err?.message || 'Failed to add minute note.', language)
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -147,18 +331,19 @@ export const DocumentDetailModal: React.FC = () => {
     e.preventDefault();
     setLegalHoldError('');
     if (legalHoldReasonInput.trim().length < 20) {
-      setLegalHoldError('Legal Hold reason must be at least 20 characters.');
+      setLegalHoldError(
+        language === 'am'
+          ? 'የሕግ እገዳ ምክንያት ቢያንስ 20 ፊደላት መሆን አለበት።'
+          : 'Legal Hold reason must be at least 20 characters.'
+      );
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/legal-hold/${doc.id}`, {
+      const res = await apiFetch(`/api/v1/records/legal-hold/${doc.id}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           active: !doc.legalHold,
           reason: legalHoldReasonInput.trim()
@@ -166,7 +351,7 @@ export const DocumentDetailModal: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setLegalHoldError(data.error || 'Failed to update Legal Hold status');
+        setLegalHoldError(localizeErrorMessage(data.error || 'Failed to update Legal Hold status', language));
         return;
       }
       setSelectedDocument(
@@ -179,7 +364,7 @@ export const DocumentDetailModal: React.FC = () => {
       setIsLegalHoldModalOpen(false);
       await refreshData();
     } catch (err: any) {
-      setLegalHoldError(err.message || 'Network error while updating Legal Hold');
+      setLegalHoldError(localizeErrorMessage(err?.message || 'Network error while updating Legal Hold', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -187,20 +372,24 @@ export const DocumentDetailModal: React.FC = () => {
 
   const handleUpdateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionFeedback(null);
     if (!editSubjectEn.trim() || editSubjectEn.trim().length < 5) {
-      alert('Subject (English) must be at least 5 characters');
+      setActionFeedback({
+        type: 'error',
+        text:
+          language === 'am'
+            ? 'ርዕስ (እንግሊዝኛ) ቢያንስ 5 ፊደላት መሆን አለበት።'
+            : 'Subject (English) must be at least 5 characters.'
+      });
       return;
     }
 
     try {
       setIsSubmitting(true);
       const targetDeptObj = departments.find(d => d.id === editDeptId);
-      const res = await fetch(`/api/v1/correspondence/${doc.id}`, {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subjectEn: editSubjectEn,
           subjectAm: editSubjectAm || editSubjectEn,
@@ -211,7 +400,9 @@ export const DocumentDetailModal: React.FC = () => {
           confidentiality: editConfidentiality,
           departmentId: editDeptId || doc.departmentId,
           assignedDepartmentName: targetDeptObj?.nameEn || doc.assignedDepartmentName,
-          dueDate: editDueDate ? new Date(editDueDate).toISOString() : undefined
+          dueDate: editDueDate ? new Date(editDueDate).toISOString() : undefined,
+          overrideSignedLock: editOverrideSignedLock || undefined,
+          editReason: editOverrideReason.trim() || undefined
         })
       });
 
@@ -223,10 +414,13 @@ export const DocumentDetailModal: React.FC = () => {
       const updated = await res.json();
       setSelectedDocument(updated);
       setIsEditOpen(false);
+      setActionFeedback({ type: 'success', text: 'Document metadata updated.' });
       await refreshData();
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Failed to update document metadata');
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage(err?.message || 'Failed to update document metadata.', language)
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -234,29 +428,38 @@ export const DocumentDetailModal: React.FC = () => {
 
   const handleSoftDelete = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionFeedback(null);
     if (!softDeleteReason.trim() || softDeleteReason.trim().length < 10) {
-      alert('Please provide a mandatory cancellation/deletion reason (min 10 characters)');
+      setActionFeedback({
+        type: 'error',
+        text:
+          language === 'am'
+            ? 'እባክዎ የሰነድ መሰረዣ ምክንያት (ቢያንስ 10 ፊደላት) ያስገቡ።'
+            : 'Please provide a mandatory cancellation/deletion reason (min 10 characters).'
+      });
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/correspondence/${doc.id}`, {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: softDeleteReason })
       });
 
-      if (!res.ok) throw new Error('Soft delete failed');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Soft delete failed');
+      }
       setIsSoftDeleteOpen(false);
       setSelectedDocument(null);
       await refreshData();
     } catch (err: any) {
-      console.error(err);
-      alert('Failed to cancel document');
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage(err?.message || 'Failed to cancel document.', language)
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -264,19 +467,22 @@ export const DocumentDetailModal: React.FC = () => {
 
   const handleHardDelete = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionFeedback(null);
     if (hardDeleteConfirmText !== 'DELETE') {
-      alert('Please type DELETE to confirm permanent purge.');
+      setActionFeedback({
+        type: 'error',
+        text:
+          language === 'am'
+            ? 'በቋሚነት ለማጥፋት እባክዎ DELETE ብለው ይጻፉ።'
+            : 'Please type DELETE to confirm permanent purge.'
+      });
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/correspondence/${doc.id}/permanent`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        }
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/permanent`, {
+        method: 'DELETE'
       });
 
       if (!res.ok) {
@@ -287,8 +493,10 @@ export const DocumentDetailModal: React.FC = () => {
       setSelectedDocument(null);
       await refreshData();
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Hard delete failed');
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage(err?.message || 'Hard delete failed.', language)
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -297,15 +505,13 @@ export const DocumentDetailModal: React.FC = () => {
   const handleAddAttachment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAttName.trim()) return;
+    setActionFeedback(null);
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/correspondence/${doc.id}/attachments`, {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/attachments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fileName: newAttName.endsWith('.pdf') ? newAttName : `${newAttName}.pdf`,
           fileSize: 1540000 + Math.floor(Math.random() * 900000),
@@ -321,59 +527,170 @@ export const DocumentDetailModal: React.FC = () => {
       setIsAddAttachmentOpen(false);
       setNewAttName('');
       setNewAttNotes('');
+      setActionFeedback({ type: 'success', text: 'Attachment linked to correspondence dossier.' });
       await refreshData();
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Failed to add attachment');
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage(err?.message || 'Failed to add attachment.', language)
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleUpdateAttachmentNotes = async (attId: string) => {
+    setActionFeedback(null);
     try {
-      const res = await fetch(`/api/v1/correspondence/${doc.id}/attachments/${attId}`, {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/attachments/${attId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: editingAttNotes })
       });
       if (!res.ok) throw new Error('Failed to update notes');
       const updated = await res.json();
       setSelectedDocument(updated);
       setEditingAttId(null);
+      setActionFeedback({ type: 'success', text: 'Attachment notes updated.' });
       await refreshData();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to update attachment notes');
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Failed to update attachment notes.', language)
+      });
     }
   };
 
-  const handleDeleteAttachment = async (attId: string, fileName: string) => {
-    if (!window.confirm(`Are you sure you want to remove attachment "${fileName}"?`)) return;
-
+  const handleDeleteAttachment = async (attId: string) => {
+    setActionFeedback(null);
     try {
-      const res = await fetch(`/api/v1/correspondence/${doc.id}/attachments/${attId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-user-id': currentUser?.id || ''
-        }
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/attachments/${attId}`, {
+        method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to remove attachment');
       const updated = await res.json();
       setSelectedDocument(updated);
+      setPendingDeleteAttId(null);
+      setActionFeedback({ type: 'success', text: 'Attachment removed from record.' });
       await refreshData();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete attachment');
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Failed to delete attachment.', language)
+      });
+    }
+  };
+
+  const canModifyLinks =
+    !doc.isDeleted &&
+    !!currentUser &&
+    (currentUser.role === 'SuperAdmin' ||
+      currentUser.permissions.includes('*') ||
+      currentUser.permissions.includes('edit:documents') ||
+      currentUser.permissions.includes('create:documents'));
+
+  const handleDraftReply = () => {
+    const replyType = doc.type === 'InternalMemo' ? 'InternalMemo' : 'OutgoingLetter';
+    openRegisterModal(replyType, doc);
+    setSelectedDocument(null);
+  };
+
+  const handleCreateDocumentLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkTargetDocId) return;
+    setActionFeedback(null);
+    try {
+      setIsSubmitting(true);
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/links`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetDocumentId: linkTargetDocId,
+          linkType,
+          notes: linkNotes.trim() || undefined
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage(data.error || 'Failed to link correspondence record.', language)
+        });
+        return;
+      }
+      setDocumentLinks(prev => [data, ...prev]);
+      setIsLinkFormOpen(false);
+      setLinkTargetDocId('');
+      setLinkNotes('');
+      setActionFeedback({ type: 'success', text: `Linked dossier record (${linkType}).` });
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Network error while linking correspondence record.', language)
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteDocumentLink = async (linkId: string) => {
+    setActionFeedback(null);
+    try {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/links/${linkId}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage(err.error || 'Failed to unlink record.', language)
+        });
+        return;
+      }
+      setDocumentLinks(prev => prev.filter(item => item.link.id !== linkId));
+      setPendingUnlinkId(null);
+      setActionFeedback({ type: 'success', text: 'Cross-document dossier link removed.' });
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Network error while unlinking record.', language)
+      });
+    }
+  };
+
+  const handleOpenLinkedDocument = async (linkedDocId: string) => {
+    const localDoc = documents.find(d => d.id === linkedDocId);
+    if (localDoc) {
+      setSelectedDocument(localDoc);
+      return;
+    }
+    try {
+      const res = await apiFetch(`/api/v1/correspondence/${linkedDocId}`);
+      if (res.ok) {
+        const fetched = await res.json();
+        setSelectedDocument(fetched);
+      } else {
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage('Unable to open linked record with current clearance.', language)
+        });
+      }
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Failed to load linked correspondence record.', language)
+      });
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-6 max-h-[90vh] flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="doc-detail-modal-title"
+        className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-6 max-h-[90vh] flex flex-col"
+      >
         {/* Modal Top Bar */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/40">
           <div className="flex items-center gap-3">
@@ -382,7 +699,7 @@ export const DocumentDetailModal: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">
+                <span id="doc-detail-modal-title" className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">
                   {doc.registrationNumber}
                 </span>
                 <span className="text-slate-300 dark:text-slate-700">·</span>
@@ -395,12 +712,41 @@ export const DocumentDetailModal: React.FC = () => {
                 </span>
               </div>
               <div className="text-[11px] text-slate-400">
-                Registered on {formatEthiopianDate(doc.registrationDate, language)}
+                Registered on {formatEthiopianDate(doc.registrationDate, language, true)}
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Direct PKI Digital Sign / Attest Button */}
+            {canSignDoc && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActionFeedback(null);
+                  setIsSignModalOpen(true);
+                }}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-700 hover:bg-teal-800 text-white inline-flex items-center gap-1 transition-colors"
+                title="Apply RSA-SHA256 Digital Signature / Executive Attestation"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Sign / Attest</span>
+              </button>
+            )}
+
+            {/* Draft Official Reply Button */}
+            {!doc.isDeleted && canModifyLinks && (
+              <button
+                type="button"
+                onClick={handleDraftReply}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 hover:bg-teal-100 inline-flex items-center gap-1 transition-colors"
+                title="Draft an outgoing letter or memo linked as a reply to this correspondence"
+              >
+                <CornerUpLeft className="w-3.5 h-3.5" />
+                <span>Draft Reply</span>
+              </button>
+            )}
+
             {/* Edit Button */}
             <button
               onClick={() => setIsEditOpen(true)}
@@ -452,7 +798,9 @@ export const DocumentDetailModal: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => setSelectedDocument(null)}
+              aria-label={t('close')}
               className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
             >
               <X className="w-5 h-5" />
@@ -462,6 +810,24 @@ export const DocumentDetailModal: React.FC = () => {
 
         {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto space-y-6 text-xs">
+          {actionFeedback && (
+            <div
+              className={`p-3 rounded-xl border flex items-center justify-between gap-2 ${
+                actionFeedback.type === 'success'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300'
+              }`}
+            >
+              <span>{actionFeedback.text}</span>
+              <button
+                type="button"
+                onClick={() => setActionFeedback(null)}
+                className="text-[11px] font-semibold hover:underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
           {/* Main Title & Status Strip */}
           <div className="space-y-2">
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
@@ -586,22 +952,34 @@ export const DocumentDetailModal: React.FC = () => {
 
           {doc.aiExtracted && (
             <div className="p-3.5 bg-teal-50/60 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-900/60 space-y-2">
-              <div className="flex items-center justify-between text-teal-800 dark:text-teal-300 font-semibold">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-teal-800 dark:text-teal-300 font-semibold">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-teal-600" />
                   <span>Gemini Multimodal Document Intelligence</span>
                 </span>
-                <span className="font-mono text-[11px] text-teal-700 dark:text-teal-400">
+                <span className="font-mono text-[11px] tabular-nums text-teal-700 dark:text-teal-400">
                   Confidence {(doc.aiExtracted.confidence * 100).toFixed(0)}%
+                  {doc.aiExtracted.lowConfidenceFlagged ? ' · Flagged Low Confidence' : ''}
                 </span>
               </div>
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                 {language === 'am' ? doc.aiExtracted.summaryAm : doc.aiExtracted.summaryEn}
               </p>
-              <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-teal-100 dark:border-teal-900/40">
+              {doc.aiExtracted.routingRecommendation && (
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  <strong>Routing Recommendation:</strong> {doc.aiExtracted.routingRecommendation}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-teal-100 dark:border-teal-900/40">
                 <span>Category: <strong>{doc.aiExtracted.suggestedCategory}</strong></span>
-                <span>·</span>
+                <span aria-hidden="true">·</span>
                 <span>Assigned: <strong>{doc.aiExtracted.suggestedDepartment}</strong></span>
+                {doc.aiExtracted.verifiedBy && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>Human Verified by <strong>{doc.aiExtracted.verifiedBy}</strong></span>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -703,9 +1081,9 @@ export const DocumentDetailModal: React.FC = () => {
                     {(liveQrCodeUrl || doc.qrCodeDataUrl) && (
                       <button
                         type="button"
-                        onClick={() => printVerificationCertificate(doc, liveQrCodeUrl || doc.qrCodeDataUrl!)}
+                        onClick={() => setIsVerificationModalOpen(true)}
                         className="p-1 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                        title="Print Official Certificate Slip"
+                        title="Open Printable Cryptographic Verification Certificate"
                       >
                         <Printer className="w-4 h-4" />
                       </button>
@@ -804,14 +1182,33 @@ export const DocumentDetailModal: React.FC = () => {
                         >
                           <Download className="w-3.5 h-3.5" />
                         </a>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAttachment(att.id, att.fileName)}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                          title="Delete Attachment"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {pendingDeleteAttId === att.id ? (
+                          <div className="inline-flex items-center gap-1 ml-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAttachment(att.id)}
+                              className="px-2 py-0.5 text-[11px] font-semibold bg-rose-600 text-white rounded"
+                            >
+                              Remove
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingDeleteAttId(null)}
+                              className="px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setPendingDeleteAttId(att.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            title="Delete Attachment"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))
@@ -820,31 +1217,241 @@ export const DocumentDetailModal: React.FC = () => {
             )}
           </div>
 
+          {/* Phase 14: Case Dossier & Cross-Document Threading */}
+          <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-teal-600" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100">
+                  Case Dossier & Linked Records ({documentLinks.length})
+                </h3>
+              </div>
+              {canModifyLinks && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDraftReply}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 inline-flex items-center gap-1"
+                  >
+                    <CornerUpLeft className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Draft Reply Letter</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsLinkFormOpen(v => !v)}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900 hover:bg-teal-100 inline-flex items-center gap-1"
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                    <span>{isLinkFormOpen ? 'Close' : 'Link Record'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {isLinkFormOpen && (
+              <form
+                onSubmit={handleCreateDocumentLink}
+                className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Relationship Type
+                    </label>
+                    <select
+                      value={linkType}
+                      onChange={e => setLinkType(e.target.value as DocumentLinkType)}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                    >
+                      <option value="RelatedDossier">Related Dossier</option>
+                      <option value="ReplyTo">Reply To</option>
+                      <option value="ParentTender">Parent Tender</option>
+                      <option value="Amends">Amends</option>
+                      <option value="Supersedes">Supersedes</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Target Correspondence Record
+                    </label>
+                    <select
+                      required
+                      value={linkTargetDocId}
+                      onChange={e => setLinkTargetDocId(e.target.value)}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                    >
+                      <option value="">Select correspondence to link...</option>
+                      {documents
+                        .filter(d => d.id !== doc.id && !d.isDeleted)
+                        .map(candidate => (
+                          <option key={candidate.id} value={candidate.id}>
+                            {candidate.registrationNumber} — {candidate.subjectEn.slice(0, 70)}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    placeholder="Optional dossier note (e.g. Tender award follow-up or amendment justification)..."
+                    value={linkNotes}
+                    onChange={e => setLinkNotes(e.target.value)}
+                    className="flex-1 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !linkTargetDocId}
+                    className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold text-xs disabled:opacity-50 shrink-0"
+                  >
+                    Create Link
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {linksLoading ? (
+              <div className="py-4 text-center text-slate-400 text-xs">Loading dossier thread...</div>
+            ) : documentLinks.length === 0 ? (
+              <div className="py-4 text-center text-slate-400 text-xs">
+                No cross-document links recorded yet. Click "Link Record" or "Draft Reply Letter" to build this case dossier.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {documentLinks.map(item => (
+                  <div
+                    key={item.link.id}
+                    className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                  >
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                          {item.link.linkType}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {item.direction === 'Outgoing' ? 'Outgoing Link' : 'Referenced By'}
+                        </span>
+                        <span className="font-mono tabular-nums font-bold text-slate-900 dark:text-slate-100">
+                          {item.linkedDocument.registrationNumber}
+                        </span>
+                        <span className="font-mono tabular-nums text-[11px] text-slate-500">
+                          ({item.linkedDocument.status})
+                        </span>
+                      </div>
+                      <div className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                        {item.linkedDocument.subjectEn}
+                      </div>
+                      {item.link.notes && (
+                        <div className="text-[11px] text-slate-500">{item.link.notes}</div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenLinkedDocument(item.linkedDocument.id)}
+                        className="px-2.5 py-1 text-[11px] font-semibold text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800 rounded-md hover:bg-teal-50 dark:hover:bg-teal-950/40 inline-flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Open Record</span>
+                      </button>
+                      {canModifyLinks &&
+                        (pendingUnlinkId === item.link.id ? (
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDocumentLink(item.link.id)}
+                              className="px-2 py-1 text-[11px] font-semibold bg-rose-600 text-white rounded"
+                            >
+                              Unlink
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingUnlinkId(null)}
+                              className="px-1.5 py-1 text-[11px] text-slate-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setPendingUnlinkId(item.link.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            title="Remove dossier link"
+                          >
+                            <Unlink className="w-3.5 h-3.5" />
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Workflow History / Minutes Trail */}
           <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <h3 className="font-bold text-slate-900 dark:text-slate-100">
-              Official Minutes & Workflow Progression
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100">
+                Official Minutes & Workflow Progression
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsVerificationModalOpen(true)}
+                className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline inline-flex items-center gap-1"
+              >
+                <FileKey2 className="w-3.5 h-3.5" />
+                <span>Verify PKI Signatures ({activeSignaturesCount})</span>
+              </button>
+            </div>
 
             <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
               {doc.workflowHistory.map((step) => (
                 <div key={step.id} className="relative space-y-1">
                   <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-teal-600 border-2 border-white dark:border-slate-900" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-slate-900 dark:text-slate-100">{step.actorName}</span>
                     <span className="text-slate-400">({step.actorRole})</span>
                     <span className="text-slate-300">·</span>
                     <span className="font-semibold text-teal-700 dark:text-teal-400">{step.action}</span>
                     <span className="text-slate-300">·</span>
-                    <span className="font-mono text-slate-400">{formatEthiopianDate(step.timestamp, language)}</span>
+                    <span className="font-mono text-slate-400 tabular-nums">{formatEthiopianDate(step.timestamp, language, true)}</span>
                   </div>
                   <p className="text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
                     {step.comments}
                   </p>
                   {step.digitalSignature && (
-                    <div className="inline-flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-                      <ShieldCheck className="w-3 h-3" />
-                      <span>Signed: {step.digitalSignature.certificateSerial}</span>
+                    <div
+                      className={`p-2 rounded-lg border text-[11px] font-mono tabular-nums space-y-0.5 ${
+                        step.digitalSignature.invalidated
+                          ? 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900'
+                          : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2 font-semibold">
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {step.digitalSignature.invalidated ? 'Superseded PKI Seal' : 'RSA-SHA256 Signed'}:{' '}
+                          {step.digitalSignature.certificateSerial}
+                        </span>
+                        {step.digitalSignature.biometricVerified && <span>· Step-Up MFA</span>}
+                      </div>
+                      {step.digitalSignature.signingMeaning && (
+                        <div className="font-sans text-slate-700 dark:text-slate-300">
+                          Intent: {step.digitalSignature.signingMeaning}
+                        </div>
+                      )}
+                      {step.digitalSignature.documentDigestSha256 && (
+                        <div className="text-[10px] opacity-80 truncate">
+                          Digest: {step.digitalSignature.documentDigestSha256}
+                        </div>
+                      )}
+                      {step.digitalSignature.invalidatedReason && (
+                        <div className="font-sans text-[10px] font-semibold">
+                          {step.digitalSignature.invalidatedReason}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -889,7 +1496,7 @@ export const DocumentDetailModal: React.FC = () => {
                   {language === 'am' ? 'የሰነድ መረጃ አሻሽል' : 'Edit Document Metadata'} – <span className="font-mono text-teal-700 dark:text-teal-400">{doc.registrationNumber}</span>
                 </h3>
               </div>
-              <button onClick={() => setIsEditOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button type="button" onClick={() => setIsEditOpen(false)} aria-label={t('close')} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -999,6 +1606,42 @@ export const DocumentDetailModal: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {activeSignaturesCount > 0 && (
+                <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 space-y-2.5">
+                  <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    <span>Signed Record Protection ({activeSignaturesCount} Active PKI Signature{activeSignaturesCount > 1 ? 's' : ''})</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 dark:text-amber-300">
+                    Modifying governed fields (subject, sender, recipient, confidentiality, or description) will supersede existing cryptographic signatures. Only SuperAdmin or DirectorGeneral may override with a mandatory reason.
+                  </p>
+                  {(currentUser?.role === 'SuperAdmin' || currentUser?.role === 'DirectorGeneral') && (
+                    <div className="space-y-2 pt-1">
+                      <label className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editOverrideSignedLock}
+                          onChange={(e) => setEditOverrideSignedLock(e.target.checked)}
+                          className="rounded border-slate-300 text-teal-600"
+                        />
+                        <span>Confirm Executive Signed-Lock Override (invalidates prior signatures)</span>
+                      </label>
+                      {editOverrideSignedLock && (
+                        <input
+                          type="text"
+                          required
+                          minLength={10}
+                          value={editOverrideReason}
+                          onChange={(e) => setEditOverrideReason(e.target.value)}
+                          placeholder="Enter formal justification for modifying signed record (min 10 characters)..."
+                          className="w-full p-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-lg text-slate-900 dark:text-slate-100"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button
@@ -1130,7 +1773,7 @@ export const DocumentDetailModal: React.FC = () => {
                   Add Document Attachment
                 </h3>
               </div>
-              <button onClick={() => setIsAddAttachmentOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button type="button" onClick={() => setIsAddAttachmentOpen(false)} aria-label={t('close')} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1234,7 +1877,7 @@ export const DocumentDetailModal: React.FC = () => {
                   {doc.legalHold ? 'Remove Legal Hold' : 'Apply Legal Hold'} — {doc.registrationNumber}
                 </h3>
               </div>
-              <button type="button" onClick={() => setIsLegalHoldModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setIsLegalHoldModalOpen(false)} aria-label={t('close')} className="text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1295,18 +1938,142 @@ export const DocumentDetailModal: React.FC = () => {
         </div>
       )}
 
+      {/* Direct PKI Signing / Executive Attestation Modal */}
+      {isSignModalOpen && (
+        <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-teal-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Apply Electronic PKI Signature
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-500">{doc.registrationNumber}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setIsSignModalOpen(false)} aria-label={t('close')} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {!activeCertificate ? (
+              <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 space-y-2">
+                <p className="font-semibold">No active RSA-2048 signing certificate found for your account.</p>
+                <button
+                  type="button"
+                  onClick={handleIssueMyCert}
+                  disabled={isIssuingCert}
+                  className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold"
+                >
+                  {isIssuingCert ? 'Issuing Certificate...' : 'Issue Active EPSS Certificate'}
+                </button>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/30 space-y-1 font-mono text-[11px] tabular-nums">
+                <div className="font-bold text-emerald-800 dark:text-emerald-300">
+                  ACTIVE CERT: {activeCertificate.serialNumber}
+                </div>
+                <div className="text-slate-600 dark:text-slate-400">
+                  {activeCertificate.algorithm} ({activeCertificate.keySizeBits}-bit) · Exp {activeCertificate.expiresAt.slice(0, 10)}
+                </div>
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                executeDirectSign(false);
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Signature Intent / Official Meaning
+                </label>
+                <select
+                  value={signMeaning}
+                  onChange={(e) => setSignMeaning(e.target.value)}
+                  className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                >
+                  <option value="Executive Counter-Signature & Attestation">Executive Counter-Signature & Attestation</option>
+                  <option value="Approved for Official Issuance">Approved for Official Issuance</option>
+                  <option value="Legal & Regulatory Compliance Verified">Legal & Regulatory Compliance Verified</option>
+                  <option value="Cold-Chain Quality Clearance">Cold-Chain Quality Clearance</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Step-Up Officer Security PIN (Required for Sensitive Records if WebAuthn not elevated)
+                </label>
+                <input
+                  type="password"
+                  maxLength={8}
+                  value={signStepUpPin}
+                  onChange={(e) => setSignStepUpPin(e.target.value)}
+                  placeholder="Enter Officer PIN or verify via Biometrics"
+                  className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Attestation Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={signComments}
+                  onChange={(e) => setSignComments(e.target.value)}
+                  placeholder="Record attestation context or compliance statement..."
+                  className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsSignModalOpen(false)}
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-400 font-semibold"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !activeCertificate}
+                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold disabled:opacity-40"
+                >
+                  {isSubmitting ? 'Signing...' : 'Sign with RSA-SHA256'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Biometric Verification Modal */}
       <BiometricVerificationModal
         isOpen={isBiometricModalOpen}
-        onClose={() => setIsBiometricModalOpen(false)}
+        onClose={() => {
+          setPendingBioSignRetry(false);
+          setIsBiometricModalOpen(false);
+        }}
         onVerified={() => {
           setIsBiometricUnlocked(true);
           setIsBiometricModalOpen(false);
+          if (pendingBioSignRetry) {
+            setPendingBioSignRetry(false);
+            executeDirectSign(true);
+          }
         }}
         documentTitle={doc.subjectEn}
         registrationNumber={doc.registrationNumber}
         confidentialityLevel={doc.confidentiality}
-        actionReason="Unlock Confidential Pharmaceutical Record & Authorize Minutes"
+        actionReason={
+          pendingBioSignRetry
+            ? 'Step-Up Biometric Confirmation for RSA-SHA256 Digital Signature'
+            : 'Unlock Confidential Pharmaceutical Record & Authorize Minutes'
+        }
       />
     </div>
   );

@@ -21,6 +21,8 @@ import {
   History
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
+import { formatEthiopianDate } from '../../lib/translations.js';
+import { localizeErrorMessage } from '../../lib/localizedErrors.js';
 import {
   AuthSession,
   Branch,
@@ -112,8 +114,17 @@ export const OrganizationAdminView: React.FC = () => {
   const [resetPwdUser, setResetPwdUser] = useState<User | null>(null);
   const [adminNewPassword, setAdminNewPassword] = useState('');
 
+  // In-app Confirmation Modal (replaces browser window.confirm for iframe safety)
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+
   const showToast = (type: 'success' | 'error', text: string) => {
-    setToast({ type, text });
+    const safeText = type === 'error' ? localizeErrorMessage(text, language) : text;
+    setToast({ type, text: safeText });
     setTimeout(() => setToast(null), 4500);
   };
 
@@ -264,19 +275,25 @@ export const OrganizationAdminView: React.FC = () => {
     }
   };
 
-  const handleDeactivateBranch = async (branch: Branch) => {
-    if (!window.confirm(`Deactivate branch "${branch.nameEn}" (${branch.code})?`)) return;
-    try {
-      const res = await fetch(`/api/v1/organizations/branches/${branch.id}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': currentUser?.id || '' }
-      });
-      if (!res.ok) throw new Error('Failed to deactivate branch');
-      await refreshData();
-      showToast('success', `Branch ${branch.nameEn} marked inactive.`);
-    } catch (err: any) {
-      showToast('error', err.message);
-    }
+  const handleDeactivateBranch = (branch: Branch) => {
+    setConfirmModal({
+      title: 'Deactivate Regional Branch?',
+      message: `Deactivate branch "${branch.nameEn}" (${branch.code})? Active records remain archived and auditable.`,
+      confirmLabel: 'Deactivate Branch',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/v1/organizations/branches/${branch.id}`, {
+            method: 'DELETE',
+            headers: { 'x-user-id': currentUser?.id || '' }
+          });
+          if (!res.ok) throw new Error('Failed to deactivate branch');
+          await refreshData();
+          showToast('success', `Branch ${branch.nameEn} marked inactive.`);
+        } catch (err: any) {
+          showToast('error', err.message);
+        }
+      }
+    });
   };
 
   // Directorate Handlers
@@ -338,19 +355,25 @@ export const OrganizationAdminView: React.FC = () => {
     }
   };
 
-  const handleDeactivateDept = async (dept: Department) => {
-    if (!window.confirm(`Deactivate directorate "${dept.nameEn}"?`)) return;
-    try {
-      const res = await fetch(`/api/v1/organizations/departments/${dept.id}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': currentUser?.id || '' }
-      });
-      if (!res.ok) throw new Error('Failed to deactivate directorate');
-      await refreshData();
-      showToast('success', `Directorate ${dept.nameEn} deactivated.`);
-    } catch (err: any) {
-      showToast('error', err.message);
-    }
+  const handleDeactivateDept = (dept: Department) => {
+    setConfirmModal({
+      title: 'Deactivate Directorate?',
+      message: `Deactivate directorate "${dept.nameEn}" (${dept.code})?`,
+      confirmLabel: 'Deactivate Directorate',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/v1/organizations/departments/${dept.id}`, {
+            method: 'DELETE',
+            headers: { 'x-user-id': currentUser?.id || '' }
+          });
+          if (!res.ok) throw new Error('Failed to deactivate directorate');
+          await refreshData();
+          showToast('success', `Directorate ${dept.nameEn} deactivated.`);
+        } catch (err: any) {
+          showToast('error', err.message);
+        }
+      }
+    });
   };
 
   // User Handlers
@@ -437,17 +460,23 @@ export const OrganizationAdminView: React.FC = () => {
     }
   };
 
-  const handleDeactivateUser = async (user: User) => {
-    if (!window.confirm(`Deactivate user account "${user.fullNameEn}" (${user.email})?`)) return;
-    try {
-      const res = await fetch(`/api/v1/organizations/users/${user.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to deactivate user');
-      await fetchUsers();
-      showToast('success', `Staff account ${user.fullNameEn} deactivated.`);
-    } catch (err: any) {
-      showToast('error', err.message);
-    }
+  const handleDeactivateUser = (user: User) => {
+    setConfirmModal({
+      title: 'Deactivate Staff Account?',
+      message: `Deactivate user account "${user.fullNameEn}" (${user.email})? Active sessions will be invalidated.`,
+      confirmLabel: 'Deactivate Account',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/v1/organizations/users/${user.id}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to deactivate user');
+          await fetchUsers();
+          showToast('success', `Staff account ${user.fullNameEn} deactivated.`);
+        } catch (err: any) {
+          showToast('error', err.message);
+        }
+      }
+    });
   };
 
   const handleToggleLockUser = async (user: User) => {
@@ -842,7 +871,7 @@ export const OrganizationAdminView: React.FC = () => {
                       <div className="text-[11px] text-slate-500">{u.departmentNameEn}</div>
                     </td>
                     <td className="px-4 py-3 font-mono text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never logged in'}
+                      {u.lastLoginAt ? formatEthiopianDate(u.lastLoginAt, language, true) : t('neverLoggedIn')}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`font-semibold ${
@@ -1027,7 +1056,7 @@ export const OrganizationAdminView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500 tabular-nums">
-                        Idle: {new Date(s.idleExpiresAt).toLocaleTimeString()} · Abs: {new Date(s.expiresAt).toLocaleTimeString()}
+                        Idle: {formatEthiopianDate(s.idleExpiresAt, language, true)} · Abs: {formatEthiopianDate(s.expiresAt, language, true)}
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <button
@@ -1066,7 +1095,7 @@ export const OrganizationAdminView: React.FC = () => {
                   {adminLoginHistory.slice(0, 50).map((h) => (
                     <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="px-4 py-2 font-mono text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
-                        {new Date(h.timestamp).toLocaleString()}
+                        {formatEthiopianDate(h.timestamp, language, true)}
                       </td>
                       <td className="px-4 py-2 font-mono font-semibold text-slate-800 dark:text-slate-200">
                         {h.usernameAttempted}
@@ -1543,6 +1572,55 @@ export const OrganizationAdminView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* In-App Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>{confirmModal.title}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+              {confirmModal.message}
+            </p>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  try {
+                    await confirmModal.onConfirm();
+                    setConfirmModal(null);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-lg font-semibold shadow-xs disabled:opacity-50"
+              >
+                {isSubmitting ? 'Processing...' : confirmModal.confirmLabel}
+              </button>
+            </div>
           </div>
         </div>
       )}

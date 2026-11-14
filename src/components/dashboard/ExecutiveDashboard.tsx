@@ -20,6 +20,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
+import { apiFetch } from '../../lib/apiFetch.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
 
 export const ExecutiveDashboard: React.FC = () => {
@@ -41,7 +42,7 @@ export const ExecutiveDashboard: React.FC = () => {
   >([]);
 
   useEffect(() => {
-    fetch('/api/v1/tracking/overdue')
+    apiFetch('/api/v1/tracking/overdue')
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setOverduePhysicalItems(Array.isArray(data) ? data : []))
       .catch(() => setOverduePhysicalItems([]));
@@ -49,8 +50,8 @@ export const ExecutiveDashboard: React.FC = () => {
 
   useEffect(() => {
     if (dashboardView === 'admin') {
-      fetch('/api/v1/health')
-        .then(r => r.json())
+      apiFetch('/api/v1/health')
+        .then(r => (r.ok ? r.json() : null))
         .then(setServerHealth)
         .catch(console.error);
     }
@@ -59,45 +60,15 @@ export const ExecutiveDashboard: React.FC = () => {
   const recentDocs = documents.slice(0, 5);
   const urgentDocs = documents.filter(d => d.priority === 'VeryUrgent' || d.priority === 'Urgent').slice(0, 4);
 
-  // Department analytics aggregates
-  const deptStats = [
-    {
-      nameEn: 'Pharmaceuticals & Medical Devices Procurement Directorate',
-      nameAm: 'የመድኃኒትና ሕክምና መሣሪያዎች ግዢ ዳይሬክቶሬት',
-      code: 'PMPD',
-      pending: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('procure') && d.status === 'UnderReview').length,
-      total: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('procure')).length,
-      activeStaff: 14,
-      avgDays: 2.1
-    },
-    {
-      nameEn: 'Storage & Distribution Directorate',
-      nameAm: 'የመድኃኒት ክምችትና ሥርጭት ዳይሬክቶሬት',
-      code: 'SDD',
-      pending: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('storage') && d.status === 'UnderReview').length,
-      total: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('storage')).length,
-      activeStaff: 22,
-      avgDays: 1.4
-    },
-    {
-      nameEn: 'Quality Assurance & Regulatory Compliance Directorate',
-      nameAm: 'የጥራት ማረጋገጫና ሕጋዊ ተገዥነት ዳይሬክቶሬት',
-      code: 'QACD',
-      pending: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('quality') && d.status === 'UnderReview').length,
-      total: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('quality')).length,
-      activeStaff: 9,
-      avgDays: 1.8
-    },
-    {
-      nameEn: 'Fund Management & Finance Directorate',
-      nameAm: 'የፈንድ አስተዳደርና ፋይናንስ ዳይሬክቶሬት',
-      code: 'FMFD',
-      pending: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('finance') && d.status === 'UnderReview').length,
-      total: documents.filter(d => (d.assignedDepartmentName || '').toLowerCase().includes('finance')).length,
-      activeStaff: 11,
-      avgDays: 1.9
-    }
-  ];
+  const deptStats = (kpis?.directorateStats || []).map((d) => ({
+    nameEn: d.nameEn,
+    nameAm: d.nameAm,
+    code: d.code,
+    pending: d.pendingReview,
+    total: d.totalDocuments,
+    activeStaff: d.activeStaff,
+    avgDays: d.avgTurnaroundDays
+  }));
 
   return (
     <div className="space-y-6">
@@ -179,9 +150,12 @@ export const ExecutiveDashboard: React.FC = () => {
                 <span className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100">
                   {kpis?.totalIncoming || 0}
                 </span>
-                <span className="text-[11px] text-teal-700 dark:text-teal-400 font-medium">
-                  +14% MoM
-                </span>
+                {kpis?.momDeltaPct !== null && kpis?.momDeltaPct !== undefined && (
+                  <span className="text-[11px] text-teal-700 dark:text-teal-400 font-mono tabular-nums font-medium">
+                    {kpis.momDeltaPct >= 0 ? '+' : ''}
+                    {kpis.momDeltaPct}% 30d
+                  </span>
+                )}
               </div>
               <div className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
                 {language === 'am' ? 'በማዕከልና በቅርንጫፎች የተመዘገቡ' : 'Logged across all hubs'}
@@ -198,8 +172,8 @@ export const ExecutiveDashboard: React.FC = () => {
                 <span className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100">
                   {kpis?.totalOutgoing || 0}
                 </span>
-                <span className="text-[11px] text-sky-700 dark:text-sky-400 font-medium">
-                  Official Sealed
+                <span className="text-[11px] text-sky-700 dark:text-sky-400 font-mono tabular-nums font-medium">
+                  {kpis?.digitalSigningRate ?? 100}% PKI Signed
                 </span>
               </div>
               <div className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
@@ -257,12 +231,20 @@ export const ExecutiveDashboard: React.FC = () => {
                     {t('branchPerformance')}
                   </h2>
                 </div>
-                <button 
-                  onClick={() => setActiveTab('organization')}
-                  className="text-xs text-teal-700 dark:text-teal-400 hover:underline font-medium"
-                >
-                  {language === 'am' ? 'ሁሉንም 19 ቅርንጫፎች ይመልከቱ →' : 'View Hub Registry →'}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveTab('reports')}
+                    className="text-xs text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-400 hover:underline font-medium"
+                  >
+                    {language === 'am' ? 'ሙሉ ትንተና →' : 'Analytics & Export →'}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('organization')}
+                    className="text-xs text-teal-700 dark:text-teal-400 hover:underline font-medium"
+                  >
+                    {language === 'am' ? 'ሁሉንም 19 ቅርንጫፎች ይመልከቱ →' : 'View Hub Registry →'}
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-x-auto max-h-[380px] overflow-y-auto">
@@ -625,8 +607,7 @@ export const ExecutiveDashboard: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
               <span className="text-xs font-medium text-slate-500">Node Server Status</span>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="mt-2">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {serverHealth?.status || 'UP'} (Port 3000)
                 </span>
@@ -677,8 +658,8 @@ export const ExecutiveDashboard: React.FC = () => {
             </span>
             <button
               onClick={() => {
-                fetch('/api/v1/health')
-                  .then(r => r.json())
+                apiFetch('/api/v1/health')
+                  .then(r => (r.ok ? r.json() : null))
                   .then(setServerHealth);
               }}
               className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded font-medium flex items-center gap-1.5 transition-colors"

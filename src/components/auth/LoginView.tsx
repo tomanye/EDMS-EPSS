@@ -45,7 +45,7 @@ const DEMO_ACCOUNTS: { username: string; role: UserRole; label: string; mfa: boo
   { username: 'tigist.h', role: 'Auditor', label: 'Internal Auditor', mfa: true }
 ];
 
-export const LoginView: React.FC = () => {
+export const LoginView: React.FC<{ onOpenPublicVerify?: () => void }> = ({ onOpenPublicVerify }) => {
   const { language, setLanguage, theme, toggleTheme, loginSuccess } = useApp();
 
   const [screen, setScreen] = useState<AuthScreen>('login');
@@ -544,6 +544,21 @@ export const LoginView: React.FC = () => {
                   <Fingerprint className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span>{language === 'am' ? 'በጣት አሻራ / Face ID ግባ' : 'Sign in with Biometrics (WebAuthn)'}</span>
                 </button>
+
+                {onOpenPublicVerify && (
+                  <button
+                    type="button"
+                    onClick={onOpenPublicVerify}
+                    className="w-full py-2.5 bg-white dark:bg-slate-900 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 text-teal-800 dark:text-teal-300 font-semibold text-xs rounded-lg border border-teal-200 dark:border-teal-800 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-teal-700 dark:text-teal-400" />
+                    <span>
+                      {language === 'am'
+                        ? 'የውጭ ሰነድ እና QR ማህተም ማረጋገጫ ፖርታል ክፈት'
+                        : 'Public Document QR & Authenticity Verification Portal'}
+                    </span>
+                  </button>
+                )}
 
                 {/* Collapsible Institutional Quick-Fill Directory for Testing */}
                 <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden text-xs">

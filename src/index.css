@@ -22,7 +22,9 @@
   .epss-printable-label,
   .epss-printable-label *,
   .epss-printable-certificate,
-  .epss-printable-certificate * {
+  .epss-printable-certificate *,
+  .epss-printable-report,
+  .epss-printable-report * {
     visibility: visible !important;
   }
   .epss-printable-label {
@@ -43,6 +45,15 @@
     color: #0f172a !important;
     border: 2px solid #0f172a !important;
     padding: 24px !important;
+    box-shadow: none !important;
+  }
+  .epss-printable-report {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 16px !important;
     box-shadow: none !important;
   }
 }

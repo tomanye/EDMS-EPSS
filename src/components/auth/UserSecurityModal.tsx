@@ -12,13 +12,18 @@ import {
   CheckCircle2,
   AlertCircle,
   PlusCircle,
-  Clock
+  Clock,
+  FileKey2,
+  RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
+import { apiFetch } from '../../lib/apiFetch.js';
+import { formatEthiopianDate } from '../../lib/translations.js';
+import { useEscapeKey } from '../../lib/useEscapeKey.js';
 import { registerBiometricAuthenticator } from '../../lib/webauthn.js';
-import { AuthSession, BiometricCredential, DelegationRecord, LoginHistoryEntry, User } from '../../types/index.js';
+import { AuthSession, BiometricCredential, DelegationRecord, LoginHistoryEntry, SigningCertificate, User } from '../../types/index.js';
 
-export type SecurityModalTab = 'profile' | 'password' | 'security' | 'delegation' | 'history';
+export type SecurityModalTab = 'profile' | 'password' | 'security' | 'pki' | 'delegation' | 'history';
 
 interface UserSecurityModalProps {
   isOpen: boolean;
@@ -31,7 +36,8 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
   initialTab = 'profile',
   onClose
 }) => {
-  const { currentUser, session, delegations, refreshData, refreshSession } = useApp();
+  const { currentUser, session, delegations, refreshData, refreshSession, language, t } = useApp();
+  useEscapeKey(isOpen, onClose);
   const [activeTab, setActiveTab] = useState<SecurityModalTab>(initialTab);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,10 +61,17 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
   // Login History State
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([]);
 
+  // PKI Signing Certificates State
+  const [myCertificates, setMyCertificates] = useState<SigningCertificate[]>([]);
+  const [revokeCertTargetId, setRevokeCertTargetId] = useState<string | null>(null);
+  const [revokeReason, setRevokeReason] = useState('');
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
       setFeedback(null);
+      setRevokeCertTargetId(null);
+      setRevokeReason('');
       loadTabData(initialTab);
     }
   }, [isOpen, initialTab]);
@@ -67,16 +80,22 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
     try {
       if (tab === 'security') {
         const [sessRes, bioRes] = await Promise.all([
-          fetch('/api/v1/auth/sessions'),
-          fetch('/api/v1/auth/webauthn/credentials')
+          apiFetch('/api/v1/auth/sessions'),
+          apiFetch('/api/v1/auth/webauthn/credentials')
         ]);
         if (sessRes.ok) setSessions(await sessRes.json());
         if (bioRes.ok) {
           const bioJson = await bioRes.json();
           setBiometrics(bioJson.credentials || []);
         }
+      } else if (tab === 'pki') {
+        const certRes = await apiFetch('/api/v1/pki/certificates');
+        if (certRes.ok) {
+          const allCerts: SigningCertificate[] = await certRes.json();
+          setMyCertificates(allCerts.filter(c => c.userId === currentUser?.id));
+        }
       } else if (tab === 'delegation') {
-        const usrRes = await fetch('/api/v1/organizations/users');
+        const usrRes = await apiFetch('/api/v1/organizations/users');
         if (usrRes.ok) {
           const list: User[] = await usrRes.json();
           const eligible = list.filter(u => u.id !== currentUser?.id && u.status !== 'Inactive');
@@ -84,7 +103,7 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
           if (eligible.length > 0 && !delegateId) setDelegateId(eligible[0].id);
         }
       } else if (tab === 'history') {
-        const histRes = await fetch('/api/v1/auth/login-history');
+        const histRes = await apiFetch('/api/v1/auth/login-history');
         if (histRes.ok) setLoginHistory(await histRes.json());
       }
     } catch (err) {
@@ -118,7 +137,7 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/v1/auth/change-password', {
+      const res = await apiFetch('/api/v1/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword })
@@ -161,7 +180,7 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
   const handleRevokeSession = async (sessionId: string) => {
     setFeedback(null);
     try {
-      const res = await fetch(`/api/v1/auth/sessions/${sessionId}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/v1/auth/sessions/${sessionId}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) {
         setFeedback({ type: 'error', text: data.error || 'Failed to revoke session.' });
@@ -174,12 +193,66 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
     }
   };
 
+  const handleIssueMyCertificate = async () => {
+    setFeedback(null);
+    setBusy(true);
+    try {
+      const res = await apiFetch('/api/v1/pki/certificates/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'User self-service PKI signing keypair renewal' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedback({ type: 'error', text: data.error || 'Failed to issue signing certificate.' });
+        return;
+      }
+      setFeedback({ type: 'success', text: `Issued active RSA-2048 certificate ${data.serialNumber}.` });
+      await loadTabData('pki');
+    } catch {
+      setFeedback({ type: 'error', text: 'Network error while issuing certificate.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRevokeMyCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!revokeCertTargetId) return;
+    setFeedback(null);
+    if (revokeReason.trim().length < 10) {
+      setFeedback({ type: 'error', text: 'Revocation reason must be at least 10 characters.' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await apiFetch(`/api/v1/pki/certificates/${revokeCertTargetId}/revoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: revokeReason.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedback({ type: 'error', text: data.error || 'Failed to revoke certificate.' });
+        return;
+      }
+      setRevokeCertTargetId(null);
+      setRevokeReason('');
+      setFeedback({ type: 'success', text: `Revoked signing certificate ${data.serialNumber}.` });
+      await loadTabData('pki');
+    } catch {
+      setFeedback({ type: 'error', text: 'Network error while revoking certificate.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleCreateDelegation = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
     setBusy(true);
     try {
-      const res = await fetch('/api/v1/auth/delegations', {
+      const res = await apiFetch('/api/v1/auth/delegations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -208,7 +281,7 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
   const handleRevokeDelegation = async (id: string) => {
     setFeedback(null);
     try {
-      const res = await fetch(`/api/v1/auth/delegations/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/v1/auth/delegations/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) {
         setFeedback({ type: 'error', text: data.error || 'Failed to revoke delegation.' });
@@ -225,27 +298,34 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
     { id: 'profile', label: 'My Profile', icon: UserIcon },
     { id: 'password', label: 'Change Password', icon: KeyRound },
     { id: 'security', label: 'Security & Sessions', icon: ShieldCheck },
+    { id: 'pki', label: 'PKI Certificate', icon: FileKey2 },
     { id: 'delegation', label: 'Delegation', icon: Users },
     { id: 'history', label: 'Login History', icon: History }
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="security-modal-title"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              Account Profile & Security Settings
+            <h2 id="security-modal-title" className="text-base font-bold text-slate-900 dark:text-slate-100">
+              {language === 'am' ? 'የመለያ መገለጫ እና የደህንነት ቅንብሮች' : 'Account Profile & Security Settings'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {currentUser.fullNameEn} · <span className="font-mono">{currentUser.username}</span> · {currentUser.role}
+              {language === 'am' ? currentUser.fullNameAm : currentUser.fullNameEn} · <span className="font-mono">{currentUser.username}</span> · {currentUser.role}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+            aria-label={t('close')}
+            className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -472,8 +552,8 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
                           )}
                         </div>
                         <div className="text-[11px] font-mono text-slate-500 mt-0.5 tabular-nums">
-                          IP: {s.ipAddress} · Last active: {new Date(s.lastActiveAt).toLocaleString()} · Idle exp:{' '}
-                          {new Date(s.idleExpiresAt).toLocaleTimeString()}
+                          IP: {s.ipAddress} · Last active: {formatEthiopianDate(s.lastActiveAt, language, true)} · Idle exp:{' '}
+                          {formatEthiopianDate(s.idleExpiresAt, language, true)}
                         </div>
                       </div>
                       <button
@@ -491,7 +571,129 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: DELEGATION */}
+          {/* TAB 4: PKI SIGNING CERTIFICATES */}
+          {activeTab === 'pki' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <FileKey2 className="w-4 h-4 text-teal-600" />
+                    <span>EPSS X.509-Style RSA-2048 Signing Certificates</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Used to cryptographically sign official workflow approvals and executive attestations. Renewing supersedes any prior active key.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={handleIssueMyCertificate}
+                  className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold inline-flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} />
+                  <span>Issue / Renew Keypair</span>
+                </button>
+              </div>
+
+              {revokeCertTargetId && (
+                <form
+                  onSubmit={handleRevokeMyCertificate}
+                  className="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/30 space-y-3"
+                >
+                  <div className="font-bold text-rose-800 dark:text-rose-300">
+                    Revoke Compromised Signing Certificate
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    minLength={10}
+                    value={revokeReason}
+                    onChange={e => setRevokeReason(e.target.value)}
+                    placeholder="Mandatory revocation justification (min 10 characters)..."
+                    className="w-full p-2 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 rounded-lg"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRevokeCertTargetId(null);
+                        setRevokeReason('');
+                      }}
+                      className="px-3 py-1.5 text-slate-600 dark:text-slate-300 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg font-semibold"
+                    >
+                      Confirm Key Revocation
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {myCertificates.length === 0 ? (
+                <div className="p-6 text-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                  No signing certificates issued for your account yet. Click "Issue / Renew Keypair" above.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myCertificates.map(cert => (
+                    <div
+                      key={cert.id}
+                      className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-mono font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                          {cert.serialNumber}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-mono font-bold text-[11px] uppercase ${
+                              cert.status === 'Active'
+                                ? 'text-emerald-700 dark:text-emerald-400'
+                                : 'text-rose-600 dark:text-rose-400'
+                            }`}
+                          >
+                            {cert.status}
+                          </span>
+                          {cert.status === 'Active' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRevokeCertTargetId(cert.id);
+                                setRevokeReason('');
+                              }}
+                              className="px-2 py-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+                        <div>Alg: {cert.algorithm} ({cert.keySizeBits}-bit RSA)</div>
+                        <div>Expires: {formatEthiopianDate(cert.expiresAt, language)}</div>
+                        <div className="sm:col-span-2 truncate">Fingerprint: {cert.fingerprintSha256}</div>
+                        <div className="sm:col-span-2 font-sans text-slate-600 dark:text-slate-300 truncate">
+                          Subject: {cert.subjectDn}
+                        </div>
+                        {cert.revokedReason && (
+                          <div className="sm:col-span-2 font-sans text-rose-600 dark:text-rose-400">
+                            Revoked ({cert.revokedBy || 'System'}): {cert.revokedReason}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: DELEGATION */}
           {activeTab === 'delegation' && (
             <div className="space-y-5">
               <form
@@ -644,7 +846,7 @@ export const UserSecurityModal: React.FC<UserSecurityModalProps> = ({
                         <td className="px-4 py-2.5 font-mono tabular-nums text-slate-500 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(h.timestamp).toLocaleString()}
+                            {formatEthiopianDate(h.timestamp, language, true)}
                           </span>
                         </td>
                         <td className="px-4 py-2.5 font-mono text-slate-700 dark:text-slate-300">{h.method}</td>

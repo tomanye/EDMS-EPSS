@@ -35,10 +35,14 @@ export const translations = {
     navRepository: "Document Repository",
     navSearch: "Advanced Search",
     navArchives: "Records & Archival",
+    navNotifications: "Notifications & Escalation",
     navReports: "Reports & Analytics",
     navOrganization: "Organization & Branches",
     navIntegrations: "Enterprise Integrations",
     navSecurity: "Audit & Security Logs",
+    navRolesGovernance: "Roles & Access Governance",
+    navVerify: "QR & Seal Verifier",
+    navTransmittals: "Batch & Transmittals",
 
     // Common Actions
     actions: "Actions",
@@ -147,9 +151,21 @@ export const translations = {
     handoverHistory: "Custody Movement Log",
     verifyHandover: "Confirm Handover Receipt",
 
-    // Empty States
+    // Empty States & Global Feedback
     noDocumentsFound: "No documents found matching the selected filter criteria.",
     noTasksPending: "Your workflow approval inbox is clear. No pending items.",
+    loadingData: "Loading EPSS records and directorate data...",
+    verifyingSession: "Verifying EPSS Security Session...",
+    dismiss: "Dismiss",
+    sessionExpired: "Your security session has expired. Please sign in again.",
+    unexpectedError: "An unexpected error occurred. Please try again.",
+    accessDenied: "Access denied: insufficient permissions for this operation.",
+    invalidFormInput: "Please review the highlighted fields before submitting.",
+    neverLoggedIn: "Never logged in",
+    openNotifications: "Toggle notifications",
+    toggleThemeLabel: "Toggle light/dark theme",
+    mainNavigation: "Primary EDRMS navigation",
+    mainWorkspace: "EPSS EDRMS Workspace",
   },
 
   am: {
@@ -183,10 +199,14 @@ export const translations = {
     navRepository: "ማዕከላዊ የሰነድ ማከማቻ",
     navSearch: "የላቀ ፍለጋ",
     navArchives: "መዛግብት እና ማህደር",
+    navNotifications: "ማሳወቂያዎች እና ማስጠንቀቂያዎች",
     navReports: "ሪፖርቶች እና ትንተና",
     navOrganization: "መዋቅር እና 19 ቅርንጫፎች",
     navIntegrations: "የድርጅት ሲስተሞች ግንኙነት (Integrations)",
     navSecurity: "የደህንነት እና ኦዲት መዝገብ",
+    navRolesGovernance: "ሚናዎች እና የፈቃድ አስተዳደር",
+    navVerify: "የQR እና ዲጂታል ማህተም ማረጋገጫ",
+    navTransmittals: "የቡድን መላኪያ እና ማኒፌስት",
 
     // Common Actions
     actions: "ተግባራት",
@@ -295,31 +315,57 @@ export const translations = {
     handoverHistory: "የርክክብ እና ዝውውር ታሪክ",
     verifyHandover: "የርክክብ ማረጋገጫ",
 
-    // Empty States
+    // Empty States & Global Feedback
     noDocumentsFound: "ከተመረጠው መስፈርት ጋር የሚዛመድ ሰነድ አልተገኘም።",
     noTasksPending: "የሥራ ፍሰት ሳጥንዎ ንጹህ ነው። የሚጠብቅዎት ተግባር የለም።",
+    loadingData: "የEPSS ሰነዶችን እና የዳይሬክቶሬት መረጃዎችን በመጫን ላይ...",
+    verifyingSession: "የEPSS የደህንነት ክፍለ ጊዜ በማረጋገጥ ላይ...",
+    dismiss: "ዝጋ",
+    sessionExpired: "የደህንነት ክፍለ ጊዜዎ አልቋል። እባክዎ እንደገና ይግቡ።",
+    unexpectedError: "ያልተጠበቀ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።",
+    accessDenied: "ፈቃድ ተከልክሏል፦ ይህን ተግባር ለማከናወን በቂ ፈቃድ የለዎትም።",
+    invalidFormInput: "እባክዎ ከማስገባትዎ በፊት የተሳሳቱ መስኮችን ያስተካክሉ።",
+    neverLoggedIn: "ከዚህ ቀደም አልገቡም",
+    openNotifications: "ማሳወቂያዎችን ክፈት/ዝጋ",
+    toggleThemeLabel: "ብርሃን/ጨለማ ገጽታ ቀይር",
+    mainNavigation: "ዋና የEDRMS አሰሳ",
+    mainWorkspace: "የEPSS EDRMS ዋና የሥራ ቦታ",
   }
 };
 
 /**
- * Format date with both Gregorian and Ethiopian approximate representations
+ * Format UTC ISO date with local representation + Ethiopian calendar year
  */
-export function formatEthiopianDate(isoDateString: string, lang: 'en' | 'am' = 'en'): string {
+export function formatEthiopianDate(
+  isoDateString: string,
+  lang: 'en' | 'am' = 'en',
+  includeTime = false
+): string {
   try {
     const date = new Date(isoDateString);
     if (isNaN(date.getTime())) return isoDateString;
-    
-    const formattedGregorian = date.toLocaleDateString(lang === 'am' ? 'am-ET' : 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
 
-    // Simple approximate Ethiopian calendar offset (~7-8 years, Meskerem new year)
+    const options: Intl.DateTimeFormatOptions = includeTime
+      ? {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }
+      : {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        };
+
+    const formattedGregorian = date.toLocaleString(lang === 'am' ? 'am-ET' : 'en-US', options);
+
+    // Ethiopian calendar year offset (~7-8 years depending on Meskerem 1 / Sep 11)
     const gYear = date.getFullYear();
     const gMonth = date.getMonth() + 1; // 1-12
     const gDay = date.getDate();
-    
+
     let ethYear = gYear - 8;
     if (gMonth > 9 || (gMonth === 9 && gDay >= 11)) {
       ethYear = gYear - 7;

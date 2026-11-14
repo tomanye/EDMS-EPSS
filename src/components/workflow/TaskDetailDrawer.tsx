@@ -16,11 +16,14 @@ import {
   ExternalLink,
   MessageSquare,
   GitBranch,
-  ArrowUpRight
+  ArrowUpRight,
+  KeyRound,
+  RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
-import { EnrichedWorkflowTask, User } from '../../types/index.js';
+import { apiFetch } from '../../lib/apiFetch.js';
+import { EnrichedWorkflowTask, SigningCertificate, User } from '../../types/index.js';
 import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 
 interface TaskDetailDrawerProps {
@@ -65,8 +68,39 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingAtt, setIsUploadingAtt] = useState(false);
 
-  // Biometric gate
+  // Biometric & PKI Signing Gate
   const [isBiometricOpen, setIsBiometricOpen] = useState(false);
+  const [myCertificates, setMyCertificates] = useState<SigningCertificate[]>([]);
+  const [isLoadingCerts, setIsLoadingCerts] = useState(false);
+  const [isIssuingCert, setIsIssuingCert] = useState(false);
+  const [signingMeaning, setSigningMeaning] = useState('Approved for Official Issuance');
+  const [stepUpPin, setStepUpPin] = useState('');
+
+  React.useEffect(() => {
+    let active = true;
+    const loadCerts = async () => {
+      if (!currentUser) return;
+      setIsLoadingCerts(true);
+      try {
+        const res = await apiFetch('/api/v1/pki/certificates');
+        if (res.ok && active) {
+          const allCerts: SigningCertificate[] = await res.json();
+          setMyCertificates(allCerts.filter(c => c.userId === currentUser.id));
+        }
+      } catch {
+        // Ignore silent fetch error
+      } finally {
+        if (active) setIsLoadingCerts(false);
+      }
+    };
+    loadCerts();
+    return () => {
+      active = false;
+    };
+  }, [currentUser?.id]);
+
+  const activeCertificate = myCertificates.find(c => c.status === 'Active') || null;
+  const latestRevokedCert = !activeCertificate ? myCertificates.find(c => c.status === 'Revoked') || null : null;
 
   const isSensitiveApproval =
     doc.confidentiality === 'Secret' ||
@@ -131,13 +165,16 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
         payload.delegateToUserId = delegateUserId;
       }
       if (selectedAction === 'Approved') {
-        payload.digitalSignatureCertificate = `ET-PKI-EPSS-${currentUser?.role.toUpperCase()}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        payload.signingMeaning = signingMeaning;
+        if (stepUpPin.trim()) {
+          payload.stepUpPin = stepUpPin.trim();
+        }
         if (biometricVerified) {
           payload.biometricSignatureVerified = true;
         }
       }
 
-      const res = await fetch(`/api/v1/workflows/instances/${instance.id}/action`, {
+      const res = await apiFetch(`/api/v1/workflows/instances/${instance.id}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -153,7 +190,8 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
       }
 
       setComments('');
-      setSuccessMsg(`Action "${selectedAction}" recorded successfully.`);
+      setStepUpPin('');
+      setSuccessMsg(`Action "${selectedAction}" recorded and sealed with RSA-SHA256.`);
       await onTaskUpdated(data.task);
     } catch {
       setErrorMsg('Network error while executing workflow action.');
@@ -162,9 +200,33 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
     }
   };
 
+  const handleIssueCertificate = async () => {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setIsIssuingCert(true);
+    try {
+      const res = await apiFetch('/api/v1/pki/certificates/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Workflow approval PKI signing key activation' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || 'Failed to issue signing certificate.');
+        return;
+      }
+      setMyCertificates(prev => [data, ...prev.map(c => (c.status === 'Active' ? { ...c, status: 'Revoked' as const } : c))]);
+      setSuccessMsg(`Active RSA-2048 signing certificate ${data.serialNumber} issued.`);
+    } catch {
+      setErrorMsg('Network error while issuing PKI signing certificate.');
+    } finally {
+      setIsIssuingCert(false);
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedAction === 'Approved' && isSensitiveApproval) {
+    if (selectedAction === 'Approved' && isSensitiveApproval && !stepUpPin.trim()) {
       setIsBiometricOpen(true);
       return;
     }
@@ -180,7 +242,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/workflows/instances/${instance.id}/escalate`, {
+      const res = await apiFetch(`/api/v1/workflows/instances/${instance.id}/escalate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -214,7 +276,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
       const fd = new FormData();
       fd.append('file', file);
       fd.append('notes', `Supporting attachment uploaded at stage: ${instance.currentStageName}`);
-      const res = await fetch(`/api/v1/workflows/instances/${instance.id}/attachments`, {
+      const res = await apiFetch(`/api/v1/workflows/instances/${instance.id}/attachments`, {
         method: 'POST',
         body: fd
       });
@@ -642,6 +704,84 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                 </div>
               )}
 
+              {selectedAction === 'Approved' && (
+                <div className="space-y-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100">
+                      <KeyRound className="w-3.5 h-3.5 text-teal-600" />
+                      <span>EPSS PKI Signing Certificate & Intent</span>
+                    </div>
+                    {isLoadingCerts ? (
+                      <span className="text-[11px] text-slate-400">Checking certificate...</span>
+                    ) : activeCertificate ? (
+                      <span className="font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                        ACTIVE · {activeCertificate.serialNumber}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[11px] font-semibold text-rose-600 dark:text-rose-400">
+                        {latestRevokedCert ? 'CERTIFICATE REVOKED' : 'NO ACTIVE CERTIFICATE'}
+                      </span>
+                    )}
+                  </div>
+
+                  {!isLoadingCerts && !activeCertificate && (
+                    <div className="p-2.5 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        {latestRevokedCert
+                          ? `Your certificate (${latestRevokedCert.serialNumber}) was revoked. Issue a new RSA-2048 certificate to sign approvals.`
+                          : 'No active signing certificate found for your account.'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleIssueCertificate}
+                        disabled={isIssuingCert}
+                        className="px-2.5 py-1 bg-teal-700 hover:bg-teal-800 text-white rounded-md font-semibold inline-flex items-center gap-1"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isIssuingCert ? 'animate-spin' : ''}`} />
+                        <span>{isIssuingCert ? 'Issuing...' : 'Issue New Certificate'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {activeCertificate && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Signature Intent / Legal Meaning
+                        </label>
+                        <select
+                          value={signingMeaning}
+                          onChange={e => setSigningMeaning(e.target.value)}
+                          className="w-full px-2.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+                        >
+                          <option value="Approved for Official Issuance">Approved for Official Issuance</option>
+                          <option value="Parallel Executive Endorsement">Parallel Executive Endorsement</option>
+                          <option value="Procurement Clearance Sign-Off">Procurement Clearance Sign-Off</option>
+                          <option value="Technical Compliance Verified">Technical Compliance Verified</option>
+                          <option value="Directorate Dispatch Authorization">Directorate Dispatch Authorization</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Step-Up Officer PIN (Optional if using Biometrics)
+                        </label>
+                        <input
+                          type="password"
+                          maxLength={8}
+                          value={stepUpPin}
+                          onChange={e => setStepUpPin(e.target.value)}
+                          placeholder={isSensitiveApproval ? 'Enter PIN or use Biometrics on submit' : 'Optional 6-digit confirmation PIN'}
+                          className="w-full px-2.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+                        Alg: {activeCertificate.algorithm} ({activeCertificate.keySizeBits}-bit) · Fingerprint: {activeCertificate.fingerprintSha256.slice(0, 24)}...
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {selectedAction === 'Approved' && isSensitiveApproval && (
                 <div className="p-3 rounded-lg border border-teal-200 dark:border-teal-900 bg-teal-50/70 dark:bg-teal-950/30 text-teal-900 dark:text-teal-200 flex items-center gap-2">
                   <Fingerprint className="w-4 h-4 shrink-0 text-teal-700 dark:text-teal-400" />
@@ -688,17 +828,20 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                   disabled={
                     isSubmitting ||
                     (!task.canAct && selectedAction !== 'MinuteAdded') ||
-                    (requiresMin10Chars && comments.trim().length < 10)
+                    (requiresMin10Chars && comments.trim().length < 10) ||
+                    (selectedAction === 'Approved' && !activeCertificate)
                   }
                   className="px-4 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 rounded-lg flex items-center gap-1.5 disabled:opacity-40 whitespace-nowrap"
                 >
                   {selectedAction === 'Approved' && isSensitiveApproval && <Fingerprint className="w-3.5 h-3.5" />}
                   <span>
                     {isSubmitting
-                      ? 'Recording...'
-                      : selectedAction === 'Approved' && isSensitiveApproval
-                        ? 'Verify Biometrics & Approve'
-                        : `Submit ${selectedAction}`}
+                      ? 'Signing & Recording...'
+                      : selectedAction === 'Approved' && isSensitiveApproval && !stepUpPin.trim()
+                        ? 'Verify Biometrics & Sign Approval'
+                        : selectedAction === 'Approved'
+                          ? 'Cryptographically Sign & Approve'
+                          : `Submit ${selectedAction}`}
                   </span>
                 </button>
               </div>
@@ -784,10 +927,36 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                     {entry.comments}
                   </p>
                   {entry.digitalSignature && (
-                    <div className="mt-1 flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 dark:text-emerald-400">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>PKI Seal: {entry.digitalSignature.certificateSerial}</span>
-                      {entry.biometricVerified && <span>· Biometric Verified</span>}
+                    <div
+                      className={`mt-1.5 p-2 rounded border text-[11px] font-mono tabular-nums space-y-0.5 ${
+                        entry.digitalSignature.invalidated
+                          ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300'
+                          : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2 font-semibold">
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {entry.digitalSignature.invalidated ? 'Superseded PKI Seal' : 'RSA-SHA256 Seal'}:{' '}
+                          {entry.digitalSignature.certificateSerial}
+                        </span>
+                        {entry.biometricVerified && <span>· Step-Up MFA</span>}
+                      </div>
+                      {entry.digitalSignature.signingMeaning && (
+                        <div className="font-sans text-slate-700 dark:text-slate-300">
+                          Intent: {entry.digitalSignature.signingMeaning}
+                        </div>
+                      )}
+                      {entry.digitalSignature.documentDigestSha256 && (
+                        <div className="text-[10px] opacity-80 truncate">
+                          Digest: {entry.digitalSignature.documentDigestSha256}
+                        </div>
+                      )}
+                      {entry.digitalSignature.invalidatedReason && (
+                        <div className="font-sans text-[10px] font-semibold">
+                          {entry.digitalSignature.invalidatedReason}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

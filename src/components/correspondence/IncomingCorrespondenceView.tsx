@@ -14,10 +14,12 @@ import {
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
 import { DocumentItem } from '../../types/index.js';
+import { CorrespondenceBulkToolbar } from './CorrespondenceBulkToolbar.js';
 
 export const IncomingCorrespondenceView: React.FC = () => {
-  const { documents, branches, departments, setSelectedDocument, openRegisterModal, language, t } = useApp();
+  const { documents, branches, departments, setSelectedDocument, openRegisterModal, setActiveTab, language, t } = useApp();
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedDept, setSelectedDept] = useState('all');
@@ -59,13 +61,22 @@ export const IncomingCorrespondenceView: React.FC = () => {
               : 'Official registry of external letters received from Ministry of Health, EFDA, WHO, and suppliers.'}
           </p>
         </div>
-        <button
-          onClick={() => openRegisterModal('IncomingLetter')}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 rounded-lg shadow-xs transition-colors whitespace-nowrap shrink-0 self-start sm:self-auto"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>{language === 'am' ? 'አዲስ ገቢ ደብዳቤ መዝግብ' : 'Register Incoming Letter'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('transmittals')}
+            className="px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap"
+          >
+            {language === 'am' ? 'CSV / ማኒፌስት' : 'Batch CSV / Manifests'}
+          </button>
+          <button
+            onClick={() => openRegisterModal('IncomingLetter')}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 rounded-lg shadow-xs transition-colors whitespace-nowrap shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>{language === 'am' ? 'አዲስ ገቢ ደብዳቤ መዝግብ' : 'Register Incoming Letter'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -155,12 +166,31 @@ export const IncomingCorrespondenceView: React.FC = () => {
         </div>
       </div>
 
+      <CorrespondenceBulkToolbar
+        selectedIds={selectedIds}
+        onClearSelection={() => setSelectedIds([])}
+      />
+
       {/* Table Container */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
+                <th className="pl-4 pr-2 py-3 w-8">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all visible incoming letters"
+                    checked={filteredDocs.length > 0 && filteredDocs.every(d => selectedIds.includes(d.id))}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(filteredDocs.map(d => d.id));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-4 py-3 font-semibold">{t('regNumber')}</th>
                 <th className="px-4 py-3 font-semibold">{t('subject')}</th>
                 <th className="px-4 py-3 font-semibold">{t('sender')}</th>
@@ -174,7 +204,7 @@ export const IncomingCorrespondenceView: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredDocs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     {t('noDocumentsFound')}
                   </td>
                 </tr>
@@ -185,6 +215,20 @@ export const IncomingCorrespondenceView: React.FC = () => {
                     onClick={() => setSelectedDocument(doc)}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
                   >
+                    <td className="pl-4 pr-2 py-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${doc.registrationNumber}`}
+                        checked={selectedIds.includes(doc.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, doc.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== doc.id));
+                          }
+                        }}
+                      />
+                    </td>
                     {/* Reg No + Ref */}
                     <td className="px-4 py-3 font-mono tabular-nums whitespace-nowrap">
                       <div className="font-bold text-slate-900 dark:text-slate-100">

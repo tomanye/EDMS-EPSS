@@ -5,7 +5,9 @@ import {
   setUnauthorizedHandler,
   TOKEN_STORAGE_KEY
 } from '../lib/apiFetch.js';
+import { createNotificationSocketClient } from '../lib/notificationSocket.js';
 import { translations } from '../lib/translations.js';
+import { hasEffectivePermission } from '../lib/permissions.js';
 import {
   AppNotification,
   AuthSession,
@@ -14,6 +16,8 @@ import {
   Department,
   DocumentItem,
   DocumentType,
+  EffectivePermissionPreview,
+  EnterpriseRole,
   ExecutiveKpiSummary,
   Language,
   RolePermissionMatrix,
@@ -31,6 +35,9 @@ interface AppContextType {
   session: AuthSession | null;
   roleMatrix: RolePermissionMatrix[];
   delegations: DelegationRecord[];
+  effectivePermissions: EffectivePermissionPreview | null;
+  enterpriseRoles: EnterpriseRole[];
+  can: (permission: string) => boolean;
   isAuthenticated: boolean;
   isAuthChecking: boolean;
   loginSuccess: (token: string, user: User, session: AuthSession) => Promise<void>;
@@ -44,6 +51,8 @@ interface AppContextType {
   notifications: AppNotification[];
   unreadNotificationsCount: number;
   markNotificationAsRead: (id: string) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
+  realtimeConnected: boolean;
   isLoading: boolean;
   refreshData: () => Promise<void>;
   selectedDocument: DocumentItem | null;
@@ -51,7 +60,9 @@ interface AppContextType {
   isRegisterModalOpen: boolean;
   setIsRegisterModalOpen: (open: boolean) => void;
   registerModalType: DocumentType;
-  openRegisterModal: (type: DocumentType) => void;
+  replyToDocument: DocumentItem | null;
+  clearReplyContext: () => void;
+  openRegisterModal: (type: DocumentType, replyToDoc?: DocumentItem | null) => void;
   t: (key: keyof typeof translations.en) => string;
 }
 
@@ -67,16 +78,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [session, setSession] = useState<AuthSession | null>(null);
   const [roleMatrix, setRoleMatrix] = useState<RolePermissionMatrix[]>([]);
   const [delegations, setDelegations] = useState<DelegationRecord[]>([]);
+  const [effectivePermissions, setEffectivePermissions] = useState<EffectivePermissionPreview | null>(null);
+  const [enterpriseRoles, setEnterpriseRoles] = useState<EnterpriseRole[]>([]);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [kpis, setKpis] = useState<ExecutiveKpiSummary | null>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [realtimeConnected, setRealtimeConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState<boolean>(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpenState] = useState<boolean>(false);
   const [registerModalType, setRegisterModalType] = useState<DocumentType>('IncomingLetter');
+  const [replyToDocument, setReplyToDocument] = useState<DocumentItem | null>(null);
   const isLoggingOutRef = useRef(false);
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
@@ -88,6 +103,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSession(null);
     setRoleMatrix([]);
     setDelegations([]);
+    setEffectivePermissions(null);
+    setEnterpriseRoles([]);
     setBranches([]);
     setDepartments([]);
     setDocuments([]);
@@ -108,6 +125,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [clearAuthState]);
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = language;
+    }
+  }, [language]);
+
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
@@ -118,10 +141,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRealtimeConnected(false);
+      return;
+    }
+
+    const socket = createNotificationSocketClient({
+      onStatusChange: (connected) => setRealtimeConnected(connected),
+      onEvent: (evt) => {
+        if (evt.type === 'notifications:init') {
+          setNotifications(Array.isArray(evt.notifications) ? evt.notifications : []);
+        } else if (evt.type === 'notification:created' && evt.payload) {
+          // Idempotent insert: never duplicate notification IDs across reconnects
+          setNotifications((prev) =>
+            prev.some((n) => n.id === evt.payload.id) ? prev : [evt.payload, ...prev]
+          );
+        } else if (evt.type === 'notification:read' && evt.payload?.id) {
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === evt.payload.id ? { ...n, isRead: true } : n))
+          );
+        } else if (evt.type === 'notification:read_all') {
+          setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        }
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [isAuthenticated]);
+
   const markNotificationAsRead = async (id: string) => {
     try {
-      await apiFetch(`/api/v1/notifications/${id}/read`, { method: 'POST' });
+      const res = await apiFetch(`/api/v1/notifications/${id}/read`, { method: 'POST' });
+      if (!res.ok) return;
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    try {
+      const res = await apiFetch('/api/v1/notifications/read-all', { method: 'POST' });
+      if (!res.ok) return;
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (e) {
       console.error(e);
     }
@@ -163,6 +228,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSession(data.session);
         setRoleMatrix(Array.isArray(data.roleMatrix) ? data.roleMatrix : []);
         setDelegations(Array.isArray(data.delegations) ? data.delegations : []);
+        setEffectivePermissions(data.effectivePermissions || null);
+        setEnterpriseRoles(Array.isArray(data.enterpriseRoles) ? data.enterpriseRoles : []);
       } else {
         clearAuthState();
       }
@@ -190,6 +257,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setSession(data.session);
             setRoleMatrix(Array.isArray(data.roleMatrix) ? data.roleMatrix : []);
             setDelegations(Array.isArray(data.delegations) ? data.delegations : []);
+            setEffectivePermissions(data.effectivePermissions || null);
+            setEnterpriseRoles(Array.isArray(data.enterpriseRoles) ? data.enterpriseRoles : []);
             await loadProtectedData();
           } else {
             clearAuthState();
@@ -230,10 +299,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSession(prev => (prev ? { ...prev, mfaVerified: true } : prev));
   };
 
-  const openRegisterModal = (type: DocumentType) => {
+  const setIsRegisterModalOpen = useCallback((open: boolean) => {
+    setIsRegisterModalOpenState(open);
+    if (!open) {
+      setReplyToDocument(null);
+    }
+  }, []);
+
+  const clearReplyContext = useCallback(() => {
+    setReplyToDocument(null);
+  }, []);
+
+  const openRegisterModal = (type: DocumentType, replyToDoc?: DocumentItem | null) => {
     setRegisterModalType(type);
-    setIsRegisterModalOpen(true);
+    setReplyToDocument(replyToDoc || null);
+    setIsRegisterModalOpenState(true);
   };
+
+  const can = useCallback(
+    (permission: string) => hasEffectivePermission(effectivePermissions, currentUser, roleMatrix, permission),
+    [effectivePermissions, currentUser, roleMatrix]
+  );
 
   const t = (key: keyof typeof translations.en): string => {
     const dict = translations[language];
@@ -253,6 +339,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         session,
         roleMatrix,
         delegations,
+        effectivePermissions,
+        enterpriseRoles,
+        can,
         isAuthenticated,
         isAuthChecking,
         loginSuccess,
@@ -266,6 +355,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         unreadNotificationsCount,
         markNotificationAsRead,
+        markAllNotificationsAsRead,
+        realtimeConnected,
         isLoading,
         refreshData,
         selectedDocument,
@@ -273,6 +364,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isRegisterModalOpen,
         setIsRegisterModalOpen,
         registerModalType,
+        replyToDocument,
+        clearReplyContext,
         openRegisterModal,
         t
       }}

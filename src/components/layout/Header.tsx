@@ -14,12 +14,16 @@ import {
   Users,
   History,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  CheckCheck,
+  Sliders
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
+import { useEscapeKey } from '../../lib/useEscapeKey.js';
 import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 import { SecurityModalTab, UserSecurityModal } from '../auth/UserSecurityModal.js';
+import { groupNotificationsByDate } from '../notifications/NotificationsEscalationView.js';
 
 export const Header: React.FC = () => {
   const {
@@ -31,9 +35,11 @@ export const Header: React.FC = () => {
     session,
     logout,
     openRegisterModal,
+    setActiveTab,
     notifications,
     unreadNotificationsCount,
     markNotificationAsRead,
+    markAllNotificationsAsRead,
     documents,
     setSelectedDocument,
     t
@@ -45,11 +51,30 @@ export const Header: React.FC = () => {
   const [securityModalOpen, setSecurityModalOpen] = useState(false);
   const [securityModalTab, setSecurityModalTab] = useState<SecurityModalTab>('profile');
 
+  useEscapeKey(isNotifOpen || isProfileMenuOpen, () => {
+    setIsNotifOpen(false);
+    setIsProfileMenuOpen(false);
+  });
+
   const openSecurityTab = (tab: SecurityModalTab) => {
     setSecurityModalTab(tab);
     setSecurityModalOpen(true);
     setIsProfileMenuOpen(false);
   };
+
+  const openNotificationsHub = (subTab: 'center' | 'preferences') => {
+    try {
+      window.sessionStorage.setItem('epss_notifications_target_tab', subTab);
+    } catch {
+      // ignore
+    }
+    setActiveTab('notifications');
+    window.dispatchEvent(new CustomEvent('epss-notifications-tab', { detail: { tab: subTab } }));
+    setIsNotifOpen(false);
+    setIsProfileMenuOpen(false);
+  };
+
+  const groupedNotifications = groupNotificationsByDate(notifications.slice(0, 20));
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-6 sticky top-0 z-30 transition-colors">
@@ -110,16 +135,21 @@ export const Header: React.FC = () => {
         {/* Notifications Bell & Dropdown */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => {
               setIsNotifOpen(!isNotifOpen);
               setIsProfileMenuOpen(false);
             }}
-            aria-label="Toggle notifications"
+            aria-label={t('openNotifications')}
+            aria-expanded={isNotifOpen}
+            aria-haspopup="true"
             className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
           >
             <Bell className="w-4 h-4" />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold tabular-nums flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+                {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+              </span>
             )}
           </button>
 
@@ -130,68 +160,110 @@ export const Header: React.FC = () => {
                   <Bell className="w-3.5 h-3.5 text-teal-600" />
                   <span>{t('notifications')}</span>
                   {unreadNotificationsCount > 0 && (
-                    <span className="font-mono text-[10px] text-teal-800 bg-teal-100 dark:bg-teal-950 px-1.5 py-0.5 rounded">
-                      {unreadNotificationsCount} new
+                    <span className="font-mono text-[10px] tabular-nums text-teal-800 bg-teal-100 dark:bg-teal-950 dark:text-teal-300 px-1.5 py-0.5 rounded">
+                      {unreadNotificationsCount} unread
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => setIsNotifOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 text-xs"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                  {unreadNotificationsCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => markAllNotificationsAsRead()}
+                      className="text-[11px] font-medium text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1"
+                    >
+                      <CheckCheck className="w-3 h-3" />
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsNotifOpen(false)}
+                    aria-label={t('close')}
+                    className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-xs p-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="py-8 text-center text-slate-400">
-                    No new system notifications.
+                    No system notifications.
                   </div>
                 ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      onClick={() => {
-                        markNotificationAsRead(n.id);
-                        if (n.documentId) {
-                          const target = documents.find(
-                            d => d.id === n.documentId || d.registrationNumber === n.registrationNumber
-                          );
-                          if (target) {
-                            setSelectedDocument(target);
-                            setIsNotifOpen(false);
-                          }
-                        }
-                      }}
-                      className={`p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors ${
-                        !n.isRead ? 'bg-teal-50/40 dark:bg-teal-950/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">
-                          {language === 'am' ? n.titleAm : n.titleEn}
-                        </span>
-                        <span className="font-mono text-[10px] text-slate-400">
-                          {formatEthiopianDate(n.timestamp, language)}
-                        </span>
+                  groupedNotifications.map((group) => (
+                    <div key={group.key}>
+                      <div className="px-3 py-1.5 bg-slate-50/80 dark:bg-slate-800/40 text-[10px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 dark:border-slate-800 sticky top-0">
+                        {group.key}
                       </div>
-                      <p className="mt-1 text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">
-                        {language === 'am' ? n.messageAm : n.messageEn}
-                      </p>
-                      {n.registrationNumber && (
-                        <div className="mt-1 flex items-center justify-between">
-                          <span className="font-mono text-[10px] text-teal-700 dark:text-teal-400 font-semibold">
-                            {n.registrationNumber}
-                          </span>
-                          <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
-                            View <ArrowRight className="w-2.5 h-2.5" />
-                          </span>
-                        </div>
-                      )}
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {group.items.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              if (!n.isRead) markNotificationAsRead(n.id);
+                              if (n.documentId) {
+                                const target = documents.find(
+                                  d => d.id === n.documentId || d.registrationNumber === n.registrationNumber
+                                );
+                                if (target) {
+                                  setSelectedDocument(target);
+                                  setIsNotifOpen(false);
+                                }
+                              }
+                            }}
+                            className={`p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors ${
+                              !n.isRead ? 'bg-teal-50/40 dark:bg-teal-950/20' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0" />}
+                                {language === 'am' ? n.titleAm : n.titleEn}
+                              </span>
+                              <span className="font-mono text-[10px] text-slate-400 shrink-0">
+                                {formatEthiopianDate(n.timestamp, language)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">
+                              {language === 'am' ? n.messageAm : n.messageEn}
+                            </p>
+                            {n.registrationNumber && (
+                              <div className="mt-1 flex items-center justify-between">
+                                <span className="font-mono text-[10px] text-teal-700 dark:text-teal-400 font-semibold">
+                                  {n.registrationNumber}
+                                </span>
+                                <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                                  Open Document <ArrowRight className="w-2.5 h-2.5" />
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}
+              </div>
+
+              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => openNotificationsHub('center')}
+                  className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1"
+                >
+                  Open Notification Center <ArrowRight className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openNotificationsHub('preferences')}
+                  className="text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1"
+                >
+                  <Sliders className="w-3 h-3" />
+                  Preferences
+                </button>
               </div>
             </div>
           )}
@@ -208,8 +280,9 @@ export const Header: React.FC = () => {
 
         {/* Theme Switcher */}
         <button
+          type="button"
           onClick={toggleTheme}
-          aria-label="Toggle theme"
+          aria-label={t('toggleThemeLabel')}
           className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
         >
           {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
@@ -223,6 +296,8 @@ export const Header: React.FC = () => {
               setIsProfileMenuOpen(!isProfileMenuOpen);
               setIsNotifOpen(false);
             }}
+            aria-expanded={isProfileMenuOpen}
+            aria-haspopup="menu"
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
           >
             <div className="w-6 h-6 rounded-md bg-teal-700/10 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 font-bold text-[11px] flex items-center justify-center">
@@ -292,6 +367,14 @@ export const Header: React.FC = () => {
               >
                 <History className="w-3.5 h-3.5 text-slate-400" />
                 <span>Login History</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openNotificationsHub('preferences')}
+                className="w-full px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <Sliders className="w-3.5 h-3.5 text-slate-400" />
+                <span>Notification Preferences</span>
               </button>
 
               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />

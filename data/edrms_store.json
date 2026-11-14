@@ -379,7 +379,7 @@
       "mfaPinHash": "343ed67960ed404160461309b6d14558:f0f396abb375c771d4f5e90408ba6b83c2bb8710f69b9a812185e83377db3bd9",
       "failedLoginAttempts": 0,
       "lockedUntil": null,
-      "lastLoginAt": "2026-11-13T06:44:43.824Z"
+      "lastLoginAt": "2026-11-14T15:11:18.553Z"
     },
     {
       "id": "usr-dg",
@@ -425,7 +425,8 @@
         "create:incoming",
         "create:outgoing",
         "track:physical",
-        "manage:archive"
+        "manage:archive",
+        "export:reports"
       ],
       "username": "selamawit.b",
       "passwordHash": "9f48a7d25b1739ff4f531130deb6960e:4e7519a7402becd8eb7973ea0057974a95aa8b7fc09d93bf1193c8fa90970c99",
@@ -434,7 +435,7 @@
       "status": "Active",
       "mfaRequired": false,
       "lockedUntil": null,
-      "lastLoginAt": "2026-11-13T06:51:53.249Z",
+      "lastLoginAt": "2026-11-14T15:00:10.951Z",
       "biometricCredentials": [
         {
           "id": "bio-1794551424322",
@@ -466,7 +467,8 @@
         "approve:workflow",
         "forward:workflow",
         "create:outgoing",
-        "create:memo"
+        "create:memo",
+        "export:reports"
       ],
       "username": "dawit.t",
       "passwordHash": "9f48a7d25b1739ff4f531130deb6960e:4e7519a7402becd8eb7973ea0057974a95aa8b7fc09d93bf1193c8fa90970c99",
@@ -495,7 +497,8 @@
         "approve:workflow",
         "forward:workflow",
         "create:outgoing",
-        "create:memo"
+        "create:memo",
+        "export:reports"
       ],
       "username": "hiwot.t",
       "passwordHash": "9f48a7d25b1739ff4f531130deb6960e:4e7519a7402becd8eb7973ea0057974a95aa8b7fc09d93bf1193c8fa90970c99",
@@ -523,7 +526,8 @@
         "read:branch",
         "create:incoming",
         "create:outgoing",
-        "track:physical"
+        "track:physical",
+        "export:reports"
       ],
       "username": "yonas.a",
       "passwordHash": "9f48a7d25b1739ff4f531130deb6960e:4e7519a7402becd8eb7973ea0057974a95aa8b7fc09d93bf1193c8fa90970c99",
@@ -532,7 +536,7 @@
       "status": "Active",
       "mfaRequired": false,
       "lockedUntil": null,
-      "lastLoginAt": "2026-11-13T06:51:53.414Z"
+      "lastLoginAt": "2026-11-14T15:00:11.008Z"
     },
     {
       "id": "usr-audit",
@@ -618,7 +622,10 @@
       "retentionExpiryDate": "2036-11-05T17:30:28.214Z",
       "legalHold": false,
       "retentionScheduleId": "ret-02",
-      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications"
+      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
+      "ocrTextEn": "WHO Direct Shipment Notification for Polio Vaccines.  Reference REF-1883 from World Health Organization (WHO) to EPSS.",
+      "ocrTextAm": "የዓለም ጤና ድርጅት የፖሊዮ ክትባቶች ቀጥታ ጭነት ማሳወቂያ.  የማጣቀሻ ቁጥር REF-1883 ከWorld Health Organization (WHO)።",
+      "contentHash": "78aec8d98be92926b91cfc9c97c5f00ed35bab8291ff5fdc1c4b1aa806e414be"
     },
     {
       "id": "doc-001",
@@ -710,7 +717,10 @@
       },
       "qrCodeDataUrl": "data:image/png;base64,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",
       "retentionScheduleId": "ret-02",
-      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications"
+      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
+      "ocrTextEn": "Batch Clearance Certificate for Pediatric Antibiotics & Essential Oncology Medications. Official batch release and laboratory safety clearance for 45,000 vials of Amoxicillin and Cisplatin arrived at Bole International Airport customs terminal. Reference EFDA/04/1892/2026 from Ethiopian Food and Drug Authority (EFDA) to EPSS - Quality Assurance & Regulatory Directorate.",
+      "ocrTextAm": "ለህፃናት አንቲባዮቲክስ እና ለአስፈላጊ የካንሰር ህክምና መድኃኒቶች የጥራት ማረጋገጫ የምስክር ወረቀት. በቦሌ ዓለም አቀፍ አውሮፕላን ማረፊያ ለደረሱ 45,000 የህፃናት አሞክሲሲሊን እና ሲስፕላቲን መድኃኒቶች የተሰጠ የላቦራቶሪ ምርመራ እና የጥራት ፈቃድ። የማጣቀሻ ቁጥር EFDA/04/1892/2026 ከEthiopian Food and Drug Authority (EFDA)።",
+      "contentHash": "d6bd98e9da80163af7a09cdbbc41f8dd84fc8588d7ccf961f9e1545e294bf7d1"
     },
     {
       "id": "doc-002",
@@ -802,7 +812,10 @@
       },
       "qrCodeDataUrl": "data:image/png;base64,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",
       "retentionScheduleId": "ret-02",
-      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications"
+      "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
+      "ocrTextEn": "Urgent Allocation Request: Cholera Response & IV Fluid Kits for Somali and Afar Hubs. Ministry of Health national disaster coordination desk requests immediate dispatch of 200,000 Ringer Lactate bags and water purification tablets to Semera and Jijiga hubs. Reference MoH/EMERG/889/26 from Federal Ministry of Health (MoH) to EPSS - Office of the Director General.",
+      "ocrTextAm": "አስቸኳይ የመድኃኒት ጥያቄ፦ ለሶማሌ እና አፋር ቅርንጫፎች የኮሌራ መከላከያና የደም ሥር ፈሳሾች ድልድል. የጤና ሚኒስቴር የአደጋ መከላከል አስተባባሪ ዴስክ 200,000 ሪንገር ላክቴት እና የውሃ ማከሚያ ኬሚካሎች በአስቸኳይ ለሰመራ እና ጅጅጋ ቅርንጫፎች እንዲላኩ ያቀረበው መመሪያ። የማጣቀሻ ቁጥር MoH/EMERG/889/26 ከFederal Ministry of Health (MoH)።",
+      "contentHash": "a1ec553bbf85ae65575663578868f5d072b30b86fd1150a57d7f6bb840730e97"
     },
     {
       "id": "doc-003",
@@ -869,11 +882,22 @@
           "action": "Approved",
           "comments": "Approved and signed with official digital key. Release to diplomatic dispatch registry.",
           "digitalSignature": {
-            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
-            "certificateSerial": "ET-PKI-EPSS-DG-2026-8819",
+            "signatureId": "sig-1794595669099-839337",
+            "signedByUserId": "usr-dg",
+            "signedBy": "Dr. Abdulkadir Gelgelo (DirectorGeneral)",
+            "signedByRole": "DirectorGeneral",
+            "certificateSerial": "ET-PKI-EPSS-2026-DIRECT-E216A7",
+            "certificateFingerprint": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
+            "algorithm": "RSA-SHA256",
+            "documentDigestSha256": "b079963fe41a639d2c4ae9559627e8a178e75023a462e691bfe461be401ebea3",
+            "signatureBase64": "HTz1oMtyk922vclwwSZdb2UNXqaLu/GJIqCYI/ubUcKsoqsp8FAOCuX6976eIgoPeb/P19yiML2ELlnIexZGW5F6Llp5qgkVzjWccOKaybh3i9KSBvIfefRxlCZ0/nBJ4bJFsN8r7k6i/3cAWE7AzgDd4WCW6hzSlilP+SitH2Hg8tlS+m5/Zf261w186I4lxYLhp4C7aZp4kSCZzDafuxy0ryauE1MumMLcFFxtoLFTh/zQzRVjFocke1uEvpz2oJf0PrzsxEHmXou7HS5hEwtPCVJTW98J95OaEI4tLtI4k6HOUq8M0jjssvWWmeaLUZqcgunZUQAHWSa7iL6TyA==",
+            "signingMeaning": "Approved for Official Issuance",
+            "biometricVerified": true,
+            "mfaMethod": "webauthn",
             "timestamp": "2026-11-03T16:02:11Z",
             "verified": true
-          }
+          },
+          "biometricVerified": true
         }
       ],
       "physicalTracking": {
@@ -891,7 +915,10 @@
       },
       "qrCodeDataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAD6CAYAAACI7Fo9AAAAAklEQVR4AewaftIAABj4SURBVO3BwY0Yy65twaVCG0BPOaQNHG5P6YG+JgkQAjJPdd1uSa8+I378/IUxxqtdjDFe72KM8XoXY4zX++A3Fs6fUCk6C+epSrFj4ZxUis7CuatSfBULZ6dS3GXhnFSKuyycr1ApTiycrlIsFs5JpdixcJ6qFJ2F01WKxcLpKsWJhfMnVIrlYozxehdjjNe7GGO83o+fv9BYOF2l+CoWzlIpPsPCWSrFV7FwukqxWDifUSl2LJyuUvwJFs5dleLEwlkqRWfhdJVix8J5qlKcWDhfoVI8ZeF0laKzcJZK8VUsnK5SLBdjjNe7GGO83sUY4/U++CQL565K8ZSF01WKuyycpVJ8hoWzUyk6C2fHwnnKwjmpFDsWTlcpvkql2KkUnYVzV6V4ysLZqRSfYeEsFs5dleKrWDh3VYq7LsYYr3cxxni9D/4RFs5dFs5JpVgsnJNK0Vk4S6V4qlJ8hoWzUyl2LJwTC2enUnwVC2enUpxYOF2lWCycrlLcZeF0leI7WDhdpfjXXIwxXu9ijPF6F2OM1/vgH1UpdirFiYWzVIrOwrnLwukqxVMWTlcp/jYL56RSdBbOUilOKsVi4XSV4q5K0Vk4XaV4ysJ5qlLsWDhdpfjbLsYYr3cxxni9izHG633wSZXiT7BwukqxY+F0lWKxcD6jUtxVKe6qFJ2Fs1MpOgunqxRLpegsnK5S3GXhnFSKxcLpKsVOpTipFDsWTlcpTiycnUpxUikWC+fEwlkqRVcpnqoU3+FijPF6F2OM17sYY7zeB//BwvkbKkVn4SyV4qlK0Vk4XaVYLJyuUnQWTlcpFgunqxQnlWKxcLpK0Vk4S6X4DAtnqRSfYeEslaKzcLpKsVg4XaXoLJyuUtxl4XSVYrFwvkql6CycHQunqxQ7Fs6fcDHGeL2LMcbr/fj5C/8AC6erFDsWzkml2LFwukrRWThPVYrFwjmpFHdZOE9VirssnJNK8a+xcHYqxWdYOHdViv9LLsYYr3cxxni9izHG6/34+QuNhdNVirssnK5SdBbOU5VisXCeqhSdhdNVisXCOakUT1k4XaVYLJyuUuxYON+lUuxYOF2l6CycpVI8ZeF8RqVYLJynKsWJhfM3VIodC6erFMvFGOP1LsYYr3cxxni9D35TKToLZ6dSnFg4XaVYLJyuUpxYOEul6CycrlIsFs5JpdipFJ2Fc2LhLJWis3BOLJw/oVJ8BwunqxQ7Fk5XKToLZ6kU36VS7Fg4XaV4qlJ0Fs5SKToL56lKsXMxxni9izHG612MMV7vx89faCycP6FSdBZOVyl2LJy7KkVn4XSV4i4L565KcWLhfIdK0Vk4d1WK72DhdJWis3B2KkVn4XSV4i4L56RS7Fg4XaXYsXDuqhSdhdNVis7CuatSLBdjjNe7GGO83ge/qRQnFs5OpfgqFk5XKXYqRWfh7FSKEwvnrkrRWThPVYrFwukqRWfhLJXipFLcZeH8CyrFTqXoLJyvYuHsVIodC6erFE9VipNKsVg4XaXYuRhjvN7FGOP1LsYYr/fj5y80Fk5XKToLZ6kUnYXTVYrOwvkKleLEwvkOlaKzcHYqRWfhnFSKr2Dh3FUpnrJw7qoUJxbOXZXixMJZKkVn4XSVorNwlkrRWTjfoVJ0Fk5XKXYsnJNKsVyMMV7vYozxehdjjNf74H9g4XxGpbjLwrnLwukqxY6Fc1IpFgvnpFI8VSm+goXTVYrOwukqxWLhdJXixMJZKsVdFs5JpegsnB0Lp6sUOxbOiYWzY+F0lWLHwvmMSrFYOCcWTlcplkpx18UY4/Uuxhiv9+PnLzQWzkmleMrCWSpFZ+F0laKzcJZK0Vk4XaXYsXD+hkrRWTjfoVKcWDhLpfgMC2epFJ2F01WKHQvnrkrRWTgnlWKxcLpKcZeFc1IpvoOF01WKr3Axxni9izHG612MMV7vg0+ycJZKcWLhdJVisXBOLJyuUjxh4TxVKToLp6sUnYWzVIqTSrFj4XSVorNwnqoUd1k4OxZOVyk6C2enUnQWTlcpdirFiYWzVIrOwnmqUnQWzk6l6Cycr2LhLJWis3C6SrFcjDFe72KM8XoXY4zX++B/YOF0laKrFJ2Fs1SKz7BwlkpxYuHcVSm+SqXYsXC6StFZOEuluKtSnFg4O5Wis3BOKsVi4XQWTlcpdiycEwtnqRSdhdNVirsqRWfhPFUpFgvnMyrFjoXTWThdpVgsnLsuxhivdzHGeL2LMcbr/fj5CwcWTlcpFgunqxSdhdNVisXC6SpFZ+F0leIJC6erFJ2F01WKHQvnrkrxGRbOUik6C6erFIuF01WKzsLZqRSdhXNXpfgqFs5OpXjKwukqxYmFs1SKzsK5q1LcZeF0leI7XIwxXu9ijPF6H/xBFs5dlaKzcHYqRWfhLJXiMyycpVJ0leLEwlksnK5SnFSKxcL5KpVix8I5qRSdhfOEhfOUhXNSKZ6ycJ6qFE9ZOEul6Cyck0qxY+F0lWK5GGO83sUY4/Uuxhiv9+PnLxxYODuVorNwukpxl4XTVYqvYOGcVIodC+ekUnQWzl2V4m+wcJZKcWLhdJVisXC+S6V4ysJZKkVn4XSVorNwlkpxYuH8DZVix8LpKsVyMcZ4vYsxxutdjDFe74P/UCm+ioWzVIquUnQWzl2V4qtYOEulOLFwukqxWDhdpegsnK5S3GXhLJXixMLZsXC6StFVip1K0Vk4d1WKEwtnqRRPWTgnFk5XKXYsnKcqxV0WTlcpdiycuy7GGK93McZ4vYsxxut98BsL565K8RmVYsfC6SrFn2Dh7Fg4J5Vip1J8hoWzUym6SrFYOCeVorNwdiycrlLsWDhdpegsnKVSnFg4d1k4XaXYqRSdhXNi4exUis7C2akUd1k4X6VS7FyMMV7vYozxeh/8h0qxY+F0leLEwvkKFs5JpbirUuxYOCcWzk6lOKkUOxbOiYWzVIoTC+erWDhLpegsnK5S7Fg4XaXoLJzFwjmxcLpKsVMpnrJwdipFZ+HcVSk6C+cpC6erFMvFGOP1LsYYr3cxxni9D76QhdNViq5S3GXhdJXiLgtnqRSfYeEsleLEwtmxcE4qxVOVYrFwukrRVYqnLJyuUtxl4SyV4jMqxWLhdJWis3A6C+euStFZODuVorNwFgvnMyrFYuF0laKzcLpK8cTFGOP1LsYYr3cxxni9Hz9/4cDC6SrFXRbOXZXixMJZKkVn4XSVYrFwukrRWThdpdixcLpKsWPhfEalWCycrlJ0Fs5dlaKzcJZK0Vk4XaXYsXBOKsWOhdNViu9g4XxGpdixcO6qFHdZOCeV4itcjDFe72KM8XoXY4zX+/HzFw4snK5S7Fg4XaXYsXBOKsVTFs5SKToL56RSLBbOU5Wis3C6StFZOEul6CycnUpxYuF0lWLHwukqxVewcL5KpegsnK5S7Fg4J5Vix8LpKsVi4ZxUirssnLsqRWfhdJViuRhjvN7FGOP1fvz8hcbCeapSdBbOXZXixMJZKkVn4dxVKToLp6sUOxbOXZWis3BOKsUTFk5XKToL565KcWLhfIdK0Vk4S6X4DAtnqRSfYeHcVSnusnC6SnGXhXNXpdi5GGO83sUY4/Uuxhiv98H/oFKcVIodC6ezcE4qxV2VYsfC6SrFjoVzUik6C2enUnQWzo6F85SF01WKHQuns3DuqhSdhdNVih0L56tYOHdZOF2l6CrFYuGcWDh3VYodC6erFHdVirsuxhivdzHGeL2LMcbr/fj5C42F01WKHQunqxSdhfP/k0rxlIVzV6XYsXC6StFZOH9apTixcLpKsVg4X6VSdBbOTqXoLJyuUiwWzlOV4sTCuatS7FyMMV7vYozxeh/8plJ0Fs5TlWLHwjmpFDsWTlcpOgtnqRQnFk5XKXYsnBMLZ6kUnYXTVYquUnwHC6erFF/BwukqxY6F01WKrlLcVSlOLJw/wcJZKkVn4ZxUih0Lp6sUnYXzxMUY4/UuxhivdzHGeL0fP3/hEyycv6FSLBZOVyl2LJyTStFZOEul6CycpyrFXRZOVyk6C+dPqBSdhbNUihML565K0Vk4T1WKxcLpKkVn4XSVYrFwTirFjoXzVSrFjoVzUimWizHG612MMV7vYozxeh/8xsLpKkVXKRYL56RS3GXhdJXiKQtnp1LcZeGcVIo/wcLZqRSdhdNVirssnM7C6SrFYuE8VSk6C6erFE9ZOEul6CycrlLcVSmeqhR3WTidhdNViicuxhivdzHGeL2LMcbrffCbStFZOF2leMrCWSrFZ1g4d1WKxcLpLJzvYuHsVIrOwrmrUnwVC2epFF+lUnQWzl2V4i4L5y4L5zMsnKVSfBcLZ6kUn2HhLJXirosxxutdjDFe78fPXziwcJ6qFHdZOCeVYrFwukrxVSycnUrxXSycpVKcWDhLpegsnK5S3GXhdJXiK1g4J5Wis3CWSnFi4XSVYrFwTipFZ+F8h0pxl4XTVYodC+ekUiwXY4zXuxhjvN7FGOP1PviNhXNSKRYL58TCeapS7FSKzsLZqRSdhdNViq5SLBbOiYXTVYrFwvmMSrFj4exYOCcWzlexcJZKcVel6Cycuyyck0rRWThLpXiqUnQWzk6l6CyczsL52y7GGK93McZ4vYsxxut98D+oFH+KhbNTKe6qFJ2F01WKHQunqxQ7laKzcLpK0Vk4S6U4qRSLhfOnVIrFwukqRWfhfIdK0Vk4X6VSLBbOU5Wis3B2KkVn4dxVKe66GGO83sUY4/Uuxhiv9+PnLzQWzl2VorNwukrRWThPVYq/zcI5qRQ7Fs5XqRQ7Fs5JpVgsnJNKcZeF01WKv8HC2akUd1k4XaXYsXA+o1LsWDgnlWLHwukqxXIxxni9izHG633wHypFZ+HcZeF0leIpC+eJStFZOF2l6CycpVJ0leLEwnmqUiwWTlcp/oRKcWLhLJXiq1g4XaXYsXC6SvGUhfOUhXNXpXiqUuxYOHddjDFe72KM8XoXY4zX++CTKsVdlaKzcHYqRWfh7FSKEwtnp1J0Fs5dFk5XKXYqRWfhnFg4OxZOVyl2KkVn4exUis7C+SoWzlMWzlIpukrRWThdpdixcLpK0Vk4OxbOTqU4sXDuqhQnFs5Opdi5GGO83sUY4/Uuxhiv9+PnLzQWTlcpnrJwukqxY+F0laKzcO6qFDsWzr+gUuxYOF2l6CycnUpxYuEslaKzcLpK8ZSFc1el6CycnUrRWTh3VYoTC2epFJ2F01WKxcLpKkVn4exUiqcsnJNKsVyMMV7vYozxeh/8plKcWDhLpfgMC+crVIrOwuksnKVSnFSKzsLZqRRPWTidhbNTKU4qxY6Fc1IpFgvnMyycnUrRVYrFwukqxZ9QKToLp6sUXaVYLJwTC+euSvGUhbNTKe66GGO83sUY4/Uuxhiv98FvLJyuUuxYOF2lOKkUi4XzlIVzUikWC6erFJ2F01WKxcLpLJyuUuxYOF2l6CycHQunqxSdhbNTKToLp7NwlkrRWTgnlWKxcL6KhdNVih0Lp6sUnYWzWDgnFk5XKZZKcWLhLJXixMLpKsVi4XwVC6erFMvFGOP1LsYYr3cxxni9D/4gC2enUnQWTlcpdiycuyycrlJ0Fs5OpTixcHYsnK5SdBbOV7BwukrRWTg7leKuStFZOF2lWCpFZ+E8VSk6C6erFIuF01WKzsK5y8LpKsWOhXNi4dxVKToLZ7FwukqxczHGeL2LMcbrXYwxXu+D31SKk0rxVKXYsXC6StFZOEuluKtSdBZOZ+HsVIrOwukqxU6lOLFwukqxWDgnlWKxcJ6ycJ6qFCcWzlIpukrRWTh3WThdpegsnKVSdBbOiYWzUyl2LJyuUpxYODuV4jtcjDFe72KM8Xo/fv7CgYWzUyk6C+epSnGXhfNUpTixcO6qFDsWTlcp/gUWzlIpTiycnUrRWThdpdixcO6qFJ2F01WKuyycpypFZ+EslaKzcLpKsWPhnFSKzsK5q1IsF2OM17sYY7zexRjj9T74jYVzl4XzGZXiLgvnqUqxWDidhXNSKXYsnLsqxWdYODuVorNwdipFZ+HcZeF0laKzcBYLp6sUT1WKHQvnxMJ5qlJ0Fs5SKToL5ykLp6sUS6XoLJy7KkVn4excjDFe72KM8XoXY4zX++A3laKzcLpKsVg4n2HhLJWis3BOKsV3qBSdhbNUis+wcHYqxUml2LFwukqxWDifUSkWC+epSvFVLJynKsWOhdNVis7C6SrFXZXiK1g4n1EpFgvnrosxxutdjDFe72KM8Xo/fv7CQxbOZ1SKHQvnrkpxYuEsleLEwvkbKkVn4exUir/BwrmrUnQWzk6l6CycrlIsFk5XKU4snO9QKToLZ6kUJxZOVykWC+epStFZOF2lWC7GGK93McZ4vQ9+Y+HcVSlOLJzOwlkqxUml6CycxcLpKsVTlaKzcJZKcWLhdJXiLgunqxR/goWzVIrOwnnKwrnLwjmxcJ6qFIuFc1IpvoKFc1IpnqoUOxbOXRdjjNe7GGO83sUY4/U++A+V4i4Lp6sUT1k4O5Wis3B2LJyuUnQWTlcpFgvnpFJ0Fs53sHC6SrFj4XyVStFZOE9Uis7C6SpFZ+HsWDhdpegsnD+hUiwWzmdYOEul6CyczsLpKsVSKe66GGO83sUY4/Uuxhiv98FvKkVn4XSVYrFwPsPCWSrFZ1SKuyrFXZVip1KcWDjfwcI5sXCWSvEZlWKxcLpK0Vk4O5Xiq1g4X6VSLBZOVynusnBOKsVSKb5KpegsnM7CWSpFZ+F0lWK5GGO83sUY4/Uuxhiv9+PnLzQWTlcp7rJwukqxY+F0leLEwlkqxYmFs1SKz7BwlkrRWThdpbjLwukqxVMWzlIpTiycv61SnFg4XaVYLJyuUpxYOEulOLFw7qoUnYWzVIoTC6erFIuF01WKuyyck0qxXIwxXu9ijPF6H/wPLJzPsHB2LJyuUjxVKRYL56RSdJXiLgunqxQ7leLEwlkqxUml+BMqxY6Fc1IpdiycEwtnqRRPWTifUSkWC6ezcO6ycLpKsVMpOgvnpFI8cTHGeL2LMcbrXYwxXu/Hz1/4JhZOVynusnC6SnGXhbNUihMLp6sUd1k4O5XixMLpKsVi4XSV4i4L565K8RkWzhOV4sTC2akUT1k4XaW4y8I5qRQ7Fs5dleJPuBhjvN7FGOP1LsYYr/fj5y98goWzUyk6C2enUnQWzkmlWCyck0qxY+F0leIuC+erVIrOwrmrUjxl4exUihMLZ6kUnYXTVYodC6erFJ2Fc1eleMrC6SrFjoVzV6XoLJyuUjxl4dxVKZaLMcbrXYwxXu+D31g4XaXoKsVi4ZxUirsqxYmF8x0snK5SLBbOU5Wis3C+g4XTVYqTSrFYOF+lUnQWzlIpTiycrlIsFk5XKU4snKVSfIaFs1MpOgvnrkrRWThLpegsnJNK8cTFGOP1LsYYr3cxxni9D35TKToLZ6dSdBZOVyk6C2epFJ2F81UsnJ1K0Vk4nYWzUyk6C6erFIuF81UqRWfhLJWis3CesnC6SvFUpVgsnK5S/OsqxVMWzl0WzmdYOEuluOtijPF6F2OM17sYY7zeB/+hUtxVKU4qxV2VorNwlkpxYuEslaKzcE4qxWLhPFUpTiycrlJ8h0pxl4VzUikWC+erWDg7leIzKsVdlaKzcO6qFIuFc1Ip7rJwTirFjoXTVYrlYozxehdjjNe7GGO83ge/sXD+hErxlIVzUinuqhQ7leIpC+ekUnQWzlIpOgunqxRPWThLpTixcHYqRWfh/AssnKVSfEalWCyck0qxVIrOwjmxcJZKcVIpdiycrlLsXIwxXu9ijPF6H/yHSvFVLJydStFZOF2lWCycuyycrlJ0Fs5TlaKzcJZKcWLhdJVip1J0Fs5TleKpSvFEpfiMSrFj4dxl4XSV4sTCecLC+YxK8ZSFs1SKuy7GGK93McZ4vYsxxuv9+PkLjYXTVYrOwrmrUnQWzlIpOgvnqUqxY+GcVIq7LJyuUuxYOCeVorNwlkrxlIXzJ1SKpyyck0qxWDhdpbjLwnmqUnQWzk6l6Cycv6FS7FyMMV7vYozxehdjjNf74B9RKToLZ6dSdBbOn1ApTiycnUrRWTg7Fs6/qFIsFs5JpdipFJ2F01k4S6U4sXB2KkVn4ZxUisXC6SrFjoXTVYrOwtmpFJ2F01WKzsJZKsVdF2OM17sYY7zexRjj9T74R1WKzsL5CpXixMJZKkVn4fwLKsWOhdNVis7C2akUd1WKpyycrlLcZeE8VSlOLJwdC6erFDsWzkmlWCycEwtnx8I5qRTLxRjj9S7GGK/3wSdVir+hUuxUis7CucvC2bFwukpxYuHcVSk6C2enUuxYOP86C+f/mkrRWTidhbNUis7CuatSnFg4XaVYLJy7LsYYr3cxxni9izHG6/34+QuNhfMnVIrOwrmrUtxl4ZxUis7CuatSdBbOUimesnC6SvEvsHCWStFZOF2l2LFwnqoUd1k4n1EpFgunqxSdhbNUiqcsnK5SdBbOXZVi52KM8XoXY4zXuxhjvN6Pn78wxni1izHG612MMV7v/wHDdwqyO3ETQwAAAABJRU5ErkJggg==",
       "retentionScheduleId": "ret-01",
-      "retentionCategory": "International Pharmaceutical Procurement Contracts"
+      "retentionCategory": "International Pharmaceutical Procurement Contracts",
+      "ocrTextEn": "Award Notification & Contract Finalization: Global Pharmaceutical Supply Tender No. ICB/EPSS/08/2026. Formal award letter addressed to international pre-qualified manufacturers for the delivery of essential maternal health and diabetes insulin consignments. Reference EPSS/PROC/INTL/904/26 from Ethiopian Pharmaceutical Supply Service (EPSS) to Pre-qualified Global Pharmaceutical Consortium (Geneva / Mumbai).",
+      "ocrTextAm": "የጨረታ አሸናፊነት ማሳወቂያ እና የውል ፊርማ ጥሪ፦ ዓለም አቀፍ መድኃኒት አቅርቦት ግዥ ቁጥር ICB/EPSS/08/2026. ለእናቶች ጤና እና ለስኳር ህመም የኢንሱሊን መድኃኒቶች አቅርቦት ላሸነፉ ዓለም አቀፍ አምራች ኩባንያዎች የተላከ ይፋዊ የውል ፊርማ እና የጨረታ ውጤት ማሳወቂያ። የማጣቀሻ ቁጥር EPSS/PROC/INTL/904/26 ከEthiopian Pharmaceutical Supply Service (EPSS)።",
+      "contentHash": "87b73e140cb57cf92adba07c46c195bad6ab31a605a3860be3649f7a3aa040ec"
     },
     {
       "id": "doc-004",
@@ -947,11 +974,22 @@
           "action": "Approved",
           "comments": "Issued to all 19 branches. Mandatory read acknowledgement required by branch managers.",
           "digitalSignature": {
-            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
-            "certificateSerial": "ET-PKI-EPSS-DG-2026-8801",
+            "signatureId": "sig-1794595669100-01c753",
+            "signedByUserId": "usr-dg",
+            "signedBy": "Dr. Abdulkadir Gelgelo (DirectorGeneral)",
+            "signedByRole": "DirectorGeneral",
+            "certificateSerial": "ET-PKI-EPSS-2026-DIRECT-E216A7",
+            "certificateFingerprint": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
+            "algorithm": "RSA-SHA256",
+            "documentDigestSha256": "acdb36a76b83b3eec39fc090d3236c92a8091a4fc14324fdea4cee9e32254dcd",
+            "signatureBase64": "DCruu1N+DJN7GgVKq5yl8GBxARn5w2ksS2zWP8jc/spemwWbJ5JYuwMb3kKshXt8ESon3+uIBbARBNTY4ZQ+C/wDljUqiMgnTCmyR2A8PjjdfAnQkV2LdoSqdk6sFv/dc7Po6P1gzT1CDeYnnwCdgQFOjjKvHipM259vi/GQt3I7ybnDOh9yE5ue/qaLNYTmJT0qKswYI4xD6wMfO48wjOB4s6ROWFgU0AT8QsSlx3DboXfkng0Tb3XGQa649WjfvkO30CTHKUQVQGHLo2QjLd3bfshY83sRdkL1KgtnHWTQIZcb1WHFMGQrWgz3jRNesImBWVykSjxsIm5hLfUIXg==",
+            "signingMeaning": "Approved for Official Issuance",
+            "biometricVerified": true,
+            "mfaMethod": "webauthn",
             "timestamp": "2026-11-01T08:35:00Z",
             "verified": true
-          }
+          },
+          "biometricVerified": true
         }
       ],
       "physicalTracking": {
@@ -971,7 +1009,10 @@
       "retentionCategory": "Internal Administrative Circulars & Meeting Minutes",
       "legalHoldReason": "Active EFDA post-market quality audit and regulatory preservation mandate.",
       "legalHoldAppliedBy": "Dr. Abdulkadir Gelgelo",
-      "legalHoldAppliedAt": "2026-11-01T08:30:00Z"
+      "legalHoldAppliedAt": "2026-11-01T08:30:00Z",
+      "ocrTextEn": "Executive Directive: Nationwide Implementation of EDRMS and Deprecation of Unsigned Paper Correspondence. All 19 regional branch hubs and central directorates are mandated to execute correspondence intake, approval, and physical movement logging exclusively via the new EPSS EDRMS. Reference EPSS/DG/DIR/2026/014 from EPSS - Office of the Director General to All 19 Regional Branch Managers & Directorate Heads.",
+      "ocrTextAm": "የአመራር መመሪያ፦ የሰነድና መዛግብት ኤሌክትሮኒክስ ሥርዓት (EDRMS) አጠቃቀም እና ያልተፈቀዱ የወረቀት ዝውውሮችን ማቆም. ሁሉም 19 የክልል ቅርንጫፍ ማዕከላት እና የማዕከላዊ ዳይሬክቶሬቶች የደብዳቤ መቀበል፣ ማጽደቅ እና የአካላዊ ሰነድ ዝውውርን በአዲሱ የኢ.መ.አ.አ የኤሌክትሮኒክስ ሥርዓት ብቻ እንዲያከናውኑ የሚያዝ መመሪያ። የማጣቀሻ ቁጥር EPSS/DG/DIR/2026/014 ከEPSS - Office of the Director General።",
+      "contentHash": "503a7761259f0f348fb8492d4951741fe948163b2b7cf8dce1ccaea953b5404c"
     },
     {
       "id": "doc-005",
@@ -1047,7 +1088,10 @@
       "retentionCategory": "Regional Hub Consignment Waybills and Goods Received Vouchers",
       "legalHoldReason": "Active EFDA post-market quality audit and regulatory preservation mandate.",
       "legalHoldAppliedBy": "Dr. Abdulkadir Gelgelo",
-      "legalHoldAppliedAt": "2026-11-06T11:45:00Z"
+      "legalHoldAppliedAt": "2026-11-06T11:45:00Z",
+      "ocrTextEn": "Application for Annual Good Distribution Practice (GDP) Warehouse Inspection & Re-Certification. Cadila Pharmaceuticals Ethiopia PLC submits pre-audit compliance checklist and fee payment receipt for renewal of central pharmaceutical storage clearance. Reference APP/CADILA/ETH/2026/08 from Cadila Pharmaceuticals Ethiopia PLC to EPSS - Quality Assurance & Inspection Directorate.",
+      "ocrTextAm": "የዓመታዊ የመልካም መድኃኒት ስርጭት ልምድ (GDP) የመጋዘን ፍተሻ እና የምስክር ወረቀት ዕድሳት ማመልከቻ. ካዲላ ፋርማሲዩቲካልስ ኢትዮጵያ ኃ.የተ.የግ.ማህበር ለማዕከላዊ መድኃኒት ማከማቻ ፍተሻ እና የፍቃድ ዕድሳት ያቀረበው ማመልከቻና የክፍያ ማረጋገጫ። የማጣቀሻ ቁጥር APP/CADILA/ETH/2026/08 ከCadila Pharmaceuticals Ethiopia PLC።",
+      "contentHash": "8d61b9cec1f7e567e76473d768ccd59da0b904574adb7dd6180eea2ad37e3207"
     },
     {
       "id": "doc-arch-mature",
@@ -1092,7 +1136,10 @@
       "retentionCategory": "Internal Administrative Circulars & Meeting Minutes",
       "retentionYears": 5,
       "retentionExpiryDate": "2025-03-15T09:00:00.000Z",
-      "legalHold": false
+      "legalHold": false,
+      "ocrTextEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020). Archived 2020 administrative circular whose mandatory 5-year NALA retention period matured in March 2025. Reference ADM-2020-044 from EPSS Corporate Services Directorate to All Regional Hubs.",
+      "ocrTextAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ.  የማጣቀሻ ቁጥር ADM-2020-044 ከEPSS Corporate Services Directorate።",
+      "contentHash": "cdc2fe5ae6171850b7d4610845b29d71b113c5699b2af1b42d3305416cb8f2d3"
     }
   ],
   "retentionSchedules": [
@@ -1205,6 +1252,123 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit-1794669078553-tom7mi",
+      "timestamp": "2026-11-14T15:11:18.553Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwgjmrkp-9l24",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
+    {
+      "id": "audit-1794668411026-8x6c6n",
+      "timestamp": "2026-11-14T15:00:11.026Z",
+      "userId": "usr-bm-haw",
+      "userName": "Yonas Alemu",
+      "userRole": "BranchManager",
+      "branchName": "Hawassa Branch Hub",
+      "action": "CREATED_CORRESPONDENCE_TEMPLATE",
+      "resourceType": "CorrespondenceTemplate",
+      "resourceId": "tpl-1794668411026-877",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Created bilingual template \"Unauthorized Auditor Template\" (OutgoingLetter)"
+    },
+    {
+      "id": "audit-1794668411009-b5w5uv",
+      "timestamp": "2026-11-14T15:00:11.009Z",
+      "userId": "usr-bm-haw",
+      "userName": "Yonas Alemu",
+      "userRole": "BranchManager",
+      "branchName": "Hawassa Branch Hub",
+      "action": "USER_LOGIN",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwgj8ghs-h2bu",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Authenticated via username + password"
+    },
+    {
+      "id": "audit-1794668410951-ckvwrf",
+      "timestamp": "2026-11-14T15:00:10.951Z",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "userRole": "RegistryOfficer",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwgj8gg7-kdji",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Authenticated via username + password"
+    },
+    {
+      "id": "audit-1794668410898-cd9arj",
+      "timestamp": "2026-11-14T15:00:10.898Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwgj8geq-893t",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
+    {
+      "id": "audit-1794593572630-lfrpp1",
+      "timestamp": "2026-11-13T18:12:52.630Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwfaoety-0thi",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
+    {
+      "id": "audit-1794593559826-g2xgwe",
+      "timestamp": "2026-11-13T18:12:39.826Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "SAVED_NOTIFICATION_TEMPLATE",
+      "resourceType": "NotificationTemplate",
+      "resourceId": "tpl-assignment",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Saved bilingual EN/AM template \"Correspondence Task Assignment\" for Assignment"
+    },
+    {
+      "id": "audit-1794593559783-pny6at",
+      "timestamp": "2026-11-13T18:12:39.783Z",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "userRole": "RegistryOfficer",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwfao4x3-kqlh",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Authenticated via username + password"
+    },
+    {
+      "id": "audit-1794593559717-3d67r5",
+      "timestamp": "2026-11-13T18:12:39.717Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwfao4v8-ynrg",
+      "ipAddress": "::ffff:127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
     {
       "id": "audit-1794552713456-filksf",
       "timestamp": "2026-11-13T06:51:53.456Z",
@@ -2195,7 +2359,12 @@
       "authMethod": "OAuth2",
       "lastSyncTimestamp": "2026-11-08T09:15:00Z",
       "pingLatencyMs": 38,
-      "description": "Bi-directional purchase order, inventory requisition, and consignment GRV synchronization."
+      "description": "Bi-directional purchase order, inventory requisition, and consignment GRV synchronization.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     },
     {
       "id": "conn-ad",
@@ -2206,7 +2375,12 @@
       "authMethod": "LDAP_SSL",
       "lastSyncTimestamp": "2026-11-08T09:00:00Z",
       "pingLatencyMs": 14,
-      "description": "Centralized institutional staff directory, SSO credentials, and security groups synchronization."
+      "description": "Centralized institutional staff directory, SSO credentials, and security groups synchronization.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     },
     {
       "id": "conn-sms",
@@ -2217,7 +2391,12 @@
       "authMethod": "API_Key",
       "lastSyncTimestamp": "2026-11-08T08:50:00Z",
       "pingLatencyMs": 42,
-      "description": "Automated SMS alerts for emergency drug dispatches, workflow assignments, and courier handovers."
+      "description": "Automated SMS alerts for emergency drug dispatches, workflow assignments, and courier handovers.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     },
     {
       "id": "conn-efda",
@@ -2228,7 +2407,12 @@
       "authMethod": "Mutual_TLS",
       "lastSyncTimestamp": "2026-11-08T09:10:00Z",
       "pingLatencyMs": 55,
-      "description": "Direct verification of import licenses, batch clearance certificates, and GMP status."
+      "description": "Direct verification of import licenses, batch clearance certificates, and GMP status.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     },
     {
       "id": "conn-moh",
@@ -2239,7 +2423,12 @@
       "authMethod": "API_Key",
       "lastSyncTimestamp": "2026-11-08T07:30:00Z",
       "pingLatencyMs": 29,
-      "description": "National emergency allocations coordination and regional disease outbreak response tracking."
+      "description": "National emergency allocations coordination and regional disease outbreak response tracking.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     },
     {
       "id": "conn-smtp",
@@ -2250,7 +2439,12 @@
       "authMethod": "API_Key",
       "lastSyncTimestamp": "2026-11-08T09:20:00Z",
       "pingLatencyMs": 18,
-      "description": "Encrypted government SMTP dispatch for outgoing official letters and acknowledgement receipts."
+      "description": "Encrypted government SMTP dispatch for outgoing official letters and acknowledgement receipts.",
+      "enabled": true,
+      "syncIntervalMinutes": 15,
+      "timeoutMs": 8000,
+      "verifyTls": true,
+      "totalDispatches": 0
     }
   ],
   "workspaceItems": [
@@ -2621,6 +2815,111 @@
   },
   "sessions": [
     {
+      "id": "sess-mwgjmrkp-9l24",
+      "token": "88fecb55c178f9c845219c17746e4d8398cc467159fcd043f219665de8883ab6",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-14T15:11:18.553Z",
+      "lastActiveAt": "2026-11-14T15:11:18.553Z",
+      "idleExpiresAt": "2026-11-14T15:41:18.553Z",
+      "expiresAt": "2026-11-14T23:11:18.553Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwgj8ghs-h2bu",
+      "token": "06c0bfa9414393d65f79b56c675f15babdce407b38310cf777414b62e714f64c",
+      "userId": "usr-bm-haw",
+      "userName": "Yonas Alemu",
+      "userRole": "BranchManager",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-14T15:00:11.008Z",
+      "lastActiveAt": "2026-11-14T15:00:11.026Z",
+      "idleExpiresAt": "2026-11-14T15:30:11.026Z",
+      "expiresAt": "2026-11-14T23:00:11.008Z",
+      "mfaVerified": false,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwgj8gg7-kdji",
+      "token": "5459a17d85f8c5b4c727443c2bbbcf47ad6acb0ee74a5559b7733a464095665e",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "userRole": "RegistryOfficer",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-14T15:00:10.951Z",
+      "lastActiveAt": "2026-11-14T15:00:11.022Z",
+      "idleExpiresAt": "2026-11-14T15:30:11.022Z",
+      "expiresAt": "2026-11-14T23:00:10.951Z",
+      "mfaVerified": false,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwgj8geq-893t",
+      "token": "832b0b17353af459e1ce843e22e840fa0adccad6d981b707d3e184a1b5c1756a",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-14T15:00:10.898Z",
+      "lastActiveAt": "2026-11-14T15:00:10.898Z",
+      "idleExpiresAt": "2026-11-14T15:30:10.898Z",
+      "expiresAt": "2026-11-14T23:00:10.898Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwfaoety-0thi",
+      "token": "80ffe3b0c45759aee1c973bd492b6323c82f198ccea9e946b8aba73512227828",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "createdAt": "2026-11-13T18:12:52.630Z",
+      "lastActiveAt": "2026-11-13T18:12:52.630Z",
+      "idleExpiresAt": "2026-11-13T18:42:52.630Z",
+      "expiresAt": "2026-11-14T02:12:52.630Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwfao4x3-kqlh",
+      "token": "e96fb019c02ca9f153dae31a1beffaf033074ce91e849c905ff80260fcc4faa3",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "userRole": "RegistryOfficer",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-13T18:12:39.783Z",
+      "lastActiveAt": "2026-11-13T18:12:39.783Z",
+      "idleExpiresAt": "2026-11-13T18:42:39.783Z",
+      "expiresAt": "2026-11-14T02:12:39.783Z",
+      "mfaVerified": false,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwfao4v8-ynrg",
+      "token": "f8ac5a34b3818fdcc091e3780e3d7bad7e2b89343a9f7402b0bf006d5c7d1433",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "createdAt": "2026-11-13T18:12:39.716Z",
+      "lastActiveAt": "2026-11-13T18:12:39.806Z",
+      "idleExpiresAt": "2026-11-13T18:42:39.806Z",
+      "expiresAt": "2026-11-14T02:12:39.716Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
+    {
       "id": "sess-mwemcnnq-1s5m",
       "token": "62c9956adc05944e5240b1bbce249d81bfa1ab42d8e6e97a69b6c37cb6bb2990",
       "userId": "usr-bm-haw",
@@ -2877,6 +3176,207 @@
     }
   ],
   "loginHistory": [
+    {
+      "id": "lhist-1794669078553-f6ah",
+      "timestamp": "2026-11-14T15:11:18.553Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1794669078473-lfbq",
+      "timestamp": "2026-11-14T15:11:18.473Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794669068247-ftqe",
+      "timestamp": "2026-11-14T15:11:08.247Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "mfa_pin",
+      "status": "Failed",
+      "reason": "Invalid MFA PIN"
+    },
+    {
+      "id": "lhist-1794669068172-9rul",
+      "timestamp": "2026-11-14T15:11:08.172Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794669055014-umbj",
+      "timestamp": "2026-11-14T15:10:55.014Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794668427428-0s3g",
+      "timestamp": "2026-11-14T15:00:27.428Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794668411009-s7he",
+      "timestamp": "2026-11-14T15:00:11.009Z",
+      "usernameAttempted": "yonas.a",
+      "userId": "usr-bm-haw",
+      "userName": "Yonas Alemu",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "Success"
+    },
+    {
+      "id": "lhist-1794668410951-3r10",
+      "timestamp": "2026-11-14T15:00:10.951Z",
+      "usernameAttempted": "selamawit.b",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "Success"
+    },
+    {
+      "id": "lhist-1794668410898-z7lb",
+      "timestamp": "2026-11-14T15:00:10.898Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1794668410838-w81y",
+      "timestamp": "2026-11-14T15:00:10.838Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794593572630-hr2w",
+      "timestamp": "2026-11-13T18:12:52.630Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1794593559783-jfc2",
+      "timestamp": "2026-11-13T18:12:39.783Z",
+      "usernameAttempted": "selamawit.b",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "Success"
+    },
+    {
+      "id": "lhist-1794593559716-s6ch",
+      "timestamp": "2026-11-13T18:12:39.716Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1794593559659-k4s4",
+      "timestamp": "2026-11-13T18:12:39.659Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794593558609-smqc",
+      "timestamp": "2026-11-13T18:12:38.609Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "mfa_pin",
+      "status": "Failed",
+      "reason": "Invalid MFA PIN"
+    },
+    {
+      "id": "lhist-1794593541763-083i",
+      "timestamp": "2026-11-13T18:12:21.763Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "node",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1794593541093-28cr",
+      "timestamp": "2026-11-13T18:12:21.093Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "::ffff:127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
     {
       "id": "lhist-1794552713415-e9pr",
       "timestamp": "2026-11-13T06:51:53.415Z",
@@ -3480,6 +3980,34 @@
       "createdAt": "2026-11-13T06:51:35.372Z",
       "expiresAt": "2026-11-13T06:56:35.372Z",
       "failedAttempts": 0
+    },
+    {
+      "challengeToken": "28e74f13431bba90a482881415f241cd8fad50f5bcf8bea7",
+      "userId": "usr-admin",
+      "createdAt": "2026-11-13T18:12:21.763Z",
+      "expiresAt": "2026-11-13T18:17:21.763Z",
+      "failedAttempts": 0
+    },
+    {
+      "challengeToken": "2fd9455f8e513b31316f203c01af36563dd5d776a6bbdad9",
+      "userId": "usr-admin",
+      "createdAt": "2026-11-14T15:00:27.428Z",
+      "expiresAt": "2026-11-14T15:05:27.428Z",
+      "failedAttempts": 0
+    },
+    {
+      "challengeToken": "a6048ec7a3ac8cbe95abc4b3ba8c7247fe7da338b1eb9909",
+      "userId": "usr-admin",
+      "createdAt": "2026-11-14T15:10:55.014Z",
+      "expiresAt": "2026-11-14T15:15:55.014Z",
+      "failedAttempts": 0
+    },
+    {
+      "challengeToken": "51d0a7ea466da785d6202abd848609217829e63a4c2bb9b5",
+      "userId": "usr-admin",
+      "createdAt": "2026-11-14T15:11:08.172Z",
+      "expiresAt": "2026-11-14T15:16:08.172Z",
+      "failedAttempts": 1
     }
   ],
   "roleMatrix": [
@@ -3509,7 +4037,8 @@
         "apply:legal_hold",
         "read:audit",
         "manage:users",
-        "manage:organizations"
+        "manage:organizations",
+        "export:reports"
       ]
     },
     {
@@ -3524,7 +4053,8 @@
         "approve:workflows",
         "manage:workspace",
         "share:workspace",
-        "manage:archives"
+        "manage:archives",
+        "export:reports"
       ]
     },
     {
@@ -3539,7 +4069,8 @@
         "track:physical",
         "manage:workspace",
         "share:workspace",
-        "manage:archives"
+        "manage:archives",
+        "export:reports"
       ]
     },
     {
@@ -3552,7 +4083,8 @@
         "create:documents",
         "edit:documents",
         "track:physical",
-        "manage:workspace"
+        "manage:workspace",
+        "export:reports"
       ]
     },
     {
@@ -4245,11 +4777,22 @@
           "action": "Approved",
           "comments": "Approved and signed with official digital key. Release to diplomatic dispatch registry.",
           "digitalSignature": {
-            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
-            "certificateSerial": "ET-PKI-EPSS-DG-2026-8819",
+            "signatureId": "sig-1794595669099-839337",
+            "signedByUserId": "usr-dg",
+            "signedBy": "Dr. Abdulkadir Gelgelo (DirectorGeneral)",
+            "signedByRole": "DirectorGeneral",
+            "certificateSerial": "ET-PKI-EPSS-2026-DIRECT-E216A7",
+            "certificateFingerprint": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
+            "algorithm": "RSA-SHA256",
+            "documentDigestSha256": "b079963fe41a639d2c4ae9559627e8a178e75023a462e691bfe461be401ebea3",
+            "signatureBase64": "HTz1oMtyk922vclwwSZdb2UNXqaLu/GJIqCYI/ubUcKsoqsp8FAOCuX6976eIgoPeb/P19yiML2ELlnIexZGW5F6Llp5qgkVzjWccOKaybh3i9KSBvIfefRxlCZ0/nBJ4bJFsN8r7k6i/3cAWE7AzgDd4WCW6hzSlilP+SitH2Hg8tlS+m5/Zf261w186I4lxYLhp4C7aZp4kSCZzDafuxy0ryauE1MumMLcFFxtoLFTh/zQzRVjFocke1uEvpz2oJf0PrzsxEHmXou7HS5hEwtPCVJTW98J95OaEI4tLtI4k6HOUq8M0jjssvWWmeaLUZqcgunZUQAHWSa7iL6TyA==",
+            "signingMeaning": "Approved for Official Issuance",
+            "biometricVerified": true,
+            "mfaMethod": "webauthn",
             "timestamp": "2026-11-03T16:02:11Z",
             "verified": true
-          }
+          },
+          "biometricVerified": true
         }
       ],
       "createdAt": "2026-11-02T14:30:00Z",
@@ -4292,11 +4835,22 @@
           "action": "Approved",
           "comments": "Issued to all 19 branches. Mandatory read acknowledgement required by branch managers.",
           "digitalSignature": {
-            "signedBy": "Dr. Abdulkadir Gelgelo (Director General, EPSS)",
-            "certificateSerial": "ET-PKI-EPSS-DG-2026-8801",
+            "signatureId": "sig-1794595669100-01c753",
+            "signedByUserId": "usr-dg",
+            "signedBy": "Dr. Abdulkadir Gelgelo (DirectorGeneral)",
+            "signedByRole": "DirectorGeneral",
+            "certificateSerial": "ET-PKI-EPSS-2026-DIRECT-E216A7",
+            "certificateFingerprint": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
+            "algorithm": "RSA-SHA256",
+            "documentDigestSha256": "acdb36a76b83b3eec39fc090d3236c92a8091a4fc14324fdea4cee9e32254dcd",
+            "signatureBase64": "DCruu1N+DJN7GgVKq5yl8GBxARn5w2ksS2zWP8jc/spemwWbJ5JYuwMb3kKshXt8ESon3+uIBbARBNTY4ZQ+C/wDljUqiMgnTCmyR2A8PjjdfAnQkV2LdoSqdk6sFv/dc7Po6P1gzT1CDeYnnwCdgQFOjjKvHipM259vi/GQt3I7ybnDOh9yE5ue/qaLNYTmJT0qKswYI4xD6wMfO48wjOB4s6ROWFgU0AT8QsSlx3DboXfkng0Tb3XGQa649WjfvkO30CTHKUQVQGHLo2QjLd3bfshY83sRdkL1KgtnHWTQIZcb1WHFMGQrWgz3jRNesImBWVykSjxsIm5hLfUIXg==",
+            "signingMeaning": "Approved for Official Issuance",
+            "biometricVerified": true,
+            "mfaMethod": "webauthn",
             "timestamp": "2026-11-01T08:35:00Z",
             "verified": true
-          }
+          },
+          "biometricVerified": true
         }
       ],
       "createdAt": "2026-11-01T08:30:00Z",
@@ -4759,6 +5313,867 @@
         }
       ],
       "digitalVerificationHash": "64eb000c58d9fc875f557318e2bd3d64bcf78fd233b0c84ace0d636c553c2a79"
+    }
+  ],
+  "notificationConfig": {
+    "smsMaxLength": 160,
+    "realtimeWsEnabled": true
+  },
+  "notificationTemplates": [
+    {
+      "id": "tpl-assignment",
+      "eventType": "Assignment",
+      "name": "Correspondence Task Assignment",
+      "requiredPlaceholders": [
+        "{{registrationNumber}}",
+        "{{subject}}"
+      ],
+      "emailSubjectEn": "[EPSS EDRMS] Task Assigned: {{registrationNumber}}",
+      "emailSubjectAm": "[EPSS EDRMS] አዲስ ተግባር ተመድቧል: {{registrationNumber}}",
+      "emailBodyEn": "Dear {{assigneeName}},\n\nDocument {{registrationNumber}} (\"{{subject}}\") has been assigned to your queue for action.",
+      "emailBodyAm": "ውድ {{assigneeName}}፣\n\nሰነድ ቁጥር {{registrationNumber}} (\"{{subject}}\") ለእርስዎ እርምጃ ተመድቧል።",
+      "smsBodyEn": "EPSS Assigned: {{registrationNumber}} - {{subject}}. Check inbox.",
+      "smsBodyAm": "EPSS ተመድቧል: {{registrationNumber}} - {{subject}}።",
+      "isActive": true,
+      "updatedAt": "2026-11-13T18:12:39.826Z",
+      "updatedBy": "System Security Administrator"
+    },
+    {
+      "id": "tpl-approval",
+      "eventType": "Approval",
+      "name": "Executive Approval Decision",
+      "requiredPlaceholders": [
+        "{{registrationNumber}}",
+        "{{subject}}"
+      ],
+      "emailSubjectEn": "[EPSS EDRMS] Approval Update: {{registrationNumber}}",
+      "emailSubjectAm": "[EPSS EDRMS] የማጽደቂያ ውሳኔ: {{registrationNumber}}",
+      "emailBodyEn": "Record {{registrationNumber}} (\"{{subject}}\") status updated by {{actorName}}.",
+      "emailBodyAm": "ሰነድ {{registrationNumber}} (\"{{subject}}\") በ{{actorName}} ውሳኔ ተሰጥቶታል።",
+      "smsBodyEn": "EPSS Approval: {{registrationNumber}} ({{subject}}) updated.",
+      "smsBodyAm": "EPSS ማጽደቂያ: {{registrationNumber}} ({{subject}}) ተዘምኗል።",
+      "isActive": true,
+      "updatedAt": "2026-11-13T18:12:08.683Z",
+      "updatedBy": "System Seed"
+    },
+    {
+      "id": "tpl-overdue-sla",
+      "eventType": "OverdueSLA",
+      "name": "SLA Escalation Alert",
+      "requiredPlaceholders": [
+        "{{registrationNumber}}",
+        "{{hoursOverdue}}"
+      ],
+      "emailSubjectEn": "[URGENT SLA] {{registrationNumber}} Overdue by {{hoursOverdue}}h",
+      "emailSubjectAm": "[አስቸኳይ SLA] {{registrationNumber}} በ{{hoursOverdue}} ሰዓት ዘግይቷል",
+      "emailBodyEn": "Escalation Notice: Correspondence {{registrationNumber}} has exceeded its SLA deadline by {{hoursOverdue}} hours. Target: {{assigneeName}}.",
+      "emailBodyAm": "የቀነ-ገደብ ማስጠንቀቂያ: ሰነድ {{registrationNumber}} የተመደበለትን የSLA ጊዜ በ{{hoursOverdue}} ሰዓት አልፏል።",
+      "smsBodyEn": "EPSS SLA ALERT: {{registrationNumber}} overdue by {{hoursOverdue}}h!",
+      "smsBodyAm": "EPSS SLA ማስጠንቀቂያ: {{registrationNumber}} በ{{hoursOverdue}} ሰዓት ዘግይቷል!",
+      "isActive": true,
+      "updatedAt": "2026-11-13T18:12:08.683Z",
+      "updatedBy": "System Seed"
+    },
+    {
+      "id": "tpl-dispatch",
+      "eventType": "Dispatch",
+      "name": "Official Dispatch Confirmation",
+      "requiredPlaceholders": [
+        "{{registrationNumber}}",
+        "{{recipientOrganization}}"
+      ],
+      "emailSubjectEn": "[EPSS Dispatch] {{registrationNumber}} Sent to {{recipientOrganization}}",
+      "emailSubjectAm": "[EPSS መላኪያ] {{registrationNumber}} ለ{{recipientOrganization}} ተልኳል",
+      "emailBodyEn": "Official correspondence {{registrationNumber}} has been dispatched to {{recipientOrganization}}.",
+      "emailBodyAm": "ይፋዊ ደብዳቤ {{registrationNumber}} ለ{{recipientOrganization}} በተሳካ ሁኔታ ተልኳል።",
+      "smsBodyEn": "EPSS Dispatched: {{registrationNumber}} -> {{recipientOrganization}}.",
+      "smsBodyAm": "EPSS ተልኳል: {{registrationNumber}} -> {{recipientOrganization}}።",
+      "isActive": true,
+      "updatedAt": "2026-11-13T18:12:08.683Z",
+      "updatedBy": "System Seed"
+    },
+    {
+      "id": "tpl-security",
+      "eventType": "Security",
+      "name": "Security & Biometric Audit Notice",
+      "requiredPlaceholders": [
+        "{{userName}}",
+        "{{eventDetails}}"
+      ],
+      "emailSubjectEn": "[EPSS Security] Account Event for {{userName}}",
+      "emailSubjectAm": "[EPSS ደህንነት] የመለያ ማስጠንቀቂያ ለ{{userName}}",
+      "emailBodyEn": "Security notification for {{userName}}: {{eventDetails}}.",
+      "emailBodyAm": "የደህንነት ማሳወቂያ ለ{{userName}}: {{eventDetails}}።",
+      "smsBodyEn": "EPSS Security ({{userName}}): {{eventDetails}}",
+      "smsBodyAm": "EPSS ደህንነት ({{userName}}): {{eventDetails}}",
+      "isActive": true,
+      "updatedAt": "2026-11-13T18:12:08.683Z",
+      "updatedBy": "System Seed"
+    }
+  ],
+  "escalationRules": [
+    {
+      "id": "esc-rule-sla-director",
+      "name": "Overdue Workflow SLA -> Directorate Alert",
+      "trigger": "WorkflowOverdue",
+      "delayHours": 4,
+      "targetType": "Role",
+      "targetRole": "Director",
+      "channels": [
+        "InApp",
+        "Email"
+      ],
+      "isActive": true,
+      "createdAt": "2026-11-13T18:12:08.684Z",
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "id": "esc-rule-urgent-dg",
+      "name": "Very Urgent Unacted -> Director General Escalation",
+      "trigger": "VeryUrgentUnacted",
+      "delayHours": 2,
+      "targetType": "Role",
+      "targetRole": "DirectorGeneral",
+      "channels": [
+        "InApp",
+        "Email",
+        "SMS"
+      ],
+      "isActive": true,
+      "createdAt": "2026-11-13T18:12:08.684Z",
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "id": "esc-rule-phys-overdue",
+      "name": "Overdue Physical File Return -> Registry Officer",
+      "trigger": "PhysicalOverdue",
+      "delayHours": 24,
+      "targetType": "Role",
+      "targetRole": "RegistryOfficer",
+      "channels": [
+        "InApp",
+        "SMS"
+      ],
+      "isActive": true,
+      "createdAt": "2026-11-13T18:12:08.684Z",
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    }
+  ],
+  "notificationPreferences": [
+    {
+      "userId": "usr-admin",
+      "emailAddress": "superadmin@epss.gov.et",
+      "phoneNumber": "+251911220001",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-dg",
+      "emailAddress": "director.general@epss.gov.et",
+      "phoneNumber": "+251911220002",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-reg",
+      "emailAddress": "selamawit.b@epss.gov.et",
+      "phoneNumber": "+251911220003",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-proc",
+      "emailAddress": "dawit.t@epss.gov.et",
+      "phoneNumber": "+251911220004",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-store",
+      "emailAddress": "hiwot.t@epss.gov.et",
+      "phoneNumber": "+251911220005",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-bm-haw",
+      "emailAddress": "yonas.a@epss.gov.et",
+      "phoneNumber": "+251911220006",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-audit",
+      "emailAddress": "tigist.h@epss.gov.et",
+      "phoneNumber": "+251911220007",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-13T18:12:08.684Z"
+    }
+  ],
+  "notificationDeliveryLogs": [
+    {
+      "id": "dlog-seed-1",
+      "timestamp": "2026-11-08T08:31:00Z",
+      "notificationId": "notif-1",
+      "eventType": "Assignment",
+      "channel": "Email",
+      "recipientUserId": "usr-dir",
+      "recipientAddress": "hiwot.tadesse@epss.gov.et",
+      "subject": "[EPSS EDRMS] Task Assigned: EPSS/IN/2026/00102",
+      "bodyPreview": "Ministry of Health Cholera Response Directive routed to Storage & Distribution.",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-seed-2",
+      "timestamp": "2026-11-08T07:16:00Z",
+      "notificationId": "notif-2",
+      "eventType": "Approval",
+      "channel": "SMS",
+      "recipientUserId": "usr-dg",
+      "recipientAddress": "+251911220044",
+      "bodyPreview": "EPSS Approval: EPSS/OUT/2026/00045 pending Director General PKI signature.",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-seed-3",
+      "timestamp": "2026-11-08T06:05:00Z",
+      "notificationId": "notif-3",
+      "eventType": "OverdueSLA",
+      "channel": "SMS",
+      "recipientUserId": "usr-proc",
+      "recipientAddress": "missing-phone",
+      "bodyPreview": "EPSS SLA ALERT: EPSS/APP/2026/00012 nearing 48h deadline.",
+      "status": "Failed",
+      "errorReason": "Recipient MSISDN missing or invalid (+251 format required for Ethio Telecom SMS)."
+    }
+  ],
+  "aiSearchConfig": {
+    "ocrConfidenceThreshold": 0.75,
+    "duplicateSimilarityThreshold": 0.72,
+    "enableGeminiExtraction": true
+  },
+  "savedSearches": [
+    {
+      "id": "ssearch-urgent-hq",
+      "userId": "usr-admin",
+      "name": "Urgent Head Office Incoming",
+      "filters": {
+        "type": "IncomingLetter",
+        "priority": "Urgent",
+        "branchId": "br-hq"
+      },
+      "notifyOnNewMatch": true,
+      "createdAt": "2026-11-05T08:00:00Z"
+    },
+    {
+      "id": "ssearch-amharic-efda",
+      "userId": "usr-admin",
+      "name": "EFDA Quality & Regulatory (አማርኛ / EN)",
+      "filters": {
+        "query": "EFDA"
+      },
+      "notifyOnNewMatch": false,
+      "createdAt": "2026-11-06T10:30:00Z"
+    }
+  ],
+  "signingCertificates": [
+    {
+      "id": "cert-1794595668662-3lna",
+      "serialNumber": "ET-PKI-EPSS-2026-SUPERA-59BDF2",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "departmentNameEn": "ICT & Security Infrastructure Directorate",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt0kznKcfrZROLjtdVaty\nvHLNSqveaWFDTnV5tof6TaXPA8d0LcuXWmD55Z0IPXGmkYgH5I8VHpwld4FDlKMj\nzHDaQAIrAPtb6Z2GmgEdEQIvnAMyH5K8TVGjbHJgcr2G58Wus3wdycJ1XpVfPWvD\ncUaaFRUa3N+queI5WUO0tDLfGh3hieFnGZ/v/dLWC0hEEYo4TFRXFflnwMpmnuxJ\nb9bK2ESwMvC2Nzf2vb67R5f5zOtCQ24q/vDoCt9NT0Syon7ZNGBkQgLe6h7q+nyx\nY3nQBD+wG8OEKbb+wBkeuFoPlbZqUL8+97WVJ4q2ggDO8aFxE4V9ySPet7m1lY2r\njwIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3STOcpx+tlE4u\nO11Vq3K8cs1Kq95pYUNOdXm2h/pNpc8Dx3Qty5daYPnlnQg9caaRiAfkjxUenCV3\ngUOUoyPMcNpAAisA+1vpnYaaAR0RAi+cAzIfkrxNUaNscmByvYbnxa6zfB3JwnVe\nlV89a8NxRpoVFRrc36q54jlZQ7S0Mt8aHeGJ4WcZn+/90tYLSEQRijhMVFcV+WfA\nymae7Elv1srYRLAy8LY3N/a9vrtHl/nM60JDbir+8OgK301PRLKiftk0YGRCAt7q\nHur6fLFjedAEP7Abw4Qptv7AGR64Wg+VtmpQvz73tZUniraCAM7xoXEThX3JI963\nubWVjauPAgMBAAECggEACcC7UaO/XUd6rR4bXNKNlxznjKIkzxtN70MnOCdeXweQ\n9b5rkbMQ+WewoUW5j9Kk20vPc7UjZnVGzxs4D+HQc75lKd1gd9U1C/M5NUFHtsVH\n6ERvqqg7UES+uyeo6mIbmoJCRhDqlHckmX694/EaI/eh4+sZrbtSUXRwVC4n072Y\n/VJNjlndDChkRYFVa9YnFGi1b/yqseSpmowzq3Yo6M+NZJAZjCWTQRdF+CBuh4ni\nmoqK9kElx5hn6y1byIeCYIEJIvEGH3T4n1oAkfrQTKwKobIcM/YeTCRVSHD1OLvp\nuubFo2ikv0rQfePkxZV5L0JGV1nHeyNxRukHc+a1zQKBgQDbfsvj+eeSYpy4I3UY\nF9E5zbPIPvGqh8bys8l8X+Tp0XiI3qp9r3pJgEBiLEB6cOWcof0N3fmsq3kVZA5G\n35d1RMnrCsLgkXg4bAb23YVEWOpXpveSukmk5cdktcn6Dj4eJjeh+ZW9/ZpbhaCm\nm/kuBYLhq5jz2lRi8cwzW2Ev7QKBgQDVxMKlW3UfL97iw7vWBErU9UEAoc+uRNID\nLXq6oNoNgzeIucfokoRk9TVx+lfv11HT4/g/MAqzbzmjCiXwxEgJi6Uz/bgvxQQQ\nOsLElP3lEt/rSKaQLEC3/o381hcVVHPlt+YLXzHF3nD0HvXthc05/i5X2RUypeJP\n05a6HmnB6wKBgEAKKZC1TAQgs1riNXq3EDtOMeL9wmKfxMLxA5s/GznA/OrqFFIh\nTYt+WMqL4LAYmlVtybgvCHaBfQ1pqOSyvazgSg1CkYMVzj6f/hQuo4BCdPTn6Rmt\nMmljBR70Dx7e4u7G9bpTaIYLJOsI/Ms/fJ8ZyorvFuwmyjIoHAzr31otAoGBANNL\n0IX397Xi8HG+vUzXI0yKOz0vtANyfQ+tBZGxardOizb3Q5UsNfdAtRo7NG6aq4RA\n4uE6UGl6OENixYvNx9K/mITidgupttF/84KyLqAd3v1G63S4eSQlVh2jVF++AW0A\nMD/vUVhe/dEfRUEJL4jyKMamiaBtfVwgLe08IJcPAoGAQMJdJYaVbV1eCwRR3pYo\neizUCgHKYh1/YQ7pjdND7bDpemOnPWJVHturhanzjK6IBmD1hsB9nmgS+FwaD9ac\nexZvw22yIvKTAyir1wQSv/10DWdRzpwbHUTUVNTJZHZ30YTgH0tmx+q8Zrhh+Hgc\nUZS+hGN/HFthuJ2zDqztZlo=\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "6A0193A1F0DAE03E044CFC7E3E558B6E8B5932AC8F8D7AF6E09D092ED99B470F",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=System Security Administrator, OU=ICT & Security Infrastructure Directorate, TITLE=SuperAdmin, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:48.662Z",
+      "expiresAt": "2028-11-12T18:47:48.662Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595668691-mqm7",
+      "serialNumber": "ET-PKI-EPSS-2026-DIRECT-E216A7",
+      "userId": "usr-dg",
+      "userName": "Dr. Abdulkadir Gelgelo",
+      "userRole": "DirectorGeneral",
+      "departmentNameEn": "Director General Office",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAucWZSfzwhownYlZRmo0C\nXj5Vvht5qvppeMc2HRCF0SHW3w82HclLnESj0w/YhYMWDUI/WpqZ8kJw8X/2TjjF\nziqcc80Z8ajGJUp4SPzRbNMGVKh+6C4Cz7jGv5QSmQOioPQGTJYwxGZOT3Tci2cP\nBTClWltNF8tujFqSSTI9MbBQg3kF6rZgzvNY50/gRZlktCapS+QnDPk1nAPr9nea\nTZbPFguWXlePntkmbBhneys+qxC6wdBBq/jOiZev3HseS0sdJXC75hMWKIIBLcdk\nUDuIPhD9SKZ+IXHGQ17TfZNaoOkLIufX9jzk6+XUmRzKy2uSI/no9SYsB6eRw30L\nEwIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC5xZlJ/PCGjCdi\nVlGajQJePlW+G3mq+ml4xzYdEIXRIdbfDzYdyUucRKPTD9iFgxYNQj9ampnyQnDx\nf/ZOOMXOKpxzzRnxqMYlSnhI/NFs0wZUqH7oLgLPuMa/lBKZA6Kg9AZMljDEZk5P\ndNyLZw8FMKVaW00Xy26MWpJJMj0xsFCDeQXqtmDO81jnT+BFmWS0JqlL5CcM+TWc\nA+v2d5pNls8WC5ZeV4+e2SZsGGd7Kz6rELrB0EGr+M6Jl6/cex5LSx0lcLvmExYo\nggEtx2RQO4g+EP1Ipn4hccZDXtN9k1qg6Qsi59f2POTr5dSZHMrLa5Ij+ej1JiwH\np5HDfQsTAgMBAAECggEAHlmlEIxtc13kdVFq5ZgSAfmnInb0qrVck+nf8mGnqyIf\nK7QdgEJJww8HwMy+8BkZejMPjKrjacvnDd19DQyDbIpToyuoCG4taRxAiJQdVu0n\nBJ++lAooVW13swbq/uq0IB2eBdcnwn6AXsTV30SIFK385cUy1CddOTr22VSG4N4I\n1UgWEqzZOs4DIxp4l/pGCltUl4vdjkESE4x6RpWYGxmeYrLeVLOP07dEB+70uNLN\nUoouY9jHzYsT/s1RvyPnz5HX67QGHkEWPSbEdo2z3h7xrFBqQBSnXy+/oONho1I2\nvFRtlw573i0H7TLw0gzr2LPf4nTZdc8mqTNFPSd6GQKBgQDtepwbKoev1OnLpteJ\nDWtc7Kh1qJA4osZV4JnFLlJrhvPceDumANGooL0Ab2/nGtcrVrM555okROS4gfGj\noAFvTWixGq5eKE9fh3704A4zhu2iYWfLuXjqVFfLsqMtuKGpI0BuvpOgoAshHchN\nVC6mnFJcsAsE9uPBmAF0HkOxLwKBgQDIQqFlxXHCjv0AKJgBFhyfr4z0hQYB7BWm\nBf/UaWsmS5q2Ed0EStQM1bl0pQ3ETwd9ViV8HhxNBddLhLxwHpi+SFLC8LkX8Ujm\n5Y+AkXquSsFcu/lx0QDhJwvmg47+6VBr+QEaKy7rQ7b2dsz5/NlXq5o1/q/XzrZp\n8xTg4YfjXQKBgQCWLfSsxV+blZToojEpzd+4mz0JczkJZ/7vbiMwbFPZBjYPlcV6\n/IeaEVSVAuQMjY/HK4QaOVnkV+EgwaRzaoudvKFZZtsgVnOjoQdrionQkiKTju/a\nCQfrgL0o52aEUn+Be/aSUlj/ulZvcesq4/LAkJkRXo8Ja6yq0BsTONRsJwKBgQCj\nZYJNCJHufj6+P2DvGfyW6mTnKhahwOBVC3YW+UC9CVkdj2u3Udq88jGUlAusjhL9\nWCnToLnUupxU+OPL05srPtWQS1uqxmuGQe4ZqBniVgp5QMKh9Dd0fih+l/83zGSb\nBJu6n1t0CFcjuAE9Q+qOVuzHe5w8SGScBAOYDUyT3QKBgAoUoBdFe1fiZN1YrSDS\nYLlPMzivgNtRxb276xh+2y8viytoc+uhf7JXSYJPtqk5KXiiKfD0ARQJuPqIMBqs\nr+L8wKYGyxyk9xaoZopMFT7ogIIT1Tnc0hPLAk+opHyXF55iX5sp4p07zia01FPM\nWNhzP2anxunEepxVmKE++Lhd\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Dr. Abdulkadir Gelgelo, OU=Director General Office, TITLE=DirectorGeneral, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:48.691Z",
+      "expiresAt": "2028-11-12T18:47:48.691Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595668836-c9mh",
+      "serialNumber": "ET-PKI-EPSS-2026-REGIST-E29521",
+      "userId": "usr-reg",
+      "userName": "Selamawit Bekele",
+      "userRole": "RegistryOfficer",
+      "departmentNameEn": "Central Registry, Documentation & Archive",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAslSaTXtOXsZ4wMEpf1DL\nIxWyi0SVFDBM9Y7dtqoIjPjsd5jM0/TBEuHc20bmCUnwrhwUU5CgoUnL9cw+vbTB\nPKsKdmvt+JJABYBuxDYGmq5JGFE0vSC3/35kQNKooCfT9s6F9c5I4mO6waN6YwwJ\nBZonY+1xLunhYVwh3exyToVWwNHT6ptByQpJOvryAR4mD7qhjf/DEfWxNL286wjW\nggPP8bWg9aCShZ2M9W5kg9nRUnVsrgKpXSzZwsS3ZbpgKCIrQU42mMt+ANc+qXz6\nkabRb2sgHzgJ5OD81pIOEiUIW9Tc0VYCDzjSRWjiXqFRzahDREBSetvcjlUB7ntK\nnQIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCyVJpNe05exnjA\nwSl/UMsjFbKLRJUUMEz1jt22qgiM+Ox3mMzT9MES4dzbRuYJSfCuHBRTkKChScv1\nzD69tME8qwp2a+34kkAFgG7ENgaarkkYUTS9ILf/fmRA0qigJ9P2zoX1zkjiY7rB\no3pjDAkFmidj7XEu6eFhXCHd7HJOhVbA0dPqm0HJCkk6+vIBHiYPuqGN/8MR9bE0\nvbzrCNaCA8/xtaD1oJKFnYz1bmSD2dFSdWyuAqldLNnCxLdlumAoIitBTjaYy34A\n1z6pfPqRptFvayAfOAnk4PzWkg4SJQhb1NzRVgIPONJFaOJeoVHNqENEQFJ629yO\nVQHue0qdAgMBAAECggEABQLzJifHs0qlFJepFKKe3tDKiHboMJ3N393AtdQv8tRB\nAvhokzFO5rqxs/jZWJv7F02DNbj8BqRWBsWTYs3sW0ncPKk6UhC8G1t5YWq6Q0kQ\nFU6c6o67lQLGivrQkdWks4wowBhovHH8itoPA68QJtfm8Pw4gM7CTnPiIMQ3DyVM\nmVM2n3U/ys3IVWH8Sl8j2lZgxNn3e19XH+WrbQrK8bId6Zc3/q1SRS21VBVHnETp\nD8ntW7qIDzcUkPnhFM1uQo30P2qzsv4xM1qYf1JlfHMVNbasoT7FdPasszcsQ6Qw\nUEKoxt9POdqhFgkt2bs20KxarFB5aTNOlvNpFL3iiQKBgQDljCLBD/ct7/FIweaC\nzpw8kchIhUYQgOFOtFUVly6pOe2jopbjN9ZidtyrtHDaMTp/n/+payKpQUW37LDK\nRG1SAXR8ytLZeZDHI+KosiQZofbGp4DDu9FtxFnC1SNRgqPHL6m/IVuSKv4KexIR\nWSjwIZjJpNpDlH89f2Gq2gOMOQKBgQDG4YT/yZi/yA9bbKFAD98u9aB2ihCy5t3C\nRetNQxKTy1yqNm3+N16KedrEcNNT1CGMmswPaR1lyWNSneU3BGNAZqhJveYz2OBo\ndjHM6q2o1k+XBhBURKBey9NFR5wNhKKEJFqCWj02Se1MGACVeRuYAFbfPd70kfWn\nHoSxcUD5hQKBgGtgx20qi8UoZeVUFwF/puRKibcq6OCVeU/42YhVBVXSLFEMoKq/\nlwDOe2Gy8cuPlb7X2J+m5zrntrZX+UdVBRKEbbpmooVq8YfGSKQDWRHIiwjYmEp3\nlHtVi2uximj5xKVLrYskDpLsm5PJiGUnIRhbjv5cqGFOmMrqyIREob45AoGAcByR\nLOAoC3Rrs8342HQaDA7K9ge+ghtCx1FC47r7rfTlt84XE0eDM+ydNj+j4Y2jm+9n\nOQi4Wbi9FMWNgQYoLRWxqGA0dOW9GyYFzM4+Nv8YvrncWqSVAttDrbpAbh5mvrb/\njpvwBbqG2m5tZdVviLAoSJBILvZY1GyPwLdnOUECgYEAn2jMPGkP1zQ5Qwg3WhM7\nZZCBRDMFpROPWIJJf/ecULE1qQA1SYir//8TCpo4k34xMyz10SUi+GyjHyjXiBII\nbk4WjniRVkY8K/9c54ubANErEOAyGvvz1XhTmluvqqvrUtLbkdex4aiEtv2hjxrX\nEMxXQVh/QAlfLoWZ5YN4CdQ=\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "E1F092A4F214122A00AB52254C8206D05ADD17CA59D1D40B6300919D13AA536C",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Selamawit Bekele, OU=Central Registry, Documentation & Archive, TITLE=RegistryOfficer, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:48.836Z",
+      "expiresAt": "2028-11-12T18:47:48.836Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595668882-61o7",
+      "serialNumber": "ET-PKI-EPSS-2026-DIRECT-76DE15",
+      "userId": "usr-proc",
+      "userName": "Dawit Tefera",
+      "userRole": "Director",
+      "departmentNameEn": "Procurement Directorate",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnNQNaIW/2u8f0Bp6agVl\nt7wxe2T2iTHDK3V6JO2zwcqe2igwnXgiXrSBLOYkX40pDkftpSRgw/RcCeJ5wlJA\ngv9Vc32/6MWS4i1g8wHO/cEahwPdaIBiegBene2pl5LQkvzrxmCPLttoKVcZfUg3\n+Ec0oTP2wFd4gV1jMtsumxX59GJnZI8B0VDCaAxSv5tIeaAC+psHIJCGA9N8GUts\nKXpjfDKemdo/1mIWr2kepPaOdnD0yF88qrrv9dZdf82bijc2BeQqay++xkQRF7O6\nHfZZGlA1t9uoNtkGtJvbMImRWuSZdFT6feEEUD5sV29mTrPxQhv63/u/uSDuRRYT\nOwIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCc1A1ohb/a7x/Q\nGnpqBWW3vDF7ZPaJMcMrdXok7bPByp7aKDCdeCJetIEs5iRfjSkOR+2lJGDD9FwJ\n4nnCUkCC/1Vzfb/oxZLiLWDzAc79wRqHA91ogGJ6AF6d7amXktCS/OvGYI8u22gp\nVxl9SDf4RzShM/bAV3iBXWMy2y6bFfn0YmdkjwHRUMJoDFK/m0h5oAL6mwcgkIYD\n03wZS2wpemN8Mp6Z2j/WYhavaR6k9o52cPTIXzyquu/11l1/zZuKNzYF5CprL77G\nRBEXs7od9lkaUDW326g22Qa0m9swiZFa5Jl0VPp94QRQPmxXb2ZOs/FCG/rf+7+5\nIO5FFhM7AgMBAAECggEASEPydcKD+KeNmkBJPkeEapjemESa0fdLPuBgS1n5Jghv\nEInKdRVhiRBWIdFe22TZkUoVuK49pK4aJzfj8WYjcfmkb5Z3cxRvradJcFDaB9YO\nmj5urPPT7PH0p4NXTZAKamD/aCcgc3AI3FvVVASOPerZ1ppyTok/7ySQTGPxYuaR\n37DdUuZdqTFNuO+JH3gGcgWVjRROB8kUHkpAAkSEWIBl7dPxyhGLuqEZ2DFA1vgP\n1njRft2XJRMdKS2/d6p5Zrgf/U6ukaFSsg/Dnt7kemxCX8UXb5sVHupqNvTKgutd\nd8VmDA2hw8NTwy071ufViypKaeeHemT8tFWoAWnj0QKBgQDJ7TsQUt4mD/Rioyhw\nMVVGR/AINils+7Ir5DqOzlAYhlCOrRyBWTkSMxNUBs6ti9iGXvI/y806rMtVI6go\nGqgXL6F8AJ5W5UiC+k+ptgBoz1qeOAflSX/JF/iaggcEjOUO1fJnoAOXQeTvVzWh\nqNNohJ7M28+KA+DxZtwcI2kmcwKBgQDG0yyfCIEaJokMlM5NQcqzjTblcRtJj1cM\nwh4Dz+pKf7beockrvV4Iadnu9Ru5zejHtCNDxw/o3DQQWFcDCaDVNPEr7qZw2v0k\n5ZO70RF6cZqhNN71gh1WmvoU7DRW8U+VPFC9xiWdCUygfBLLaPBVsD7rwQM2YHzX\nwO8w1CLmGQKBgFAmHqSLD+wxtwIT2vA1VLCxyx+nR+gfO4habbfTQk2Jup33LnJV\nFOcZaNmYXh7afFZRh3w1C7/3aDniDlPkyMVzPXi30iGRnqeGbWpieGUhsMlOWivz\ncYpDPoUtiVWQCzdJSo9BH0vBdvpdNkd1eHxq75FGymjwwy9ucX2lvI3rAoGATbK6\nzk9ZfGmwxxzj3icm2rIF0PY5jq6YeyDk7+JxkbmFMk2ROymetLUA+LQKqLrCDEDm\nQxdorTxYkEalgkdh9c/hq6RwoMvDf4bEC/Kw3OPGZNcvhkvZwT2BG2oPLibRTeWr\nO+5SRqMaseCqy5jvyty8Sg88fSSJxRrdnnxYQwkCgYBISrVgGvx40WPAemiXRs99\nNV8m5yC9Y3zMp7wJXIqFy5mgZhy5uxTczUlc7DGoMbK+z0tQJ6WSY0+Ut9nK0hDq\nFa0IJULr2LnTz6SS565r1LeXaTGaiPZ4fIKmvEQNkfHtmbRrcvurWaqVjBDDeIKa\naGywD0SvyfhetnqL94iaGw==\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "3EC538790AE53456F3FB83F0DDD2F41EF624FE30DDE2F55DE7168F3515A0F559",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Dawit Tefera, OU=Procurement Directorate, TITLE=Director, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:48.882Z",
+      "expiresAt": "2028-11-12T18:47:48.882Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595668994-gst3",
+      "serialNumber": "ET-PKI-EPSS-2026-DIRECT-73E3B6",
+      "userId": "usr-store",
+      "userName": "Hiwot Tadesse",
+      "userRole": "Director",
+      "departmentNameEn": "Storage & Distribution Directorate",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAocYYqArY6cj/7VfdpVVC\n4Hsoqf9ZyXsC3NyPguyoyFKaVP8wyA7bTnukXlZea1afS3lV1TJWHACLRWfyhANh\nhZCmSjWXiITgsrdUMVqewI6aYoXoSvHzWwrSV1SJpK7cQJx26ohRhJdp6FfYQjZI\nG1XuVBurLX2eOwf1R8UaWPNWYtFVnJhfA1HtNv6KOi+/IcNe5uHpxkRvu/zrFKyx\nZGwTbx40g5S2nzEJEYRlm76PqYOlcjjQbCkOb+qXRQUHZvAnIZ/H3RI5efmkZmbS\nT2HbuxVGmcquXAzx+nEckKGsjZAAaj11cauvPrHlyuksdwQPkj2IGVFr/RRoKfK0\nMQIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQChxhioCtjpyP/t\nV92lVULgeyip/1nJewLc3I+C7KjIUppU/zDIDttOe6ReVl5rVp9LeVXVMlYcAItF\nZ/KEA2GFkKZKNZeIhOCyt1QxWp7AjppihehK8fNbCtJXVImkrtxAnHbqiFGEl2no\nV9hCNkgbVe5UG6stfZ47B/VHxRpY81Zi0VWcmF8DUe02/oo6L78hw17m4enGRG+7\n/OsUrLFkbBNvHjSDlLafMQkRhGWbvo+pg6VyONBsKQ5v6pdFBQdm8Cchn8fdEjl5\n+aRmZtJPYdu7FUaZyq5cDPH6cRyQoayNkABqPXVxq68+seXK6Sx3BA+SPYgZUWv9\nFGgp8rQxAgMBAAECggEAHbxqgtT/mzWJqYhpov7hnJ620kywJeNZGtzl+kRjH/Nj\nD/Wac2Obtzjt9TM+Bs/01uw2NUqb3mjRMNBTGSX/8ousrV5dfMgj/2XIcYv9O1rb\nEPoZQVFpEJaUJF5TMLS9opjAGQs2pL8qRf2DsGQG7BNnDAnL9MAu6h3j3a3i0m+Z\nTUTFMan8yBfpSy6njEQQgnbQSR1dTJ99p1RMjIcN3JrWwfI+89NlZ0vkOKtn09pv\nRHsACrFD9CmyPvhF6mbKDei5fqIPQ4VFUgYJUoKZkZVbx+S0/bN8mKhLYYz5R79d\n28uJyOX5VG5P8ZLH5Dld/D9LJ2Vdkw8xQPEpXZFhmQKBgQDVxJtyiHfVsq83idBi\nCcRA9zAV9PylHBvmcg5QISEo2zmZ4TpAIZcTzBTT7q2of+re06tU+t+5tiKzLu79\nvZWDTKbyo5Smfj+tpsu95pKHpmBARpNaD2gRlk76wkxa8pFD4OyIClinj/0kQZoT\nnUTGJLzzGejiI6ZmACF4jUo+vQKBgQDBu91d6SSjlFkGNzpRe0NzO2jtKdXqjNYh\nNI34EPRIJF4bJASZKVFOki6hvOqZCk9/Fq0RboL+F+Hm/y3BJdYK1yB9fhW3LXHu\nlSaVK7rqkehy70vEr7EYufM4SFGUB4TcrhiwX03KNQko6Dr9/LIXbLf86IZa3vHx\nIJwj8sBMhQKBgHJ/p392ZzF4Tu+hipMohg0CGah5G2XYo30QdGgpBpjaq4Snpcq5\n8zDwa+uEeVG6inQlzixrX7AaRYXSSsJwbIfyY62tPq7bCoKZx6GEwdGUpRNoef6Q\nJ/7bkpwvvDQunu5LqIXJfOjrb/yegsekwjSbcvWHWDzgOX2C7mqiyzTFAoGAdf4g\nffDgQsy4R8PdPgEv/H/DkSZ4xejPBdxHVz2kOkgEFM2kC1CR16PKyPERhPI1pra9\n468GExGioZjrWgbcTS/m9ueS/ESublvi6tl+dx00kMPTxtAmsWOXkcDiBqFptypF\nmS4CZ9RTZtnCDC0ano+1o1BPfArrGiv9TRutKS0CgYBkq+CaUHI/qFsicrkvca88\nL1Tp8Tp/AY5fnIwy3iEx5SywjU+97rKGusAvfXxduCPUzUckbtVbI2t9pA46VLlE\nPR8TxlclzoYQ8DXoaSN6MYDHgefvwqSgDqG6EOsT7ZsbHl/LEqb45LJZRMcg9MMw\nK89H65NKXBjRNahwiwY1hA==\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "8ADE157E83EE76F8BA0EBC0DFCF3527C45F121C49BD840023471ACA1F2A3BB0E",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Hiwot Tadesse, OU=Storage & Distribution Directorate, TITLE=Director, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:48.994Z",
+      "expiresAt": "2028-11-12T18:47:48.994Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595669031-92yz",
+      "serialNumber": "ET-PKI-EPSS-2026-BRANCH-C896BC",
+      "userId": "usr-bm-haw",
+      "userName": "Yonas Alemu",
+      "userRole": "BranchManager",
+      "departmentNameEn": "Regional Branch Management",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkuRn1ZKwG+QBxKzxQb7q\nvE7gEwL+j6rKj+8xAZZbtlPqVR4CShQNnDnWJpWRP6HOXJYk6ZJFavEHj4cOR5O5\nHyA/ypsk6+rcXsUXaL6AbAs5hmxJTz1NNQviEmuk7AbCZSm63sEL4lsyoaSrUN0V\n7OHzncWdCpycoLMpR76HxHtGVX00rYmECCQZVwjLLsVAwOwec633V/eUMdUWwrpn\nNjgIvwUXAGJN5jZIK3e/ydQhanf8CXjy2KbQwmG4vSP7j4mJTXCqHNGvuGsENLNg\naK/2A65ExIv7M6YdPaAkcUW0ekNddQKElrIc0xLUCqmfsTfGrCiDDPY4oo6/vHnC\n3wIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCS5GfVkrAb5AHE\nrPFBvuq8TuATAv6PqsqP7zEBllu2U+pVHgJKFA2cOdYmlZE/oc5cliTpkkVq8QeP\nhw5Hk7kfID/KmyTr6txexRdovoBsCzmGbElPPU01C+ISa6TsBsJlKbrewQviWzKh\npKtQ3RXs4fOdxZ0KnJygsylHvofEe0ZVfTStiYQIJBlXCMsuxUDA7B5zrfdX95Qx\n1RbCumc2OAi/BRcAYk3mNkgrd7/J1CFqd/wJePLYptDCYbi9I/uPiYlNcKoc0a+4\nawQ0s2Bor/YDrkTEi/szph09oCRxRbR6Q111AoSWshzTEtQKqZ+xN8asKIMM9jii\njr+8ecLfAgMBAAECggEAQl4tZes9Y5SckeqbpJtofoVaq2xWbL37gJXPPArdzB7V\nCPkiiqrNzXC6R7ubITdvwBhcfCXI9H0Lb/dS5dciNKSC/f0j7O2z/KOrJHmyF17o\n8km5w7IMULPaRH1bSgLx0PhORLfPMUoIMc1vU/1YGyupwPaYskM5Z0gblh1JRWXI\nBW5xBJ4Sm2W65VrxADB03qqKW+R8BcHJXwXzoSrywWlny1p7iTPAuFYIuAxNcEWi\nUPDfDbodlC8DR2HuPN1c3HNqWcpeJ16U8QMnHVzHPGpg5TfUJNZNC7Pnmdb/nDHQ\naCrC1iab8LaUjp0f0JnbUH5a/XIlHGwfprs8bfy/BQKBgQDGctm1zxbClPhBacLG\nkjn5vvt+d52rIED8IbJGZez4Vp49/d9G0KoTCon8Fp4yy8jSrYGExpn1Uq1MDT7G\nIBr3LBwZwESeo4+Kd/Cu5kJ42bCwKFOyhe7S6sZmWHYLXspIBKrkpLjrjE+I1lD0\n7cneHmjevywDEnx4uoyeMFDeAwKBgQC9fewaA23QEeATS5o/s/Kw5K4DzGbkgelK\nY3Eoqt35Btd2pwBGat7G48sZ1kFvqV1IwlJHFTZXtz2g7F8PNMTFcz3/yK6ZEIue\nB6L87CizOaa8MCbsez3T7xtz6VJ11Deg4uZ1mSV9Hwa2TMrOryoZqQe84qqqJ8JV\nPh+lSpBu9QKBgQC7sWrqg0iylzVKoR4gs7Lz3Md/MOFGNkZgcfpsjQCZTUtztIcW\nMkt5oPErJbVQs99oK8ShcTmyhxTzJl/mAf2fI/AcBvaf2HDt9U0GDzB1nud3ZVzs\nL7LXeEhYCnjzfh7yCMAdaxKfbmDXOmTtk23nkHl9m/Cjozto8IAJKgeCQwKBgDmB\nqpJmcgAQPLF+Yyxr/v4CGHFcqek1J8iEj0XpPP4jPmZq3iGAs2Umom+P30H04zN+\njZu260wJdzGMKnkh6YmGpM0oaRxYshZeeO9K+DsUBu7bqiRgbm4QBYPSzkyl/8/a\nrFgKBx+Gt/HBMlcxP5SUAJ4pJ+QFtutJtC7khxq1AoGAOokKCxwSohlEIzzrvwyL\nCJZO7s1CpSJmDVJpxpMvs0b5uc1YWlbqFTUi3GlCWOwPbVGcSe9INvZF2fZ2uF91\n1hbTjVIEPvss685wroK/YQXOBmS//EtVYSx697z7Tx+4R1a986SHCs0Q0AeS2QCv\n15bwWI/G3LywA6anxplmUOQ=\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "04C68D9E0F4E53F9F5DA609EB4A6F911B1A42232FF358CBB34D07ACED2520EC2",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Yonas Alemu, OU=Regional Branch Management, TITLE=BranchManager, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:49.031Z",
+      "expiresAt": "2028-11-12T18:47:49.031Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794595669097-ax5l",
+      "serialNumber": "ET-PKI-EPSS-2026-AUDITO-CAD274",
+      "userId": "usr-audit",
+      "userName": "Tigist Haile",
+      "userRole": "Auditor",
+      "departmentNameEn": "Internal Audit & Inspection",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvVqDH/eHjQTRGzDlZxEA\nMzvlZ5Q3B40NlO6yycALCekxRggXF7n1fh5J0GOfnKin6hblOSuQckj7ky8fJETy\nDOivimYx6Ywyl4jWpZoNCIo+oM0m53BcipMtc6vkAO80HaPR6tNxRRYdFLUXkeCo\nyxNHZ6gd+VhWBdJkrDgb9nYTfb8x0Th71QGLvdJFEcKpIgtSLM5m0iDZuxs+rxaD\nduHnFqjb4RCcDVgnLgTUZj8fPJI6FjjXKi16CPEAXyrMgbiUfYXnUjFouj47EWzE\nIZhA8Ztt54/gavH35Wn/3ZKJ6HLLnf7eekpNLd7XfXXpLSI6AWYWQMIikLjI8ASf\nZwIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC9WoMf94eNBNEb\nMOVnEQAzO+VnlDcHjQ2U7rLJwAsJ6TFGCBcXufV+HknQY5+cqKfqFuU5K5BySPuT\nLx8kRPIM6K+KZjHpjDKXiNalmg0Iij6gzSbncFyKky1zq+QA7zQdo9Hq03FFFh0U\ntReR4KjLE0dnqB35WFYF0mSsOBv2dhN9vzHROHvVAYu90kURwqkiC1IszmbSINm7\nGz6vFoN24ecWqNvhEJwNWCcuBNRmPx88kjoWONcqLXoI8QBfKsyBuJR9hedSMWi6\nPjsRbMQhmEDxm23nj+Bq8fflaf/dkonocsud/t56Sk0t3td9dektIjoBZhZAwiKQ\nuMjwBJ9nAgMBAAECggEARDQ0AvGv+5V+lGK6XrN69PlgGj0CzU97UuffslfgIgPC\n4czMNJmg2Xqjb9JSjaUaRnFUw5DziJbNNyjD+NZ0sT2m7Rz+YXdESdzaI/AnPao+\nAMGkf7yzOJ7mwkFp8QQ4K2z0kbbzl8TtWKYaBUt8wRkCoU2m7kdpRNORu47CU7V5\nl8jqc8xaOFNbaffC0L7mDz7C9ybtcSNkzIMJ/jUI2zwXMdNJWkIj1K8vR3da+6lC\n3TiqXbcZv+Fagl0ylpN46N32D7Mu42COU6vkrvFx88ldZBsdMij9YEbSb5lUH49r\nYVXX0UIDj5F17OhV5xytrEsmQR7x9fS6p82R1CYvQQKBgQDcU4hpRsg3H78wNsG1\nkc/3OV1pYWfkEYtKxv1BhuC+jRfvVohTbvZms1ItV96Hk/JF0vbhIjRxZOC/gv/8\n5cL4vazL1c4gwrPjhBG5jnyU1wEEhJYDpf2AcK/DquFB7VmmiBujQ7ZD3MKRRuGu\nbs2expczVWLJfQUauHsPsm2mNwKBgQDcAyrlHqIs7dn4IeSAOZc41kysaYRviOYB\nTRa9OZJ1Sdzaxjz/lyzRIz8gvYDp3Qim76F35lvPxyGgppvfUgnlX7kdjRdrZNVS\nf9Qjshx8iSDzcl96HnRiLRiuyneydH04pp9e7tYNqRRfobA9sJsYTycpgI5WwO7Y\nNYDKjUE4UQKBgQCuLZNvtrddbMmWchNdWTKRfVYtkwWwtXXq3bkk7l4KBjzfxwbq\n/pPoyOa0VfzkLb+gF5F4lbPj2R4cCJIa+gDS6BAM7K+SEppnyObCTLSMbhSt36tA\nox7vRSaOhy6hEeSH1J4UydjzeTiP5PtRDOOdG944hM4d/6njX+hZlnM8rQKBgQCv\nio91FAYNlxFs2433iPvRS5sNjXsviqkJrLpR7Feg4XgnzjfpLnOBwn+h3dG3xrYa\ni+PnSJNEqvt3tLd1bX2b185Zd7OR6ngSRQ+8E2aLLtZtp3nqc9YkZxrki4MJjcxD\noR5TnniHmbo5u0ZlUj3NHYp/oKTxLyris325Hw9EoQKBgATlwRdOk8H/jd954CFC\npFMcJYSFC9fT9QwKLtcEF642eMxtcNaE3o3nxQN23i8G3OT7wVm3VIo2HatH3s8x\nFomjwXFEZ8wWG5AdDDv0oOJQM9TCCimugXyZeEo8+vQdruDLG4KK6+uiTXj2OiCy\nilHZXGX+mEr47VxAf4ECJALl\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "E02FB475E389E218DE6A9E65099389776994916413E176361D20DA43405A8386",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Tigist Haile, OU=Internal Audit & Inspection, TITLE=Auditor, O=EPSS, C=ET",
+      "issuedAt": "2026-11-13T18:47:49.097Z",
+      "expiresAt": "2028-11-12T18:47:49.097Z",
+      "status": "Active"
+    }
+  ],
+  "savedReportTemplates": [
+    {
+      "id": "rpt-tpl-sla-hq",
+      "name": "Executive Monthly SLA & Hub Compliance Brief",
+      "description": "All active correspondence SLA turnaround across Head Office and 19 Regional Hubs.",
+      "reportType": "SlaCompliance",
+      "filters": {
+        "cluster": "All",
+        "type": "All",
+        "status": "All",
+        "confidentiality": "All"
+      },
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:00:00Z"
+    },
+    {
+      "id": "rpt-tpl-overdue",
+      "name": "Critical SLA Overdue Action Register",
+      "description": "Unresolved VeryUrgent and overdue correspondence requiring Directorate intervention.",
+      "reportType": "OverdueRegister",
+      "filters": {
+        "cluster": "All",
+        "type": "All",
+        "status": "All",
+        "confidentiality": "All"
+      },
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:05:00Z"
+    },
+    {
+      "id": "rpt-tpl-retention-pki",
+      "name": "Archival Retention & PKI Signature Audit",
+      "description": "Digital signature verification rate, certificate health, and legal hold disposition ledger.",
+      "reportType": "RetentionAndPki",
+      "filters": {
+        "cluster": "All",
+        "type": "All",
+        "status": "All",
+        "confidentiality": "All"
+      },
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:10:00Z"
+    }
+  ],
+  "reportExportHistory": [],
+  "webhookSubscriptions": [
+    {
+      "id": "wh-sap-erp",
+      "name": "SAP S/4HANA Consignment & GRV Feed",
+      "targetUrl": "https://sap-gateway.epss.gov.et/webhooks/edrms-events",
+      "events": [
+        "document.approved",
+        "document.dispatched"
+      ],
+      "signingSecret": "whsec_seed_sap_s4hana_hmac_2026_epss",
+      "signingSecretPreview": "whsec_••••epss",
+      "isActive": true,
+      "connectorId": "conn-sap",
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:00:00Z",
+      "lastTriggeredAt": "2026-11-08T09:15:00Z",
+      "lastDeliveryStatus": "Delivered"
+    },
+    {
+      "id": "wh-moh-emergency",
+      "name": "Ministry of Health Emergency Dispatch Hook",
+      "targetUrl": "https://emergency.moh.gov.et/api/v1/webhooks/epss",
+      "events": [
+        "document.registered",
+        "workflow.escalated",
+        "document.dispatched"
+      ],
+      "signingSecret": "whsec_seed_moh_emergency_hmac_2026_moh",
+      "signingSecretPreview": "whsec_••••_moh",
+      "isActive": true,
+      "connectorId": "conn-moh",
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:05:00Z",
+      "lastTriggeredAt": "2026-11-08T08:30:00Z",
+      "lastDeliveryStatus": "Delivered"
+    }
+  ],
+  "webhookDeliveryLogs": [],
+  "integrationApiKeys": [
+    {
+      "id": "key-efda-seed",
+      "name": "EFDA Regulatory Portal Inbound Key",
+      "keyPrefix": "epss_int_efda84",
+      "keyHash": "336610226a325813d33a9041cb934dd14538f9973011848fcbe542db3a710c26",
+      "scopes": [
+        "correspondence:ingest",
+        "efda:clearance"
+      ],
+      "boundBranchId": "br-hq",
+      "boundConnectorId": "conn-efda",
+      "status": "Active",
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Administrator",
+      "createdAt": "2026-11-01T08:00:00Z",
+      "expiresAt": "2027-11-01T08:00:00Z",
+      "usageCount": 18
+    }
+  ],
+  "connectorExchangeLogs": [
+    {
+      "id": "exch-seed-1",
+      "connectorId": "conn-sap",
+      "connectorName": "SAP S/4HANA Pharmaceutical ERP",
+      "direction": "Outbound",
+      "operation": "PO & GRV Correspondence Sync",
+      "registrationNumber": "EPSS/IN/2026/00101",
+      "externalRefId": "SAP-PO-450009182",
+      "status": "Success",
+      "latencyMs": 36,
+      "summary": "Synchronized cold-chain procurement dossier metadata with SAP MM PO #450009182.",
+      "initiatedByName": "Automated Scheduler",
+      "timestamp": "2026-11-08T09:15:00Z"
+    },
+    {
+      "id": "exch-seed-2",
+      "connectorId": "conn-efda",
+      "connectorName": "EFDA Regulatory Drug Verification API",
+      "direction": "Inbound",
+      "operation": "GMP & Import Clearance Lookup",
+      "registrationNumber": "EPSS/APP/2026/00012",
+      "externalRefId": "EFDA-CLR-2026-8841",
+      "status": "Success",
+      "latencyMs": 52,
+      "summary": "Verified Ethiopian Food and Drug Authority batch clearance status (Valid / Active GMP).",
+      "initiatedByName": "EFDA Inbound Gateway",
+      "timestamp": "2026-11-08T09:10:00Z"
+    }
+  ],
+  "transmittalManifests": [
+    {
+      "id": "trn-seed-001",
+      "manifestNumber": "EPSS-TRN-2026-001",
+      "title": "Hawassa & Southern Hub Weekly Pharmaceutical Dossier Dispatch",
+      "targetBranchId": "br-01",
+      "targetBranchName": "Addis Ababa Central Hub",
+      "targetOrganization": "EPSS Regional Hub Logistics Desk",
+      "carrierName": "EPSS Cold-Chain Shuttle Fleet #04",
+      "courierPhone": "+251-11-551-9902",
+      "dispatchMethod": "RegionalHubShuttle",
+      "documentIds": [
+        "doc-1794159028173-63lzp",
+        "doc-001"
+      ],
+      "documentRegNumbers": [
+        "EPSS/IN/2026/00103",
+        "EPSS/IN/2026/00101"
+      ],
+      "notes": "Sealed official pouch with tamper-evident manifest digest.",
+      "status": "Dispatched",
+      "createdByUserId": "usr-admin",
+      "createdByName": "System Security Administrator",
+      "createdAt": "2026-11-12T14:43:25.265Z",
+      "dispatchedAt": "2026-11-13T14:43:25.266Z",
+      "dispatchedByName": "System Security Administrator",
+      "manifestDigestSha256": "905422ba0a6bfa7151fe9fd5f2f817577c56f727086883debae96e28e5422e44"
+    }
+  ],
+  "correspondenceTemplates": [
+    {
+      "id": "tpl-1794668411026-877",
+      "nameEn": "Unauthorized Auditor Template",
+      "nameAm": "Unauthorized Auditor Template",
+      "type": "OutgoingLetter",
+      "category": "Institutional Custom",
+      "defaultPriority": "Normal",
+      "defaultConfidentiality": "Internal",
+      "subjectEnTemplate": "Unauthorized Subject Line",
+      "subjectAmTemplate": "Unauthorized Subject Line",
+      "bodyEnTemplate": "Unauthorized Body Synopsis Content",
+      "bodyAmTemplate": "Unauthorized Body Synopsis Content",
+      "createdByName": "Yonas Alemu",
+      "isSystemDefault": false,
+      "createdAt": "2026-11-14T15:00:11.026Z"
+    },
+    {
+      "id": "tpl-efda-clearance",
+      "nameEn": "EFDA Port Batch Clearance Request",
+      "nameAm": "የEFDA ወደብ የመድኃኒት ባች ማጽደቂያ ጥያቄ",
+      "type": "IncomingLetter",
+      "category": "Regulatory & Quality",
+      "defaultPriority": "Urgent",
+      "defaultConfidentiality": "Internal",
+      "defaultSenderOrg": "Ethiopian Food and Drug Authority (EFDA)",
+      "defaultRecipientOrg": "EPSS Quality Assurance & Regulatory Compliance Directorate",
+      "defaultDepartmentId": "dept-qa",
+      "subjectEnTemplate": "Formal Requisition for Regulatory Batch Clearance Certificate (Lot #INS-2026)",
+      "subjectAmTemplate": "ለአስመጪ መድኃኒቶች የባች ጥራት ፍተሻ እና የፈቃድ የምስክር ወረቀት ጥያቄ",
+      "bodyEnTemplate": "Submission of analytical laboratory certificates (CoA), cold-chain temperature logger records, and customs packing lists for immediate EFDA port regulatory clearance.",
+      "bodyAmTemplate": "የላቦራቶሪ ጥራት ማረጋገጫ ሰርተፊኬቶች (CoA)፣ የቀዝቃዛ ሰንሰለት የሙቀት መመዝገቢያ መረጃዎች እና የጉምሩክ ሰነዶች ለፈጣን የወደብ ፈቃድ ቀርበዋል።",
+      "createdByName": "EPSS Standards Registry",
+      "isSystemDefault": true,
+      "createdAt": "2026-11-14T14:59:56.780Z"
+    },
+    {
+      "id": "tpl-moh-emergency",
+      "nameEn": "MoH Emergency Supply Response Dispatch",
+      "nameAm": "የጤና ሚኒስቴር የአስቸኳይ አቅርቦት ምላሽ ደብዳቤ",
+      "type": "OutgoingLetter",
+      "category": "Emergency Logistics",
+      "defaultPriority": "VeryUrgent",
+      "defaultConfidentiality": "Internal",
+      "defaultSenderOrg": "Ethiopian Pharmaceutical Supply Service (EPSS)",
+      "defaultRecipientOrg": "Ministry of Health Disaster Response Directorate",
+      "defaultDepartmentId": "dept-storage",
+      "subjectEnTemplate": "Emergency Epidemic Stock Allocation & Cold-Chain Dispatch Confirmation",
+      "subjectAmTemplate": "ለድንገተኛ ወረርሽኝ መከላከያ የተመደበ መድኃኒት እና የቀዝቃዛ ሰንሰለት ስርጭት ማረጋገጫ",
+      "bodyEnTemplate": "Confirmation of immediate allocation and refrigerated fleet dispatch of essential vaccines, IV Ringer Lactate, and emergency kits to designated regional hubs.",
+      "bodyAmTemplate": "ለክልል ማዕከላት የተመደቡ ክትባቶች እና አስቸኳይ የሕክምና ቁሳቁሶች በማቀዝቀዣ ተሽከርካሪዎች መላካቸውን እናረጋግጣለን።",
+      "createdByName": "EPSS Standards Registry",
+      "isSystemDefault": true,
+      "createdAt": "2026-11-14T14:59:56.780Z"
+    },
+    {
+      "id": "tpl-tender-award",
+      "nameEn": "International Tender Award & LC Notification",
+      "nameAm": "የዓለም አቀፍ ግልጽ ጨረታ አሸናፊነት ማሳወቂያ",
+      "type": "OutgoingLetter",
+      "category": "Procurement & Tenders",
+      "defaultPriority": "Urgent",
+      "defaultConfidentiality": "Confidential",
+      "defaultSenderOrg": "EPSS Pharmaceuticals & Medical Devices Procurement Directorate",
+      "defaultRecipientOrg": "Global Pharmaceutical Supplier / Vendor",
+      "defaultDepartmentId": "dept-proc",
+      "subjectEnTemplate": "Notification of International Competitive Tender Award (ICB/EPSS/2026) & LC Opening",
+      "subjectAmTemplate": "የዓለም አቀፍ ግልጽ ጨረታ አሸናፊነት ማሳወቂያ እና የማይሻር ኤልሲ (LC) የመክፈቻ ደብዳቤ",
+      "bodyEnTemplate": "Official notification of contract award pending performance bond submission within 15 working days and irrevocable Letter of Credit establishment via Commercial Bank of Ethiopia.",
+      "bodyAmTemplate": "የጨረታ አሸናፊነት ይፋዊ ማሳወቂያ እና በ15 የሥራ ቀናት ውስጥ የውል ማስከበሪያ ዋስትና በማቅረብ የባንክ ኤልሲ የመክፈቻ ዝግጅት እንዲደረግ።",
+      "createdByName": "EPSS Standards Registry",
+      "isSystemDefault": true,
+      "createdAt": "2026-11-14T14:59:56.780Z"
+    },
+    {
+      "id": "tpl-gdp-directive",
+      "nameEn": "Internal Directorate GDP Compliance Directive",
+      "nameAm": "የውስጥ ዳይሬክቶሬት የመጋዘን ጥራት (GDP) መመሪያ",
+      "type": "InternalMemo",
+      "category": "Internal Governance",
+      "defaultPriority": "Normal",
+      "defaultConfidentiality": "Internal",
+      "defaultSenderOrg": "EPSS Director General Executive Office",
+      "defaultRecipientOrg": "All EPSS Regional Branch Managers & Warehouse Custodians",
+      "defaultDepartmentId": "dept-qa",
+      "subjectEnTemplate": "Directive on Quarterly Good Distribution Practice (GDP) & Cold-Room Calibration Audit",
+      "subjectAmTemplate": "የሩብ ዓመት የመድኃኒት ማከማቻ ጥራት (GDP) እና የቀዝቃዛ ክፍል ካሊብሬሽን ፍተሻ መመሪያ",
+      "bodyEnTemplate": "All regional hub warehouse custodians must submit calibrated temperature logs, FEFO batch rotation schedules, and quarantined consignment registers prior to audit close.",
+      "bodyAmTemplate": "ሁሉም የክልል ቅርንጫፍ መጋዘን ኃላፊዎች የሙቀት መመዝገቢያ መረጃዎችን እና የFEFO አሰራር ሪፖርቶችን በወቅቱ እንዲያቀርቡ።",
+      "createdByName": "EPSS Standards Registry",
+      "isSystemDefault": true,
+      "createdAt": "2026-11-14T14:59:56.780Z"
+    }
+  ],
+  "documentLinks": [
+    {
+      "id": "lnk-seed-001",
+      "sourceDocumentId": "doc-003",
+      "targetDocumentId": "doc-001",
+      "linkType": "ParentTender",
+      "notes": "International tender award notice linked to upstream EFDA regulatory consignment dossier.",
+      "createdByUserId": "usr-proc",
+      "createdByName": "Tigist Haile",
+      "createdAt": "2026-11-14T14:59:56.780Z"
+    },
+    {
+      "id": "lnk-seed-002",
+      "sourceDocumentId": "doc-004",
+      "targetDocumentId": "doc-002",
+      "linkType": "RelatedDossier",
+      "notes": "Internal cold-chain inspection memo supporting MoH cholera outbreak vaccine dispatch.",
+      "createdByUserId": "usr-store",
+      "createdByName": "Hiwot Tadesse",
+      "createdAt": "2026-11-14T14:59:56.780Z"
     }
   ]
 }

@@ -78,7 +78,10 @@ export async function generateVerificationQrCode(
  * Builds the structured verification certificate object.
  */
 export function getVerificationCertificate(doc: DocumentItem): VerificationCertificate {
-  const latestSignedAction = doc.workflowHistory.slice().reverse().find(w => !!w.digitalSignature);
+  const latestSignedAction = doc.workflowHistory
+    .slice()
+    .reverse()
+    .find(w => !!w.digitalSignature && !w.digitalSignature.invalidated);
 
   return {
     certificateId: `EPSS-CERT-${doc.registrationNumber.replace(/\//g, '-')}`,
@@ -95,7 +98,7 @@ export function getVerificationCertificate(doc: DocumentItem): VerificationCerti
     isAuthentic: true,
     signingAuthority: latestSignedAction?.digitalSignature?.signedBy || 'EPSS Directorate Registry Authority',
     digitalSignatureSerial: latestSignedAction?.digitalSignature?.certificateSerial,
-    sha256Seal: generateSecuritySealHash(doc),
+    sha256Seal: latestSignedAction?.digitalSignature?.documentDigestSha256 || generateSecuritySealHash(doc),
     physicalFileCode: doc.physicalTracking?.fileCode,
     physicalLocation: doc.physicalTracking ? `${doc.physicalTracking.building}, ${doc.physicalTracking.room}, ${doc.physicalTracking.shelfNumber}` : undefined
   };
@@ -114,203 +117,10 @@ export function downloadQrCodeImage(dataUrl: string, fileName: string) {
 }
 
 /**
- * Opens a print dialog for an official verification certificate badge.
+ * Prints the active verification certificate surface via native browser print CSS (.epss-printable-certificate).
  */
-export function printVerificationCertificate(doc: DocumentItem, qrDataUrl: string) {
-  const cert = getVerificationCertificate(doc);
-  const printWindow = window.open('', '_blank', 'width=800,height=900');
-  if (!printWindow) return;
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>EPSS Document Verification Certificate - ${doc.registrationNumber}</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 30px;
-            color: #0f172a;
-            background: #ffffff;
-          }
-          .cert-container {
-            border: 2px solid #0f766e;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 680px;
-            margin: 0 auto;
-            position: relative;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-          }
-          .header h1 {
-            color: #0f766e;
-            font-size: 20px;
-            margin: 0 0 4px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          .header h2 {
-            font-size: 13px;
-            color: #475569;
-            margin: 0;
-            font-weight: 500;
-          }
-          .badge-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f0fdfa;
-            border: 1px solid #ccfbf1;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-          }
-          .badge-row strong {
-            color: #0f766e;
-            font-size: 14px;
-          }
-          .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
-          }
-          .field label {
-            display: block;
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #64748b;
-            font-weight: 600;
-            margin-bottom: 2px;
-          }
-          .field span {
-            font-weight: 500;
-            color: #1e293b;
-          }
-          .qr-section {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-          }
-          .qr-img {
-            width: 130px;
-            height: 130px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-          }
-          .seal-code {
-            font-family: monospace;
-            font-size: 10px;
-            color: #0f766e;
-            word-break: break-all;
-            background: #ffffff;
-            padding: 6px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            margin-top: 6px;
-          }
-          .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #64748b;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 12px;
-          }
-          @media print {
-            body { padding: 0; }
-            .cert-container { border: 2px solid #000; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="cert-container">
-          <div class="header">
-            <h1>Federal Democratic Republic of Ethiopia</h1>
-            <h2>Ethiopian Pharmaceutical Supply Service (EPSS) · የኢትዮጵያ መድኃኒት አቅራቢ አገልግሎት</h2>
-            <p style="margin: 6px 0 0 0; font-size: 12px; font-weight: bold; color: #0f766e;">Official Electronic Correspondence Authenticity Certificate</p>
-          </div>
-
-          <div class="badge-row">
-            <div>
-              <span style="font-size: 11px; color: #64748b;">Security Status:</span><br/>
-              <strong>AUTHENTIC & VERIFIED GOVERNMENT RECORD</strong>
-            </div>
-            <div style="text-align: right;">
-              <span style="font-size: 11px; color: #64748b;">Registration Number:</span><br/>
-              <span style="font-family: monospace; font-size: 14px; font-weight: bold;">${doc.registrationNumber}</span>
-            </div>
-          </div>
-
-          <div class="grid">
-            <div class="field">
-              <label>External / Directorate Reference</label>
-              <span>${doc.referenceNumber}</span>
-            </div>
-            <div class="field">
-              <label>Document Classification</label>
-              <span>${doc.type} (${doc.confidentiality})</span>
-            </div>
-            <div class="field" style="grid-column: span 2;">
-              <label>Subject (English / Amharic)</label>
-              <span>${doc.subjectEn}</span><br/>
-              <span style="color: #475569; font-size: 12px;">${doc.subjectAm || ''}</span>
-            </div>
-            <div class="field">
-              <label>Sender Organization</label>
-              <span>${doc.senderOrganization}</span>
-            </div>
-            <div class="field">
-              <label>Recipient Authority</label>
-              <span>${doc.recipientOrganization}</span>
-            </div>
-            <div class="field">
-              <label>Registration Date</label>
-              <span>${doc.registrationDate}</span>
-            </div>
-            <div class="field">
-              <label>Current Lifecycle Status</label>
-              <span style="color: #0f766e; font-weight: bold;">${doc.status}</span>
-            </div>
-          </div>
-
-          <div class="qr-section">
-            <img src="${qrDataUrl}" class="qr-img" alt="Official Verification QR" />
-            <div style="flex: 1;">
-              <strong style="font-size: 12px; color: #0f766e;">Direct Verification Link & Anti-Tamper Seal</strong>
-              <p style="font-size: 11px; color: #475569; margin: 4px 0;">
-                Scan with any mobile camera or visit the verification portal to inspect the tamper-evident digital workflow history.
-              </p>
-              <div class="seal-code">
-                SEAL: ${cert.sha256Seal}
-              </div>
-              <p style="font-size: 10px; color: #64748b; margin: 4px 0 0 0;">
-                URL: ${cert.verificationUrl}
-              </p>
-            </div>
-          </div>
-
-          <div class="footer">
-            EPSS EDRMS Security Architecture · Document ID: ${doc.id} · Issued by National Health Logistics Registry
-          </div>
-        </div>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => {
-    printWindow.print();
-  }, 350);
+export function printVerificationCertificate(_doc: DocumentItem, _qrDataUrl: string) {
+  if (typeof window !== 'undefined' && typeof window.print === 'function') {
+    window.print();
+  }
 }

@@ -5,14 +5,28 @@
 
 export type Language = 'en' | 'am';
 
-export type UserRole = 
+export type BuiltInUserRole =
   | 'SuperAdmin'
+  | 'SystemAuditor'
+  | 'SecurityOfficer'
   | 'DirectorGeneral'
+  | 'DeputyDG'
+  | 'DirectorateDirector'
   | 'Director'
+  | 'DepartmentHead'
+  | 'TeamLeader'
   | 'RegistryOfficer'
   | 'BranchManager'
+  | 'BranchRegistry'
   | 'ProcurementOfficer'
-  | 'Auditor';
+  | 'QualityOfficer'
+  | 'LegalOfficer'
+  | 'FinanceOfficer'
+  | 'Auditor'
+  | 'RecordsManager'
+  | 'Viewer';
+
+export type UserRole = BuiltInUserRole | (string & {});
 
 export interface BiometricCredential {
   id: string;
@@ -48,6 +62,7 @@ export interface User {
   mfaPinHash?: string;
   failedLoginAttempts?: number;
   lockedUntil?: string | null;
+  nextAllowedLoginAt?: string | null;
   lastLoginAt?: string;
   lastPasswordChangeAt?: string;
   mfaRequired?: boolean;
@@ -164,10 +179,22 @@ export interface WorkflowActionRecord {
   forwardedToUserId?: string;
   forwardedToUserName?: string;
   digitalSignature?: {
+    signatureId?: string;
+    signedByUserId?: string;
     signedBy: string;
+    signedByRole?: string;
     certificateSerial: string;
+    certificateFingerprint?: string;
+    algorithm?: 'RSA-SHA256';
+    documentDigestSha256?: string;
+    signatureBase64?: string;
+    signingMeaning?: string;
+    biometricVerified?: boolean;
+    mfaMethod?: 'webauthn' | 'pin' | 'session_mfa' | 'standard';
     timestamp: string;
     verified: boolean;
+    invalidated?: boolean;
+    invalidatedReason?: string;
   };
 }
 
@@ -231,12 +258,32 @@ export interface DocumentItem {
   deletedAt?: string;
   deletedBy?: string;
   deleteReason?: string;
+  ocrTextEn?: string;
+  ocrTextAm?: string;
+  ocrConfidence?: number;
+  contentHash?: string;
   aiExtracted?: {
     summaryEn: string;
     summaryAm: string;
     suggestedCategory: string;
     suggestedDepartment: string;
     confidence: number;
+    ocrTextEn?: string;
+    ocrTextAm?: string;
+    ocrConfidence?: number;
+    lowConfidenceFlagged?: boolean;
+    suggestedType?: DocumentType;
+    suggestedSubjectEn?: string;
+    suggestedSubjectAm?: string;
+    suggestedSenderOrg?: string;
+    suggestedRecipientOrg?: string;
+    suggestedReferenceNumber?: string;
+    suggestedPriority?: PriorityLevel;
+    suggestedConfidentiality?: ConfidentialityLevel;
+    routingRecommendation?: string;
+    verifiedBy?: string;
+    verifiedAt?: string;
+    acceptedFields?: string[];
   };
 }
 
@@ -416,6 +463,188 @@ export interface AuditLogEntry {
   resourceId: string;
   ipAddress: string;
   details: string;
+  reason?: string;
+  beforeValue?: string;
+  afterValue?: string;
+}
+
+export interface AnalyticsQueryParams {
+  dateFrom?: string;
+  dateTo?: string;
+  branchId?: string;
+  cluster?: BranchCluster | 'All';
+  departmentId?: string;
+  type?: DocumentType | 'All';
+  status?: DocumentStatus | 'All';
+  confidentiality?: ConfidentialityLevel | 'All';
+}
+
+export interface BranchTurnaroundMetric {
+  branchId: string;
+  branchCode: string;
+  branchNameEn: string;
+  branchNameAm: string;
+  cluster: BranchCluster;
+  incoming: number;
+  outgoing: number;
+  memos: number;
+  applications: number;
+  totalDocuments: number;
+  completed: number;
+  overdue: number;
+  slaComplianceRate: number;
+  avgTurnaroundDays: number;
+  healthStatus: 'Nominal' | 'Attention' | 'Critical' | 'Idle';
+}
+
+export interface DirectorateWorkloadMetric {
+  departmentId: string;
+  code: string;
+  nameEn: string;
+  nameAm: string;
+  activeStaff: number;
+  totalDocuments: number;
+  pendingReview: number;
+  overdueCount: number;
+  completedCount: number;
+  avgTurnaroundDays: number;
+  slaComplianceRate: number;
+}
+
+export interface WorkflowStageBottleneckMetric {
+  stageName: string;
+  activeInstances: number;
+  overdueInstances: number;
+  escalatedInstances: number;
+  avgAgeHours: number;
+  maxAgeHours: number;
+}
+
+export interface DocumentTypeBreakdownItem {
+  type: DocumentType;
+  count: number;
+  sharePct: number;
+  completedCount: number;
+  overdueCount: number;
+}
+
+export interface OverdueRegisterEntry {
+  documentId: string;
+  registrationNumber: string;
+  subjectEn: string;
+  subjectAm: string;
+  type: DocumentType;
+  priority: PriorityLevel;
+  confidentiality: ConfidentialityLevel;
+  branchId: string;
+  branchNameEn: string;
+  departmentNameEn: string;
+  status: DocumentStatus;
+  dueDate: string;
+  daysOverdue: number;
+  assignedUserName?: string;
+  stageName?: string;
+}
+
+export interface RetentionForecastSummary {
+  totalArchived: number;
+  underLegalHold: number;
+  dueForReviewWithin90Days: number;
+  pendingDisposals: number;
+  executedDisposals: number;
+  overduePhysicalFiles: number;
+}
+
+export interface PkiComplianceSummary {
+  totalApprovalsLogged: number;
+  digitallySignedApprovals: number;
+  digitalSigningRate: number;
+  activeCertificates: number;
+  revokedCertificates: number;
+  tamperedOrInvalidDocuments: number;
+}
+
+export interface TrendPeriodPoint {
+  period: string;
+  label: string;
+  incoming: number;
+  outgoing: number;
+  memos: number;
+  completed: number;
+}
+
+export type ManagementReportCategory =
+  | 'MasterRegister'
+  | 'SlaCompliance'
+  | 'BranchTurnaround'
+  | 'DirectorateWorkload'
+  | 'OverdueRegister'
+  | 'RetentionAndPki';
+
+export interface ManagementAnalyticsReport {
+  generatedAt: string;
+  filtersApplied: AnalyticsQueryParams;
+  authorizedDocumentCount: number;
+  redactedRestrictedCount: number;
+  summary: {
+    totalDocuments: number;
+    totalIncoming: number;
+    totalOutgoing: number;
+    totalInternalMemos: number;
+    totalApplications: number;
+    pendingApprovals: number;
+    completedCount: number;
+    overdueCount: number;
+    archivedCount: number;
+    averageProcessingDays: number;
+    slaComplianceRate: number;
+    digitalSigningRate: number;
+    momVolumeDeltaPct: number | null;
+  };
+  typeBreakdown: DocumentTypeBreakdownItem[];
+  statusBreakdown: Array<{ status: DocumentStatus; count: number }>;
+  confidentialityBreakdown: Array<{ level: ConfidentialityLevel; count: number }>;
+  clusterSummary: Array<{
+    cluster: BranchCluster;
+    branchesCount: number;
+    totalDocuments: number;
+    overdue: number;
+    slaComplianceRate: number;
+    avgTurnaroundDays: number;
+  }>;
+  branchStats: BranchTurnaroundMetric[];
+  directorateStats: DirectorateWorkloadMetric[];
+  workflowBottlenecks: WorkflowStageBottleneckMetric[];
+  overdueRegister: OverdueRegisterEntry[];
+  monthlyTrend: TrendPeriodPoint[];
+  retentionForecast: RetentionForecastSummary;
+  pkiCompliance: PkiComplianceSummary;
+}
+
+export interface SavedReportTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  reportType: ManagementReportCategory;
+  filters: AnalyticsQueryParams;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface ReportExportRecord {
+  id: string;
+  exportedAt: string;
+  exportedByUserId: string;
+  exportedByName: string;
+  exportedByRole: UserRole;
+  reportType: ManagementReportCategory;
+  format: 'csv' | 'excel-csv' | 'json' | 'print-brief';
+  filename: string;
+  recordCount: number;
+  redactedRestrictedCount: number;
+  filtersSummary: string;
+  sha256Checksum: string;
 }
 
 export interface ExecutiveKpiSummary {
@@ -428,6 +657,10 @@ export interface ExecutiveKpiSummary {
   completedThisMonth: number;
   archivedCount: number;
   averageProcessingDays: number;
+  slaComplianceRate: number;
+  digitalSigningRate: number;
+  momDeltaPct: number | null;
+  overduePhysicalCount: number;
   branchStats: {
     branchId: string;
     branchNameEn: string;
@@ -435,8 +668,18 @@ export interface ExecutiveKpiSummary {
     outgoing: number;
     overdue: number;
     avgTurnaroundDays: number;
+    slaComplianceRate?: number;
+    healthStatus?: 'Nominal' | 'Attention' | 'Critical' | 'Idle';
   }[];
+  directorateStats: DirectorateWorkloadMetric[];
 }
+
+export type NotificationEventType =
+  | 'Assignment'
+  | 'Approval'
+  | 'OverdueSLA'
+  | 'Dispatch'
+  | 'Security';
 
 export interface AppNotification {
   id: string;
@@ -445,10 +688,84 @@ export interface AppNotification {
   messageEn: string;
   messageAm: string;
   timestamp: string;
-  type: 'Assignment' | 'Approval' | 'OverdueSLA' | 'Dispatch' | 'Security';
+  type: NotificationEventType;
   isRead: boolean;
+  userId?: string;
+  channel?: 'InApp' | 'Email' | 'SMS';
+  priority?: 'Normal' | 'Urgent' | 'Critical';
   documentId?: string;
   registrationNumber?: string;
+}
+
+export interface NotificationTemplate {
+  id: string;
+  eventType: NotificationEventType;
+  name: string;
+  requiredPlaceholders: string[];
+  emailSubjectEn: string;
+  emailSubjectAm: string;
+  emailBodyEn: string;
+  emailBodyAm: string;
+  smsBodyEn: string;
+  smsBodyAm: string;
+  isActive: boolean;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+export interface ChannelPreferenceSet {
+  inApp: boolean;
+  email: boolean;
+  sms: boolean;
+}
+
+export interface UserNotificationPreferences {
+  userId: string;
+  emailAddress: string;
+  phoneNumber?: string;
+  preferredLanguage: Language;
+  channels: Record<NotificationEventType, ChannelPreferenceSet>;
+  updatedAt: string;
+}
+
+export type EscalationTriggerType =
+  | 'WorkflowOverdue'
+  | 'PhysicalOverdue'
+  | 'VeryUrgentUnacted';
+
+export interface EscalationRule {
+  id: string;
+  name: string;
+  trigger: EscalationTriggerType;
+  delayHours: number;
+  targetType: 'Role' | 'User';
+  targetRole?: UserRole;
+  targetUserId?: string;
+  targetUserName?: string;
+  channels: Array<'InApp' | 'Email' | 'SMS'>;
+  isActive: boolean;
+  lastTriggeredAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationDeliveryLog {
+  id: string;
+  timestamp: string;
+  notificationId?: string;
+  eventType: NotificationEventType;
+  channel: 'InApp' | 'Email' | 'SMS';
+  recipientUserId?: string;
+  recipientAddress: string;
+  subject?: string;
+  bodyPreview: string;
+  status: 'Delivered' | 'Failed';
+  errorReason?: string;
+}
+
+export interface NotificationConfig {
+  smsMaxLength: number;
+  realtimeWsEnabled: boolean;
 }
 
 export interface EnterpriseConnector {
@@ -461,6 +778,93 @@ export interface EnterpriseConnector {
   lastSyncTimestamp: string;
   pingLatencyMs: number;
   description: string;
+  enabled?: boolean;
+  syncIntervalMinutes?: number;
+  timeoutMs?: number;
+  verifyTls?: boolean;
+  totalDispatches?: number;
+  lastError?: string;
+  updatedAt?: string;
+}
+
+export type IntegrationEventType =
+  | 'document.registered'
+  | 'document.approved'
+  | 'document.dispatched'
+  | 'workflow.escalated'
+  | 'disposal.executed'
+  | 'connector.sync';
+
+export type IntegrationApiScope =
+  | 'correspondence:ingest'
+  | 'correspondence:read'
+  | 'efda:clearance'
+  | 'erp:sync';
+
+export interface WebhookSubscription {
+  id: string;
+  name: string;
+  targetUrl: string;
+  events: IntegrationEventType[];
+  signingSecretPreview: string;
+  isActive: boolean;
+  connectorId?: string;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+  lastTriggeredAt?: string;
+  lastDeliveryStatus?: 'Delivered' | 'Failed';
+}
+
+export interface WebhookDeliveryRecord {
+  id: string;
+  subscriptionId: string;
+  subscriptionName: string;
+  eventType: IntegrationEventType;
+  targetUrl: string;
+  payloadDigestSha256: string;
+  hmacSignatureHeader: string;
+  status: 'Delivered' | 'Failed';
+  httpStatus: number;
+  latencyMs: number;
+  attemptCount: number;
+  payloadPreview: string;
+  responseMessage: string;
+  timestamp: string;
+}
+
+export interface IntegrationApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  scopes: IntegrationApiScope[];
+  boundBranchId?: string;
+  boundConnectorId?: string;
+  status: 'Active' | 'Revoked';
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+  expiresAt: string;
+  lastUsedAt?: string;
+  usageCount: number;
+  revokedAt?: string;
+  revokedByName?: string;
+}
+
+export interface ConnectorExchangeLog {
+  id: string;
+  connectorId: string;
+  connectorName: string;
+  direction: 'Outbound' | 'Inbound';
+  operation: string;
+  documentId?: string;
+  registrationNumber?: string;
+  externalRefId?: string;
+  status: 'Success' | 'Failed';
+  latencyMs: number;
+  summary: string;
+  initiatedByName: string;
+  timestamp: string;
 }
 
 export interface BackupRecord {
@@ -554,10 +958,14 @@ export interface WorkspaceItem {
 export interface AuthPolicyConfig {
   maxFailedAttempts: number;
   lockoutDurationMinutes: number;
+  progressiveDelayBaseSeconds?: number;
   idleTimeoutMinutes: number;
   absoluteTimeoutHours: number;
+  maxConcurrentSessions?: number;
   minPasswordLength: number;
   maxDelegationDays: number;
+  maxTimeBoundRoleDays?: number;
+  maxBreakGlassHours?: number;
 }
 
 export interface AuthSession {
@@ -747,3 +1155,569 @@ export interface EnrichedWorkflowTask {
   actReason?: string;
   actingAsDelegateFor?: string[];
 }
+
+export interface SearchFilterParams {
+  query?: string;
+  type?: string;
+  branchId?: string;
+  departmentId?: string;
+  status?: string;
+  priority?: string;
+  confidentiality?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  hasAttachmentsOnly?: boolean;
+  legalHoldOnly?: boolean;
+}
+
+export interface SavedSearch {
+  id: string;
+  userId: string;
+  name: string;
+  filters: SearchFilterParams;
+  notifyOnNewMatch?: boolean;
+  createdAt: string;
+  lastExecutedAt?: string;
+  lastResultCount?: number;
+}
+
+export interface SearchResultItem {
+  document: DocumentItem;
+  score: number;
+  matchedFields: string[];
+  snippetEn?: string;
+  snippetAm?: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  total: number;
+  authorizedCount: number;
+  filteredRestrictedCount: number;
+  results: SearchResultItem[];
+}
+
+export interface AiSearchConfig {
+  ocrConfidenceThreshold: number;
+  duplicateSimilarityThreshold: number;
+  enableGeminiExtraction: boolean;
+}
+
+export interface OcrExtractionResult {
+  extractionId: string;
+  rawTextEn: string;
+  rawTextAm: string;
+  detectedLanguage: 'en' | 'am' | 'bilingual';
+  ocrConfidence: number;
+  lowConfidenceFlagged: boolean;
+  thresholdUsed: number;
+  modelUsed: string;
+  suggestedType: DocumentType;
+  suggestedSubjectEn: string;
+  suggestedSubjectAm: string;
+  suggestedSenderOrg: string;
+  suggestedRecipientOrg: string;
+  suggestedReferenceNumber: string;
+  suggestedPriority: PriorityLevel;
+  suggestedConfidentiality: ConfidentialityLevel;
+  suggestedCategory: string;
+  suggestedDepartment: string;
+  suggestedDepartmentId: string;
+  summaryEn: string;
+  summaryAm: string;
+  routingRecommendation: string;
+  fieldConfidences: Record<string, number>;
+  fallbackUsed?: boolean;
+}
+
+export interface DuplicateMatch {
+  documentId: string;
+  registrationNumber: string;
+  referenceNumber: string;
+  subjectEn: string;
+  subjectAm: string;
+  status: DocumentStatus;
+  confidentiality: ConfidentialityLevel;
+  registrationDate: string;
+  matchType: 'RegistrationNumber' | 'ReferenceNumber' | 'ContentHash' | 'SubjectSimilarity';
+  similarityScore: number;
+  reason: string;
+  isRestricted: boolean;
+}
+
+export interface SigningCertificate {
+  id: string;
+  serialNumber: string;
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  departmentNameEn: string;
+  algorithm: 'RSA-SHA256';
+  keySizeBits: number;
+  publicKeyPem: string;
+  fingerprintSha256: string;
+  issuerDn: string;
+  subjectDn: string;
+  issuedAt: string;
+  expiresAt: string;
+  status: 'Active' | 'Revoked' | 'Expired';
+  revokedAt?: string;
+  revokedBy?: string;
+  revokedReason?: string;
+}
+
+export interface SignatureCheckDetail {
+  historyRecordId: string;
+  signatureId: string;
+  signedBy: string;
+  signedByUserId?: string;
+  signedByRole?: string;
+  action: string;
+  stageName?: string;
+  certificateSerial: string;
+  certificateFingerprint?: string;
+  algorithm: string;
+  signingMeaning?: string;
+  signedAt: string;
+  signedDigestSha256: string;
+  currentDocumentDigestSha256: string;
+  cryptographicallyValid: boolean;
+  digestMatchesCurrent: boolean;
+  certificateStatus: 'Active' | 'Revoked' | 'Expired' | 'NotFound';
+  biometricVerified: boolean;
+  invalidated?: boolean;
+  status: 'Valid' | 'Tampered' | 'CertificateRevoked' | 'CertificateExpired' | 'InvalidSignature' | 'Superseded';
+  reason: string;
+}
+
+export interface DocumentSignatureVerificationResult {
+  documentId: string;
+  registrationNumber: string;
+  verifiedAt: string;
+  integrityStatus: 'Verified' | 'Unsigned' | 'Tampered' | 'CertificateRevoked' | 'MissingRequiredSignature' | 'Superseded';
+  currentDocumentDigestSha256: string;
+  totalSignatures: number;
+  validSignatures: number;
+  requiresDigitalSignature: boolean;
+  signatures: SignatureCheckDetail[];
+  summaryMessage: string;
+}
+
+export interface PublicVerificationSignerSummary {
+  signedBy: string;
+  signedByRole?: string;
+  stageName?: string;
+  certificateSerial: string;
+  certificateStatus: 'Active' | 'Revoked' | 'Expired' | 'NotFound';
+  algorithm: string;
+  signingMeaning?: string;
+  signedAt: string;
+  biometricVerified: boolean;
+  status: SignatureCheckDetail['status'];
+}
+
+export interface PublicVerificationResponse {
+  verified: boolean;
+  registrationNumber: string;
+  referenceNumber: string;
+  documentType: DocumentItem['type'];
+  status: DocumentItem['status'];
+  confidentiality: DocumentItem['confidentiality'];
+  redacted: boolean;
+  subjectEn: string;
+  subjectAm: string;
+  senderOrganization: string;
+  recipientOrganization: string;
+  issuingBranchEn: string;
+  issuingDepartmentEn: string;
+  registrationDate: string;
+  integrityStatus: DocumentSignatureVerificationResult['integrityStatus'];
+  currentDocumentDigestSha256: string;
+  sealMatchStatus: 'matched' | 'mismatched' | 'not_provided';
+  totalSignatures: number;
+  validSignatures: number;
+  summaryMessage: string;
+  signers: PublicVerificationSignerSummary[];
+  verifiedAt: string;
+}
+
+export interface PublicVerificationSample {
+  registrationNumber: string;
+  referenceNumber: string;
+  type: DocumentItem['type'];
+  status: DocumentItem['status'];
+  hasPkiSignature: boolean;
+}
+
+export type TransmittalDispatchMethod =
+  | 'Courier'
+  | 'RegionalHubShuttle'
+  | 'DiplomaticPouch'
+  | 'ElectronicPortal';
+
+export interface TransmittalManifest {
+  id: string;
+  manifestNumber: string;
+  title: string;
+  targetBranchId?: string;
+  targetBranchName?: string;
+  targetOrganization: string;
+  carrierName: string;
+  courierPhone?: string;
+  dispatchMethod: TransmittalDispatchMethod;
+  documentIds: string[];
+  documentRegNumbers: string[];
+  notes?: string;
+  status: 'Prepared' | 'Dispatched' | 'Acknowledged';
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+  dispatchedAt?: string;
+  dispatchedByName?: string;
+  acknowledgedAt?: string;
+  acknowledgedByName?: string;
+  manifestDigestSha256: string;
+}
+
+export interface BulkOperationItemResult {
+  documentId: string;
+  registrationNumber?: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface BulkOperationResult {
+  totalRequested: number;
+  succeededCount: number;
+  failedCount: number;
+  results: BulkOperationItemResult[];
+}
+
+export interface BulkImportRowInput {
+  type?: DocumentType;
+  referenceNumber?: string;
+  subjectEn: string;
+  subjectAm?: string;
+  senderOrganization: string;
+  recipientOrganization?: string;
+  branchId?: string;
+  departmentId?: string;
+  priority?: PriorityLevel;
+  confidentiality?: ConfidentialityLevel;
+  descriptionEn?: string;
+}
+
+export interface BulkImportRowResult {
+  rowIndex: number;
+  success: boolean;
+  registrationNumber?: string;
+  documentId?: string;
+  error?: string;
+}
+
+export interface BulkImportResult {
+  totalRows: number;
+  createdCount: number;
+  failedCount: number;
+  createdDocuments: DocumentItem[];
+  rowResults: BulkImportRowResult[];
+}
+
+export type DocumentLinkType =
+  | 'ReplyTo'
+  | 'Supersedes'
+  | 'Amends'
+  | 'RelatedDossier'
+  | 'ParentTender';
+
+export interface DocumentLink {
+  id: string;
+  sourceDocumentId: string;
+  targetDocumentId: string;
+  linkType: DocumentLinkType;
+  notes?: string;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface EnrichedDocumentLink {
+  link: DocumentLink;
+  direction: 'Outgoing' | 'Incoming';
+  linkedDocument: {
+    id: string;
+    registrationNumber: string;
+    referenceNumber: string;
+    type: DocumentType;
+    subjectEn: string;
+    subjectAm: string;
+    status: DocumentStatus;
+    registrationDate: string;
+  };
+}
+
+export interface CorrespondenceTemplate {
+  id: string;
+  nameEn: string;
+  nameAm: string;
+  type: DocumentType;
+  category: string;
+  defaultPriority: PriorityLevel;
+  defaultConfidentiality: ConfidentialityLevel;
+  defaultSenderOrg?: string;
+  defaultRecipientOrg?: string;
+  defaultDepartmentId?: string;
+  subjectEnTemplate: string;
+  subjectAmTemplate: string;
+  bodyEnTemplate: string;
+  bodyAmTemplate: string;
+  createdByName: string;
+  isSystemDefault?: boolean;
+  createdAt: string;
+}
+
+// Phase 13: High-Customizable Enterprise Role Management & ABAC Types
+export type PermissionCategory =
+  | 'Document'
+  | 'Workflow'
+  | 'Physical'
+  | 'Records'
+  | 'Administration'
+  | 'Workspace'
+  | 'Reporting';
+
+export type PermissionScopeLevel =
+  | 'None'
+  | 'Own'
+  | 'Department'
+  | 'Branch'
+  | 'Cluster'
+  | 'Organization'
+  | 'All';
+
+export type RoleScopeType =
+  | 'Global'
+  | 'Branch'
+  | 'Department'
+  | 'Cluster'
+  | 'DocumentType';
+
+export type AbacConditionField =
+  | 'confidentiality'
+  | 'type'
+  | 'priority'
+  | 'branchId'
+  | 'departmentId'
+  | 'status'
+  | 'ownerId'
+  | 'legalHold';
+
+export type AbacConditionOperator =
+  | 'eq'
+  | 'neq'
+  | 'lte'
+  | 'gte'
+  | 'in'
+  | 'notIn';
+
+export interface PermissionDefinition {
+  id: string;
+  key: string;
+  category: PermissionCategory;
+  nameEn: string;
+  nameAm: string;
+  descriptionEn: string;
+  descriptionAm: string;
+  legacyAlias?: string;
+  isCustom?: boolean;
+  createdAt?: string;
+}
+
+export interface PermissionSet {
+  id: string;
+  nameEn: string;
+  nameAm: string;
+  descriptionEn: string;
+  grants: Record<string, PermissionScopeLevel>;
+  isSystem?: boolean;
+  createdAt: string;
+}
+
+export interface AbacCondition {
+  id: string;
+  field: AbacConditionField;
+  operator: AbacConditionOperator;
+  value: string;
+}
+
+export interface AbacRule {
+  id: string;
+  permissionKey: string;
+  effect: 'Allow' | 'Deny';
+  description: string;
+  conditions: AbacCondition[];
+}
+
+export interface RoleVersionEntry {
+  version: number;
+  changedAt: string;
+  changedById: string;
+  changedByName: string;
+  versionNote: string;
+  reason: string;
+  status: 'Draft' | 'Active' | 'Inactive';
+  snapshot: {
+    grants: Record<string, PermissionScopeLevel>;
+    denies: string[];
+    abacRules: AbacRule[];
+    parentRoleIds: string[];
+    requiresMfa: boolean;
+  };
+}
+
+export interface EnterpriseRole {
+  id: string;
+  code: string;
+  nameEn: string;
+  nameAm: string;
+  descriptionEn: string;
+  descriptionAm: string;
+  isSystemRole: boolean;
+  isSensitiveRole: boolean;
+  status: 'Draft' | 'Active' | 'Inactive';
+  scopeType: RoleScopeType;
+  scopeTargetId?: string;
+  parentRoleIds: string[];
+  clonedFromRoleId?: string;
+  requiresMfa: boolean;
+  grants: Record<string, PermissionScopeLevel>;
+  denies: string[];
+  permissionSetIds: string[];
+  abacRules: AbacRule[];
+  version: number;
+  versionHistory: RoleVersionEntry[];
+  createdAt: string;
+  updatedAt: string;
+  updatedByName: string;
+}
+
+export interface UserRoleAssignment {
+  id: string;
+  userId: string;
+  roleId: string;
+  roleCode: string;
+  roleNameEn: string;
+  roleNameAm: string;
+  scopeType: RoleScopeType;
+  scopeTargetId?: string;
+  startDate: string;
+  endDate?: string;
+  justification: string;
+  ticketRef?: string;
+  status: 'Active' | 'PendingApproval' | 'Rejected' | 'Expired' | 'Revoked';
+  approvedById?: string;
+  approvedByName?: string;
+  approvedAt?: string;
+  expiryNotifiedAt?: string;
+  isBreakGlass?: boolean;
+  assignedById: string;
+  assignedByName: string;
+  createdAt: string;
+}
+
+export interface SodRule {
+  id: string;
+  nameEn: string;
+  nameAm: string;
+  description: string;
+  ruleType: 'RolePair' | 'PermissionPair' | 'WorkflowConflict';
+  leftItem: string;
+  rightItem: string;
+  severity: 'Blocking' | 'Warning';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface SodViolationItem {
+  ruleId: string;
+  ruleNameEn: string;
+  severity: 'Blocking' | 'Warning';
+  userId: string;
+  userName: string;
+  username: string;
+  detail: string;
+}
+
+export interface BreakGlassElevation {
+  id: string;
+  userId: string;
+  userName: string;
+  targetRoleId: string;
+  targetRoleCode: string;
+  reason: string;
+  ticketRef?: string;
+  requestedAt: string;
+  approvedById: string;
+  approvedByName: string;
+  dualApprovedById?: string;
+  dualApprovedByName?: string;
+  expiresAt: string;
+  status: 'Active' | 'Expired' | 'Revoked';
+  revokedAt?: string;
+  revokedByName?: string;
+}
+
+export interface RoleAutoAssignmentRule {
+  id: string;
+  nameEn: string;
+  nameAm: string;
+  matchField: 'position' | 'departmentId' | 'branchId' | 'cluster';
+  matchOperator: 'equals' | 'contains';
+  matchValue: string;
+  targetRoleId: string;
+  targetRoleCode: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AccessReviewItem {
+  id: string;
+  userId: string;
+  userName: string;
+  username: string;
+  roleId: string;
+  roleCode: string;
+  roleNameEn: string;
+  assignmentId?: string;
+  scopeLabel: string;
+  status: 'Pending' | 'Approved' | 'Revoked' | 'Modified';
+  reviewerComment?: string;
+  reviewedAt?: string;
+  reviewedByName?: string;
+}
+
+export interface AccessReviewCampaign {
+  id: string;
+  titleEn: string;
+  titleAm: string;
+  description: string;
+  reviewerIds: string[];
+  reviewerNames: string[];
+  status: 'Active' | 'Completed';
+  dueDate: string;
+  createdAt: string;
+  createdByName: string;
+  items: AccessReviewItem[];
+}
+
+export interface EffectivePermissionPreview {
+  userId: string;
+  userName: string;
+  activeRoleCodes: string[];
+  effectiveLevels: Record<string, PermissionScopeLevel>;
+  explicitDenies: string[];
+  activeAbacRules: AbacRule[];
+  sodWarnings: SodViolationItem[];
+  activeBreakGlass?: BreakGlassElevation | null;
+}
+
