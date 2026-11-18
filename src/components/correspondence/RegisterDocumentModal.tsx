@@ -25,7 +25,9 @@ import {
   DocumentType,
   DuplicateMatch,
   OcrExtractionResult,
-  PriorityLevel
+  PriorityLevel,
+  RegulatoryCategory,
+  RetentionCalculationResult
 } from '../../types/index.js';
 
 export const RegisterDocumentModal: React.FC = () => {
@@ -58,6 +60,8 @@ export const RegisterDocumentModal: React.FC = () => {
   const [receivedDate, setReceivedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [priority, setPriority] = useState<PriorityLevel>('Normal');
   const [confidentiality, setConfidentiality] = useState<ConfidentialityLevel>('Internal');
+  const [regulatoryCategory, setRegulatoryCategory] = useState<RegulatoryCategory | ''>('');
+  const [retentionPreview, setRetentionPreview] = useState<RetentionCalculationResult | null>(null);
   const [targetBranchId, setTargetBranchId] = useState('br-hq');
   const [targetDeptId, setTargetDeptId] = useState(departments[0]?.id || 'dept-proc');
   const [dueDate, setDueDate] = useState('');
@@ -127,6 +131,44 @@ export const RegisterDocumentModal: React.FC = () => {
       })
       .catch(() => {});
   }, [isRegisterModalOpen]);
+
+  useEffect(() => {
+    if (!isRegisterModalOpen) return;
+    const timer = setTimeout(() => {
+      apiFetch('/api/v1/records/retention/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: docType,
+          subjectEn,
+          subjectAm,
+          descriptionEn,
+          senderOrganization: senderOrg,
+          confidentiality,
+          regulatoryCategory: regulatoryCategory || undefined,
+          tags: [docType, priority],
+          registrationDate: receivedDate ? new Date(receivedDate).toISOString() : new Date().toISOString()
+        })
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data: RetentionCalculationResult | null) => {
+          if (data) setRetentionPreview(data);
+        })
+        .catch(() => {});
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [
+    isRegisterModalOpen,
+    docType,
+    subjectEn,
+    subjectAm,
+    descriptionEn,
+    senderOrg,
+    confidentiality,
+    regulatoryCategory,
+    priority,
+    receivedDate
+  ]);
 
   useEffect(() => {
     if (!isRegisterModalOpen || !replyToDocument) return;
@@ -377,6 +419,7 @@ export const RegisterDocumentModal: React.FC = () => {
         receivedDate: receivedDate ? new Date(receivedDate).toISOString() : undefined,
         priority,
         confidentiality,
+        regulatoryCategory: regulatoryCategory || undefined,
         branchId: targetBranchId,
         departmentId: targetDeptId,
         assignedDepartmentName: selectedDeptObj?.nameEn || 'Designated Directorate',
@@ -1288,6 +1331,61 @@ export const RegisterDocumentModal: React.FC = () => {
                 <option value="Confidential">Confidential</option>
                 <option value="Secret">Secret</option>
               </select>
+            </div>
+          </div>
+
+          {/* Regulatory Category & Intelligent Retention Preview */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/30">
+            <div className="sm:col-span-5">
+              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 text-[11px]">
+                {t('regulatoryCategoryLabel')}
+              </label>
+              <select
+                value={regulatoryCategory}
+                onChange={(e) => setRegulatoryCategory(e.target.value as RegulatoryCategory | '')}
+                className="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-xs"
+              >
+                <option value="">
+                  {language === 'am' ? 'በሰነዱ መረጃ መሠረት በራስ-ሰር ይመደብ' : 'Auto-Classify from Metadata & Keywords'}
+                </option>
+                <option value="PharmaceuticalQuality">Pharmaceutical Quality & EFDA (15 yrs)</option>
+                <option value="ProcurementTender">Procurement & Tenders (10 yrs)</option>
+                <option value="LegalCompliance">Legal & Litigation (12 yrs)</option>
+                <option value="FinancialAudit">Financial & Waybill Audit (7 yrs)</option>
+                <option value="ExecutiveGovernance">Executive / Sovereign Charter (Permanent)</option>
+                <option value="HumanResources">Human Resources Directives</option>
+                <option value="GeneralAdministrative">General Administrative (5 yrs)</option>
+              </select>
+            </div>
+            <div className="sm:col-span-7 flex flex-col justify-center text-[11px] space-y-0.5">
+              <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between gap-2">
+                <span>
+                  {retentionPreview
+                    ? retentionPreview.retentionCategory
+                    : language === 'am'
+                      ? 'የማቆያ ጊዜ በመሰላት ላይ...'
+                      : 'Calculating regulatory retention schedule...'}
+                </span>
+                {retentionPreview && (
+                  <span className="font-mono font-bold text-teal-700 dark:text-teal-300 tabular-nums shrink-0">
+                    {retentionPreview.isPermanent
+                      ? language === 'am'
+                        ? 'ቋሚ (0 ዓመት)'
+                        : 'Permanent (0 yrs)'
+                      : `${retentionPreview.retentionYears} yrs · ${retentionPreview.retentionExpiryDate.slice(0, 10)}`}
+                  </span>
+                )}
+              </div>
+              {retentionPreview && (
+                <p className="text-slate-500 dark:text-slate-400 leading-snug">
+                  {language === 'am' ? 'መነሻ፡' : 'Trigger:'}{' '}
+                  <strong className="text-slate-700 dark:text-slate-300">
+                    {retentionPreview.retentionTriggerEvent}
+                  </strong>{' '}
+                  · {Math.round(retentionPreview.retentionConfidence * 100)}% ·{' '}
+                  {retentionPreview.retentionClassificationReason}
+                </p>
+              )}
             </div>
           </div>
 

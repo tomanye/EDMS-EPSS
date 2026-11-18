@@ -31,7 +31,8 @@ import {
   GitBranch,
   Link2,
   Unlink,
-  History
+  History,
+  Eye
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
@@ -47,6 +48,7 @@ import { VerificationStatusModal } from '../verification/VerificationStatusModal
 import { BiometricVerificationModal } from '../auth/BiometricVerificationModal.js';
 import { WorkflowProgressTracker } from './WorkflowProgressTracker.js';
 import { DocumentVersioningPanel } from './DocumentVersioningPanel.js';
+import { InlineDocumentViewerModal } from './InlineDocumentViewerModal.js';
 import { Fingerprint, Scan, LockKeyhole } from 'lucide-react';
 import {
   DocumentLinkType,
@@ -179,8 +181,10 @@ export const DocumentDetailModal: React.FC = () => {
       .catch(() => {});
   }, [isSignModalOpen, currentUser?.id]);
 
-  // Versioning sub-modal tracking
+  // Versioning & Inline Viewer sub-modal tracking
   const [isVersioningSubModalOpen, setIsVersioningSubModalOpen] = useState(false);
+  const [isInlineViewerOpen, setIsInlineViewerOpen] = useState(false);
+  const [viewerInitialPage, setViewerInitialPage] = useState(1);
 
   const hasSubModalOpen =
     isSignModalOpen ||
@@ -192,6 +196,7 @@ export const DocumentDetailModal: React.FC = () => {
     isBiometricModalOpen ||
     isAddAttachmentOpen ||
     isVersioningSubModalOpen ||
+    isInlineViewerOpen ||
     Boolean(editingAttId);
 
   useEscapeKey(Boolean(editingAttId), () => setEditingAttId(null));
@@ -279,7 +284,7 @@ export const DocumentDetailModal: React.FC = () => {
       setSignStepUpPin('');
       setActionFeedback({
         type: 'success',
-        text: `Cryptographic RSA-SHA256 signature applied (${data.signature?.certificateSerial || 'PKI'}).`
+        text: `Cryptographic ${data.signature?.algorithm || 'PKI'} HSM signature applied (${data.signature?.certificateSerial || 'PKI'}).`
       });
       await refreshData();
     } catch {
@@ -289,6 +294,33 @@ export const DocumentDetailModal: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDownloadSigBundle = async () => {
+    try {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/signatures/bundle`);
+      if (!res.ok) {
+        setActionFeedback({
+          type: 'error',
+          text: localizeErrorMessage('Failed to export detached signature bundle.', language)
+        });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.registrationNumber.replace(/[^A-Za-z0-9_-]/g, '_')}.sig.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setActionFeedback({
+        type: 'error',
+        text: localizeErrorMessage('Network error exporting .sig.json bundle.', language)
+      });
     }
   };
 
@@ -720,6 +752,29 @@ export const DocumentDetailModal: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Inline Document Viewer & Annotation Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isSensitiveRecord && !isBiometricUnlocked) {
+                  setIsBiometricModalOpen(true);
+                  return;
+                }
+                setViewerInitialPage(1);
+                setIsInlineViewerOpen(true);
+              }}
+              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-teal-200 dark:border-teal-800 bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 inline-flex items-center gap-1 transition-colors"
+              title="Open Inline Document Viewer with DLP Watermarking, @Mentions & Redaction"
+            >
+              <Eye className="w-3.5 h-3.5 text-teal-600" />
+              <span>{t('inlineViewerTitle')}</span>
+              {(doc.annotations?.length || 0) > 0 && (
+                <span className="font-mono text-[10px] text-amber-700 dark:text-amber-400 tabular-nums">
+                  ({doc.annotations!.length})
+                </span>
+              )}
+            </button>
+
             {/* Direct PKI Digital Sign / Attest Button */}
             {canSignDoc && (
               <button
@@ -887,7 +942,7 @@ export const DocumentDetailModal: React.FC = () => {
           {/* Step-Based Visual Workflow Progress Tracker */}
           <WorkflowProgressTracker document={doc} />
 
-          {/* Legal Hold / Retention Governance Strip */}
+          {/* Legal Hold / Intelligent Retention Governance Strip */}
           {(doc.legalHold || doc.retentionCategory) && (
             <div
               className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -896,24 +951,45 @@ export const DocumentDetailModal: React.FC = () => {
                   : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="space-y-0.5">
+              <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 font-semibold">
-                  {doc.legalHold ? <Lock className="w-4 h-4 text-rose-600" /> : <Clock className="w-4 h-4 text-teal-600" />}
+                  {doc.legalHold ? (
+                    <Lock className="w-4 h-4 text-rose-600 shrink-0" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-teal-600 shrink-0" />
+                  )}
                   <span>
                     {doc.legalHold
-                      ? 'IMMUTABLE LEGAL HOLD ACTIVE — Edits, deletion & disposal blocked'
-                      : `Retention Schedule: ${doc.retentionCategory || 'Standard Institutional Schedule'}`}
+                      ? language === 'am'
+                        ? 'የማይነካ የሕግ እግድ (LEGAL HOLD) ገባሪ ነው — ማሻሻል፣ መሰረዝ እና ማስወገድ ታግዷል'
+                        : 'IMMUTABLE LEGAL HOLD ACTIVE — Edits, deletion & disposal blocked'
+                      : `${t('retentionPolicy')}: ${doc.retentionCategory || 'Standard Institutional Schedule'}`}
                   </span>
                 </div>
-                {doc.legalHold && doc.legalHoldReason && (
+                {doc.legalHold && doc.legalHoldReason ? (
                   <p className="text-[11px] opacity-90">
                     Reason: {doc.legalHoldReason} {doc.legalHoldAppliedBy ? `(${doc.legalHoldAppliedBy})` : ''}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {doc.regulatoryCategory ? `${doc.regulatoryCategory}` : 'GeneralAdministrative'}
+                    {' · '}
+                    {t('retentionTriggerLabel')}: {doc.retentionTriggerEvent || 'RegistrationDate'}
+                    {doc.retentionTriggerDate
+                      ? ` (${formatEthiopianDate(doc.retentionTriggerDate, language)})`
+                      : ''}
+                    {typeof doc.retentionConfidence === 'number'
+                      ? ` · ${Math.round(doc.retentionConfidence * 100)}% confidence`
+                      : ''}
+                    {doc.retentionClassificationReason ? ` · ${doc.retentionClassificationReason}` : ''}
                   </p>
                 )}
               </div>
               <span className="font-mono text-[11px] font-semibold shrink-0 tabular-nums">
                 {doc.retentionYears === 0
-                  ? '0 yrs · Permanent'
+                  ? language === 'am'
+                    ? '0 ዓመት · ቋሚ'
+                    : '0 yrs · Permanent'
                   : `${doc.retentionYears} yrs · Exp ${doc.retentionExpiryDate?.slice(0, 10) || '-'}`}
               </span>
             </div>
@@ -1177,7 +1253,11 @@ export const DocumentDetailModal: React.FC = () => {
                     No attachments uploaded. Click "Add Attachment" to link digitized records.
                   </div>
                 ) : (
-                  doc.attachments.map((att) => (
+                  doc.attachments.map((att, attIdx) => {
+                    const resolvedDownloadUrl = att.fileUrl?.startsWith('/api/v1/workspace/items/')
+                      ? att.fileUrl
+                      : `/api/v1/correspondence/${doc.id}/attachments/${att.id}/download`;
+                    return (
                     <div key={att.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2 truncate">
                         <FileText className="w-4 h-4 text-teal-600 shrink-0" />
@@ -1194,6 +1274,18 @@ export const DocumentDetailModal: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
+                            setViewerInitialPage(2 + attIdx);
+                            setIsInlineViewerOpen(true);
+                          }}
+                          className="px-2 py-1 text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 rounded inline-flex items-center gap-1"
+                          title="Open in Inline Viewer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{t('previewAttachmentBtn')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
                             setEditingAttId(att.id);
                             setEditingAttNotes(att.notes || '');
                           }}
@@ -1203,14 +1295,40 @@ export const DocumentDetailModal: React.FC = () => {
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         {can('document.download') && (
-                          <a
-                            href={att.fileUrl}
-                            download={att.fileName}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const res = await apiFetch(resolvedDownloadUrl);
+                                if (!res.ok) {
+                                  const errData = await res.json().catch(() => ({}));
+                                  setActionFeedback({
+                                    type: 'error',
+                                    text: localizeErrorMessage(errData.error || 'Download blocked by security policy.', language)
+                                  });
+                                  return;
+                                }
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                const a = window.document.createElement('a');
+                                a.href = url;
+                                a.download = att.fileName;
+                                window.document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                URL.revokeObjectURL(url);
+                              } catch {
+                                setActionFeedback({
+                                  type: 'error',
+                                  text: localizeErrorMessage('Failed to download attachment.', language)
+                                });
+                              }
+                            }}
                             className="p-1 text-slate-600 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
                             title="Download attachment"
                           >
                             <Download className="w-3.5 h-3.5" />
-                          </a>
+                          </button>
                         )}
                         {pendingDeleteAttId === att.id ? (
                           <div className="inline-flex items-center gap-1 ml-1">
@@ -1241,7 +1359,8 @@ export const DocumentDetailModal: React.FC = () => {
                         )}
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
@@ -1435,14 +1554,26 @@ export const DocumentDetailModal: React.FC = () => {
               <h3 className="font-bold text-slate-900 dark:text-slate-100">
                 Official Minutes & Workflow Progression
               </h3>
-              <button
-                type="button"
-                onClick={() => setIsVerificationModalOpen(true)}
-                className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline inline-flex items-center gap-1"
-              >
-                <FileKey2 className="w-3.5 h-3.5" />
-                <span>Verify PKI Signatures ({activeSignaturesCount})</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {activeSignaturesCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadSigBundle}
+                    className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:underline inline-flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5 text-teal-600" />
+                    <span>{t('exportSigBundleBtn')}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsVerificationModalOpen(true)}
+                  className="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <FileKey2 className="w-3.5 h-3.5" />
+                  <span>Verify PKI Signatures ({activeSignaturesCount})</span>
+                </button>
+              </div>
             </div>
 
             <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
@@ -1471,14 +1602,24 @@ export const DocumentDetailModal: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2 font-semibold">
                         <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                         <span>
-                          {step.digitalSignature.invalidated ? 'Superseded PKI Seal' : 'RSA-SHA256 Signed'}:{' '}
-                          {step.digitalSignature.certificateSerial}
+                          {step.digitalSignature.invalidated
+                            ? 'Superseded PKI Seal'
+                            : `${step.digitalSignature.algorithm || 'RSA-SHA256'} Signed`}
+                          : {step.digitalSignature.certificateSerial}
                         </span>
+                        {step.digitalSignature.hsmSlotLabel && (
+                          <span>· HSM: {step.digitalSignature.hsmSlotLabel}</span>
+                        )}
                         {step.digitalSignature.biometricVerified && <span>· Step-Up MFA</span>}
                       </div>
                       {step.digitalSignature.signingMeaning && (
                         <div className="font-sans text-slate-700 dark:text-slate-300">
                           Intent: {step.digitalSignature.signingMeaning}
+                        </div>
+                      )}
+                      {step.digitalSignature.tsaToken && (
+                        <div className="text-[10px] text-teal-700 dark:text-teal-400">
+                          TSA RFC-3161: {step.digitalSignature.tsaToken.timestampUtc.slice(0, 19)}Z ({step.digitalSignature.tsaToken.tsaTokenId})
                         </div>
                       )}
                       {step.digitalSignature.documentDigestSha256 && (
@@ -1998,14 +2139,14 @@ export const DocumentDetailModal: React.FC = () => {
 
             {!activeCertificate ? (
               <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 space-y-2">
-                <p className="font-semibold">No active RSA-2048 signing certificate found for your account.</p>
+                <p className="font-semibold">No active HSM/PKI signing certificate found for your account.</p>
                 <button
                   type="button"
                   onClick={handleIssueMyCert}
                   disabled={isIssuingCert}
                   className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold"
                 >
-                  {isIssuingCert ? 'Issuing Certificate...' : 'Issue Active EPSS Certificate'}
+                  {isIssuingCert ? 'Issuing HSM Keypair...' : 'Issue Active EPSS Certificate'}
                 </button>
               </div>
             ) : (
@@ -2013,8 +2154,11 @@ export const DocumentDetailModal: React.FC = () => {
                 <div className="font-bold text-emerald-800 dark:text-emerald-300">
                   ACTIVE CERT: {activeCertificate.serialNumber}
                 </div>
-                <div className="text-slate-600 dark:text-slate-400">
+                <div className="text-slate-700 dark:text-slate-300">
                   {activeCertificate.algorithm} ({activeCertificate.keySizeBits}-bit) · Exp {activeCertificate.expiresAt.slice(0, 10)}
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                  HSM: {activeCertificate.hsmSlotLabel || 'EPSS Primary Partition'} · {activeCertificate.keyProtectionMode === 'HSM_AES256_WRAPPED' ? 'AES-256-GCM Wrapped' : 'Standard'} · CA: {activeCertificate.issuerCaSerial || 'EPSS Issuing CA'} · RFC 3161 TSA Enabled
                 </div>
               </div>
             )}
@@ -2082,7 +2226,9 @@ export const DocumentDetailModal: React.FC = () => {
                   disabled={isSubmitting || !activeCertificate}
                   className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold disabled:opacity-40"
                 >
-                  {isSubmitting ? 'Signing...' : 'Sign with RSA-SHA256'}
+                  {isSubmitting
+                    ? 'Signing...'
+                    : `Sign with ${activeCertificate?.algorithm || 'HSM PKI'}`}
                 </button>
               </div>
             </form>
@@ -2113,6 +2259,30 @@ export const DocumentDetailModal: React.FC = () => {
             ? 'Step-Up Biometric Confirmation for RSA-SHA256 Digital Signature'
             : 'Unlock Confidential Pharmaceutical Record & Authorize Minutes'
         }
+      />
+
+      {/* Inline Document Viewer, DLP Watermarking, @Mentions & Redaction Modal */}
+      <InlineDocumentViewerModal
+        isOpen={isInlineViewerOpen}
+        onClose={() => setIsInlineViewerOpen(false)}
+        document={doc}
+        initialPage={viewerInitialPage}
+        onDocumentMutated={async (updatedDoc) => {
+          if (updatedDoc) {
+            setSelectedDocument(updatedDoc);
+          } else {
+            try {
+              const r = await apiFetch(`/api/v1/correspondence/${doc.id}`);
+              if (r.ok) {
+                const fresh = await r.json();
+                setSelectedDocument(fresh);
+              }
+            } catch {
+              // fallback to refreshData below
+            }
+          }
+          await refreshData();
+        }}
       />
     </div>
   );

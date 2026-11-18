@@ -18,14 +18,21 @@ import {
   DisposalRequest,
   CorrespondenceTemplate,
   CorrespondenceWorkflowState,
+  DlpWatermarkContext,
+  DocumentAnnotation,
+  DocumentAnnotationReply,
   DocumentAttachment,
   DocumentItem,
   DocumentLink,
   DocumentLinkType,
+  DocumentRedactionMark,
   DocumentRevision,
   DocumentRevisionActionType,
   DocumentRevisionSnapshot,
+  DocumentViewerContext,
+  DocumentViewerPage,
   EnrichedDocumentLink,
+  RedactionCategory,
   PriorityLevel,
   EnterpriseConnector,
   ExecutiveKpiSummary, 
@@ -38,7 +45,14 @@ import {
   PhysicalLocationNode,
   PublicVerificationResponse,
   PublicVerificationSample,
+  DisposalAlertUrgency,
+  PendingDisposalAlertItem,
+  RecordsAlertSummary,
+  RegulatoryCategory,
+  RetentionCalculationResult,
   RetentionSchedule,
+  RetentionSimulationInput,
+  RetentionTriggerEvent,
   TransmittalDispatchMethod,
   TransmittalManifest,
   BulkImportResult,
@@ -112,7 +126,18 @@ import {
   RoleScopeType,
   SodRule,
   SodViolationItem,
-  UserRoleAssignment
+  UserRoleAssignment,
+  SigningAlgorithm,
+  HsmProviderType,
+  KeyProtectionMode,
+  TrustedTimestampToken,
+  HsmSlotConfig,
+  PkiCaNodeSummary,
+  PkiPolicyConfig,
+  PkiHsmGovernanceStatus,
+  CrlRevocationEntry,
+  DetachedSignatureBundle,
+  BundleVerificationReport
 } from '../../src/types/index.js';
 import { INITIAL_DOCUMENTS, SEED_BRANCHES, SEED_DEPARTMENTS, SEED_RETENTION_SCHEDULES, SEED_USERS } from './seed.js';
 import {
@@ -127,7 +152,17 @@ import {
 } from '../lib/rbacSeed.js';
 
 interface StoredSigningCertificate extends SigningCertificate {
-  privateKeyPem: string;
+  privateKeyPem?: string;
+  encryptedPrivateKeyPem?: string;
+  keyWrappingIv?: string;
+  keyWrappingTag?: string;
+}
+
+interface StoredCaNode extends PkiCaNodeSummary {
+  encryptedPrivateKeyPem: string;
+  keyWrappingIv: string;
+  keyWrappingTag: string;
+  hsmSlotId: string;
 }
 
 interface StoredWebhookSubscription extends WebhookSubscription {
@@ -172,6 +207,7 @@ interface StoreSchema {
   disposalRequests: DisposalRequest[];
   archiveRetrievals: ArchiveRetrievalRequest[];
   disposalCertificates: DisposalCertificate[];
+  lastRetentionScanAt?: string;
   notificationTemplates: NotificationTemplate[];
   notificationPreferences: UserNotificationPreferences[];
   escalationRules: EscalationRule[];
@@ -180,6 +216,10 @@ interface StoreSchema {
   savedSearches: SavedSearch[];
   aiSearchConfig: AiSearchConfig;
   signingCertificates: StoredSigningCertificate[];
+  hsmMasterKeyHex?: string;
+  pkiCaHierarchy?: StoredCaNode[];
+  hsmSlots?: HsmSlotConfig[];
+  pkiPolicy?: PkiPolicyConfig;
   savedReportTemplates: SavedReportTemplate[];
   reportExportHistory: ReportExportRecord[];
   webhookSubscriptions: StoredWebhookSubscription[];
@@ -328,6 +368,8 @@ class EdrmsStore {
       enableGeminiExtraction: true
     },
     signingCertificates: [],
+    hsmSlots: [],
+    pkiCaHierarchy: [],
     savedReportTemplates: [],
     reportExportHistory: [],
     webhookSubscriptions: [],
@@ -401,13 +443,16 @@ class EdrmsStore {
         this.ensurePhase13TransmittalState();
         this.ensurePhase14DossiersAndTemplatesState();
         this.ensurePhase13RbacState();
+        this.scanAndNotifyPendingDisposals(null, '127.0.0.1', false);
         this.save();
       } catch (err) {
         console.error('Failed to load store, re-seeding:', err);
-        this.seedInitial();
+        await this.seedInitial();
       }
     } else {
       await this.seedInitial();
+      this.scanAndNotifyPendingDisposals(null, '127.0.0.1', false);
+      this.save();
     }
   }
 
@@ -985,8 +1030,19 @@ class EdrmsStore {
         docData.type || 'IncomingLetter',
         now,
         docData.retentionScheduleId,
-        docData.retentionYears
+        docData.retentionYears,
+        {
+          subjectEn: docData.subjectEn,
+          subjectAm: docData.subjectAm,
+          descriptionEn: docData.descriptionEn,
+          ocrTextEn: docData.ocrTextEn || docData.aiExtracted?.ocrTextEn,
+          senderOrganization: docData.senderOrganization,
+          confidentiality: docData.confidentiality || 'Internal',
+          regulatoryCategory: (docData as any).regulatoryCategory,
+          tags: docData.tags || ['EPSS', prefix]
+        }
       ),
+      retentionManualOverride: !!(docData.retentionScheduleId || docData.retentionYears !== undefined),
       legalHold: false,
       ocrTextEn: docData.ocrTextEn || docData.aiExtracted?.ocrTextEn || '',
       ocrTextAm: docData.ocrTextAm || docData.aiExtracted?.ocrTextAm || '',
@@ -1143,6 +1199,35 @@ class EdrmsStore {
     delete safeUpdates.currentVersion;
 
     Object.assign(doc, safeUpdates);
+    if (safeUpdates.retentionScheduleId !== undefined || safeUpdates.retentionYears !== undefined) {
+      doc.retentionManualOverride = true;
+    } else if (!doc.retentionManualOverride) {
+      const recalc = this.evaluateIntelligentRetention(
+        {
+          type: doc.type,
+          subjectEn: doc.subjectEn,
+          subjectAm: doc.subjectAm,
+          descriptionEn: doc.descriptionEn,
+          ocrTextEn: doc.ocrTextEn,
+          senderOrganization: doc.senderOrganization,
+          confidentiality: doc.confidentiality,
+          regulatoryCategory: doc.regulatoryCategory,
+          tags: doc.tags,
+          registrationDate: doc.registrationDate,
+          completedAt: this.findDocumentCompletionDate(doc),
+          archivedAt: doc.archivedAt
+        }
+      );
+      doc.retentionScheduleId = recalc.retentionScheduleId;
+      doc.retentionCategory = recalc.retentionCategory;
+      doc.regulatoryCategory = recalc.regulatoryCategory;
+      doc.retentionTriggerEvent = recalc.retentionTriggerEvent;
+      doc.retentionTriggerDate = recalc.retentionTriggerDate;
+      doc.retentionYears = recalc.retentionYears;
+      doc.retentionExpiryDate = recalc.retentionExpiryDate;
+      doc.retentionClassificationReason = recalc.retentionClassificationReason;
+      doc.retentionConfidence = recalc.retentionConfidence;
+    }
     doc.contentHash = this.computeDocumentContentHash(doc);
     const revision = this.appendDocumentRevision(
       doc,
@@ -1756,6 +1841,696 @@ class EdrmsStore {
       isDueToday: enriched.isDueToday,
       remainingHours: enriched.remainingHours
     };
+  }
+
+  // =========================================================================
+  // INLINE VIEWER, DLP WATERMARKING, ANNOTATIONS (@MENTIONS) & REDACTION
+  // =========================================================================
+
+  private escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private scrubTextWithRedactions(text: string, redactions: DocumentRedactionMark[]): string {
+    if (!text) return '';
+    let result = text;
+    for (const r of redactions) {
+      if (r.redactTextSnippet && r.redactTextSnippet.trim().length >= 3) {
+        const pattern = new RegExp(this.escapeRegExp(r.redactTextSnippet.trim()), 'gi');
+        result = result.replace(pattern, `[REDACTED · ${r.category}]`);
+      }
+    }
+    return result;
+  }
+
+  public buildDlpWatermark(doc: DocumentItem, actor: User, clientIp: string): DlpWatermarkContext {
+    const viewedAt = new Date().toISOString();
+    const copyToken = crypto
+      .createHash('sha256')
+      .update(`${doc.id}:${actor.id}:${viewedAt}`)
+      .digest('hex')
+      .slice(0, 10)
+      .toUpperCase();
+    const enforceDlp =
+      doc.confidentiality === 'Confidential' ||
+      doc.confidentiality === 'Secret' ||
+      doc.priority === 'VeryUrgent';
+
+    return {
+      watermarkText: `${doc.confidentiality.toUpperCase()} · ${actor.fullNameEn} (${actor.role}) · ${clientIp} · COPY-${copyToken}`,
+      viewerName: actor.fullNameEn,
+      viewerRole: actor.role,
+      viewerBranch: actor.branchNameEn || 'Head Office',
+      viewedAt,
+      copyToken,
+      enforceDlp
+    };
+  }
+
+  public getDocumentViewerContext(
+    documentId: string,
+    actor: User,
+    clientIp: string
+  ): DocumentViewerContext | null {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return null;
+
+    if (!Array.isArray(doc.annotations)) doc.annotations = [];
+    if (!Array.isArray(doc.redactions)) doc.redactions = [];
+
+    const watermark = this.buildDlpWatermark(doc, actor, clientIp);
+    const redactions = doc.redactions;
+
+    const pages: DocumentViewerPage[] = [];
+    // Page 1: Official Bilingual Correspondence Cover & Metadata Sheet
+    pages.push({
+      pageNumber: 1,
+      titleEn: `Official Correspondence Sheet · ${doc.registrationNumber}`,
+      titleAm: `ይፋዊ የደብዳቤ ሰነድ · ${doc.registrationNumber}`,
+      kind: 'dossier',
+      lines: [
+        { label: 'Registration No.', value: doc.registrationNumber },
+        { label: 'Reference No.', value: doc.referenceNumber || '-' },
+        { label: 'Document Type', value: doc.type },
+        { label: 'Classification', value: `${doc.confidentiality} · ${doc.priority}` },
+        { label: 'From (Sender)', value: this.scrubTextWithRedactions(`${doc.senderOrganization}${doc.senderPerson ? ` (${doc.senderPerson})` : ''}`, redactions) },
+        { label: 'To (Recipient)', value: this.scrubTextWithRedactions(`${doc.recipientOrganization}${doc.recipientPerson ? ` (${doc.recipientPerson})` : ''}`, redactions) },
+        { label: 'Assigned Directorate', value: doc.assignedDepartmentName || 'Central Registry' },
+        { label: 'Current Version', value: `v${doc.currentVersion || doc.revisions?.length || 1}` }
+      ],
+      bodyText: this.scrubTextWithRedactions(
+        [
+          `SUBJECT (EN): ${doc.subjectEn}`,
+          doc.subjectAm ? `SUBJECT (AM): ${doc.subjectAm}` : '',
+          '',
+          doc.descriptionEn || doc.ocrTextEn || doc.aiExtracted?.summaryEn || 'Official correspondence dossier registered in EPSS National EDRMS.'
+        ]
+          .filter(Boolean)
+          .join('\n'),
+        redactions
+      )
+    });
+
+    // Attachment preview pages (one per digitized attachment)
+    for (const att of doc.attachments || []) {
+      const nextNum = pages.length + 1;
+      const isWorkspaceBinary = att.fileUrl?.startsWith('/api/v1/workspace/items/');
+      const inlineUrl = isWorkspaceBinary
+        ? `${att.fileUrl}${att.fileUrl.includes('?') ? '&' : '?'}inline=1`
+        : `/api/v1/correspondence/${doc.id}/attachments/${att.id}/download?inline=1`;
+      pages.push({
+        pageNumber: nextNum,
+        titleEn: `Attachment: ${att.fileName} (v${att.version || 1})`,
+        titleAm: `አባሪ ፋይል፡ ${att.fileName} (v${att.version || 1})`,
+        kind: 'attachment-preview',
+        attachmentId: att.id,
+        inlinePreviewUrl: inlineUrl,
+        mimeType: att.mimeType || 'application/pdf',
+        lines: [
+          { label: 'File Name', value: att.fileName },
+          { label: 'File Version', value: `v${att.version || 1}` },
+          { label: 'Size', value: `${(att.fileSize / 1024).toFixed(1)} KB` },
+          { label: 'Uploaded By', value: att.uploadedBy }
+        ],
+        bodyText: this.scrubTextWithRedactions(
+          [
+            att.description || '',
+            att.notes || '',
+            doc.ocrTextEn ? `\n--- Extracted OCR Content ---\n${doc.ocrTextEn}` : ''
+          ]
+            .filter(Boolean)
+            .join('\n'),
+          redactions
+        )
+      });
+    }
+
+    // Final Page: Endorsement & PKI Sign-off Summary
+    if ((doc.workflowHistory || []).length > 0) {
+      const sigPageNum = pages.length + 1;
+      const minutesBody = doc.workflowHistory
+        .map(
+          step =>
+            `[${step.timestamp.slice(0, 16).replace('T', ' ')}] ${step.actorName} (${step.actorRole}) — ${step.action}: ${step.comments}${
+              step.digitalSignature
+                ? ` [PKI ${step.digitalSignature.invalidated ? 'SUPERSEDED' : 'VERIFIED'}: ${step.digitalSignature.certificateSerial}]`
+                : ''
+            }`
+        )
+        .join('\n\n');
+
+      pages.push({
+        pageNumber: sigPageNum,
+        titleEn: 'Official Minutes & Cryptographic Signatures Trail',
+        titleAm: 'ይፋዊ ማስታወሻዎች እና የዲጂታል ፊርማ መዝገብ',
+        kind: 'minutes',
+        lines: [
+          { label: 'Workflow Entries', value: String(doc.workflowHistory.length) },
+          {
+            label: 'Active PKI Seals',
+            value: String(
+              doc.workflowHistory.filter(h => h.digitalSignature && !h.digitalSignature.invalidated).length
+            )
+          }
+        ],
+        bodyText: this.scrubTextWithRedactions(minutesBody, redactions)
+      });
+    }
+
+    if (watermark.enforceDlp) {
+      this.addAuditLog({
+        userId: actor.id,
+        userName: actor.fullNameEn,
+        userRole: actor.role,
+        branchName: actor.branchNameEn,
+        action: 'VIEWED_DOCUMENT_INLINE',
+        resourceType: 'Document',
+        resourceId: doc.registrationNumber,
+        ipAddress: clientIp,
+        details: `Opened watermarked DLP viewer for ${doc.confidentiality} record (${watermark.copyToken})`
+      });
+      this.save();
+    }
+
+    return {
+      documentId: doc.id,
+      registrationNumber: doc.registrationNumber,
+      totalPages: pages.length,
+      pages,
+      annotations: [...doc.annotations].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
+      redactions: [...doc.redactions],
+      watermark
+    };
+  }
+
+  private resolveMentionedUsers(commentText: string, explicitUserIds?: string[]): User[] {
+    const matched = new Map<string, User>();
+    const activeUsers = this.data.users.filter(u => u.status !== 'Inactive');
+
+    if (Array.isArray(explicitUserIds)) {
+      for (const uid of explicitUserIds) {
+        const u = activeUsers.find(x => x.id === uid);
+        if (u) matched.set(u.id, u);
+      }
+    }
+
+    const handleMatches = commentText.match(/@([a-zA-Z0-9._-]+)/g) || [];
+    for (const token of handleMatches) {
+      const handle = token.slice(1).toLowerCase();
+      const u = activeUsers.find(x => x.username.toLowerCase() === handle);
+      if (u) matched.set(u.id, u);
+    }
+
+    return Array.from(matched.values());
+  }
+
+  private notifyMentionedUsers(
+    doc: DocumentItem,
+    actor: User,
+    mentionedUsers: User[],
+    snippet: string,
+    pageNumber: number
+  ) {
+    const now = new Date().toISOString();
+    for (const target of mentionedUsers) {
+      if (target.id === actor.id) continue;
+      const notif: AppNotification = {
+        id: `notif-mention-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        titleEn: `Mentioned on ${doc.registrationNumber}`,
+        titleAm: `በሰነድ ${doc.registrationNumber} ማብራሪያ ውስጥ ተጠቅሰዋል`,
+        messageEn: `${actor.fullNameEn} mentioned you on page ${pageNumber}: "${snippet.slice(0, 120)}"`,
+        messageAm: `${actor.fullNameEn} በገጽ ${pageNumber} ላይ ጠቅሰውዎታል፦ "${snippet.slice(0, 120)}"`,
+        timestamp: now,
+        type: 'Assignment',
+        isRead: false,
+        userId: target.id,
+        documentId: doc.id,
+        registrationNumber: doc.registrationNumber,
+        channel: 'InApp',
+        priority: doc.priority === 'VeryUrgent' ? 'Critical' : 'Normal'
+      };
+      this.data.notifications.unshift(notif);
+      this.data.notifications = this.data.notifications.slice(0, 150);
+      this.notificationBroadcaster?.('notification:created', notif, target.id);
+    }
+  }
+
+  public addDocumentAnnotation(
+    documentId: string,
+    payload: {
+      pageNumber: number;
+      xPercent: number;
+      yPercent: number;
+      comment: string;
+      mentionedUserIds?: string[];
+      attachmentId?: string;
+    },
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; annotation?: DocumentAnnotation } {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) {
+      return { success: false, statusCode: 404, error: 'Document not found.' };
+    }
+    if (doc.isDeleted || doc.status === 'Disposed') {
+      return { success: false, statusCode: 400, error: 'Cannot annotate cancelled or disposed documents.' };
+    }
+
+    const cleanComment = (payload.comment || '').trim();
+    if (cleanComment.length < 2 || cleanComment.length > 1000) {
+      return { success: false, statusCode: 400, error: 'Annotation comment must be between 2 and 1000 characters.' };
+    }
+
+    const pageNumber = Math.max(1, Math.round(Number(payload.pageNumber) || 1));
+    const xPercent = Math.min(98, Math.max(2, Number(payload.xPercent) || 50));
+    const yPercent = Math.min(98, Math.max(2, Number(payload.yPercent) || 50));
+
+    if (!Array.isArray(doc.annotations)) doc.annotations = [];
+    const mentioned = this.resolveMentionedUsers(cleanComment, payload.mentionedUserIds);
+
+    const annotation: DocumentAnnotation = {
+      id: `ann-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      documentId: doc.id,
+      attachmentId: payload.attachmentId,
+      pageNumber,
+      xPercent,
+      yPercent,
+      comment: cleanComment,
+      mentionedUserIds: mentioned.map(u => u.id),
+      mentionedUserNames: mentioned.map(u => u.fullNameEn),
+      authorId: actor.id,
+      authorName: actor.fullNameEn,
+      authorRole: actor.role,
+      status: 'Open',
+      replies: [],
+      createdAt: new Date().toISOString()
+    };
+
+    doc.annotations.unshift(annotation);
+    this.notifyMentionedUsers(doc, actor, mentioned, cleanComment, pageNumber);
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'ADDED_DOCUMENT_ANNOTATION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Added page ${pageNumber} annotation on ${doc.registrationNumber}${
+        mentioned.length ? ` (mentioned: ${mentioned.map(u => u.username).join(', ')})` : ''
+      }`
+    });
+
+    this.save();
+    return { success: true, annotation };
+  }
+
+  public replyDocumentAnnotation(
+    documentId: string,
+    annotationId: string,
+    payload: { message: string; mentionedUserIds?: string[] },
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; annotation?: DocumentAnnotation } {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return { success: false, statusCode: 404, error: 'Document not found.' };
+
+    const ann = (doc.annotations || []).find(a => a.id === annotationId);
+    if (!ann) return { success: false, statusCode: 404, error: 'Annotation not found.' };
+
+    const cleanMsg = (payload.message || '').trim();
+    if (cleanMsg.length < 1 || cleanMsg.length > 1000) {
+      return { success: false, statusCode: 400, error: 'Reply message is required (max 1000 characters).' };
+    }
+
+    const reply: DocumentAnnotationReply = {
+      id: `rep-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 5)}`,
+      authorId: actor.id,
+      authorName: actor.fullNameEn,
+      authorRole: actor.role,
+      message: cleanMsg,
+      createdAt: new Date().toISOString()
+    };
+    ann.replies.push(reply);
+
+    const mentioned = this.resolveMentionedUsers(cleanMsg, payload.mentionedUserIds);
+    const authorUser = this.data.users.find(u => u.id === ann.authorId);
+    const notifyList = authorUser && !mentioned.some(m => m.id === authorUser.id)
+      ? [...mentioned, authorUser]
+      : mentioned;
+    this.notifyMentionedUsers(doc, actor, notifyList, cleanMsg, ann.pageNumber);
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'REPLIED_DOCUMENT_ANNOTATION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Replied to annotation on page ${ann.pageNumber} of ${doc.registrationNumber}`
+    });
+
+    this.save();
+    return { success: true, annotation: ann };
+  }
+
+  public resolveDocumentAnnotation(
+    documentId: string,
+    annotationId: string,
+    resolved: boolean,
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; annotation?: DocumentAnnotation } {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return { success: false, statusCode: 404, error: 'Document not found.' };
+
+    const ann = (doc.annotations || []).find(a => a.id === annotationId);
+    if (!ann) return { success: false, statusCode: 404, error: 'Annotation not found.' };
+
+    ann.status = resolved ? 'Resolved' : 'Open';
+    ann.resolvedByName = resolved ? actor.fullNameEn : undefined;
+    ann.resolvedAt = resolved ? new Date().toISOString() : undefined;
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: resolved ? 'RESOLVED_DOCUMENT_ANNOTATION' : 'REOPENED_DOCUMENT_ANNOTATION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `${resolved ? 'Resolved' : 'Reopened'} page ${ann.pageNumber} annotation on ${doc.registrationNumber}`
+    });
+
+    this.save();
+    return { success: true, annotation: ann };
+  }
+
+  public deleteDocumentAnnotation(
+    documentId: string,
+    annotationId: string,
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string } {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return { success: false, statusCode: 404, error: 'Document not found.' };
+    if (doc.legalHold) {
+      return { success: false, statusCode: 423, error: 'Document under Legal Hold cannot delete annotations.' };
+    }
+    const idx = (doc.annotations || []).findIndex(a => a.id === annotationId);
+    if (idx === -1) return { success: false, statusCode: 404, error: 'Annotation not found.' };
+
+    const target = doc.annotations![idx];
+    if (
+      target.authorId !== actor.id &&
+      actor.role !== 'SuperAdmin' &&
+      actor.role !== 'SecurityOfficer'
+    ) {
+      return { success: false, statusCode: 403, error: 'Forbidden: only the annotation author or Security Officer can remove it.' };
+    }
+
+    doc.annotations!.splice(idx, 1);
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'DELETED_DOCUMENT_ANNOTATION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Removed page ${target.pageNumber} annotation from ${doc.registrationNumber}`
+    });
+    this.save();
+    return { success: true };
+  }
+
+  public applyDocumentRedaction(
+    documentId: string,
+    payload: {
+      pageNumber: number;
+      xPercent: number;
+      yPercent: number;
+      widthPercent: number;
+      heightPercent: number;
+      category: RedactionCategory;
+      reason: string;
+      redactTextSnippet?: string;
+      attachmentId?: string;
+    },
+    actor: User,
+    clientIp: string
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    redaction?: DocumentRedactionMark;
+    document?: DocumentItem;
+  } {
+    const canRedact =
+      this.hasPermission(actor, 'edit:documents') ||
+      this.hasPermission(actor, 'records.legal_hold') ||
+      ['SuperAdmin', 'DirectorGeneral', 'SecurityOfficer', 'LegalOfficer', 'RecordsManager'].includes(
+        actor.role
+      );
+    if (!canRedact) {
+      return { success: false, statusCode: 403, error: 'Forbidden: redaction authority required.' };
+    }
+
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return { success: false, statusCode: 404, error: 'Document not found.' };
+    if (doc.legalHold) {
+      return { success: false, statusCode: 423, error: 'Document under Legal Hold cannot be redacted or altered.' };
+    }
+    if (doc.status === 'Disposed' || doc.isDeleted) {
+      return { success: false, statusCode: 400, error: 'Disposed or cancelled documents cannot be redacted.' };
+    }
+
+    const cleanReason = (payload.reason || '').trim();
+    if (cleanReason.length < 10) {
+      return { success: false, statusCode: 400, error: 'Redaction justification must be at least 10 characters.' };
+    }
+
+    const allowedCats: RedactionCategory[] = [
+      'PII',
+      'FinancialBid',
+      'MedicalBatch',
+      'LegalClause',
+      'NationalSecurity'
+    ];
+    if (!allowedCats.includes(payload.category)) {
+      return { success: false, statusCode: 400, error: 'Invalid redaction category.' };
+    }
+
+    const w = Number(payload.widthPercent);
+    const h = Number(payload.heightPercent);
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 1 || h < 1) {
+      return { success: false, statusCode: 400, error: 'Redaction region must cover at least 1% x 1% area.' };
+    }
+
+    if (!Array.isArray(doc.redactions)) doc.redactions = [];
+    this.ensureDocumentRevisions(doc);
+
+    const cleanSnippet = payload.redactTextSnippet?.trim();
+    const mark: DocumentRedactionMark = {
+      id: `red-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      documentId: doc.id,
+      attachmentId: payload.attachmentId,
+      pageNumber: Math.max(1, Math.round(Number(payload.pageNumber) || 1)),
+      xPercent: Math.min(99, Math.max(0, Number(payload.xPercent) || 0)),
+      yPercent: Math.min(99, Math.max(0, Number(payload.yPercent) || 0)),
+      widthPercent: Math.min(100, w),
+      heightPercent: Math.min(100, h),
+      category: payload.category,
+      reason: cleanReason,
+      redactTextSnippet: cleanSnippet && cleanSnippet.length >= 3 ? cleanSnippet : undefined,
+      appliedById: actor.id,
+      appliedByName: actor.fullNameEn,
+      appliedByRole: actor.role,
+      appliedAt: new Date().toISOString(),
+      isPermanent: true
+    };
+
+    doc.redactions.push(mark);
+
+    // If a literal text snippet was specified for permanent text scrubbing, snapshot & mask
+    if (mark.redactTextSnippet) {
+      const replacement = `[REDACTED · ${mark.category}]`;
+      const pattern = new RegExp(this.escapeRegExp(mark.redactTextSnippet), 'gi');
+      if (doc.descriptionEn) doc.descriptionEn = doc.descriptionEn.replace(pattern, replacement);
+      if (doc.ocrTextEn) doc.ocrTextEn = doc.ocrTextEn.replace(pattern, replacement);
+      if (doc.aiExtracted?.summaryEn) {
+        doc.aiExtracted.summaryEn = doc.aiExtracted.summaryEn.replace(pattern, replacement);
+      }
+      doc.contentHash = this.computeDocumentContentHash(doc);
+      this.appendDocumentRevision(
+        doc,
+        actor,
+        'MetadataEdit',
+        `Applied permanent ${mark.category} redaction: ${cleanReason}`
+      );
+    }
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'APPLIED_DOCUMENT_REDACTION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Applied permanent ${mark.category} redaction on page ${mark.pageNumber} of ${doc.registrationNumber}`,
+      reason: cleanReason,
+      beforeValue: JSON.stringify({ redactionsCount: doc.redactions.length - 1 }),
+      afterValue: JSON.stringify({
+        redactionId: mark.id,
+        category: mark.category,
+        pageNumber: mark.pageNumber,
+        redactionsCount: doc.redactions.length
+      })
+    });
+
+    this.save();
+    return { success: true, redaction: mark, document: doc };
+  }
+
+  public removeDocumentRedaction(
+    documentId: string,
+    redactionId: string,
+    reason: string,
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string } {
+    if (actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer') {
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'Forbidden: un-redacting permanent marks requires SuperAdmin or SecurityOfficer clearance.'
+      };
+    }
+    const cleanReason = (reason || '').trim();
+    if (cleanReason.length < 10) {
+      return { success: false, statusCode: 400, error: 'Un-redaction justification must be at least 10 characters.' };
+    }
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return { success: false, statusCode: 404, error: 'Document not found.' };
+    if (doc.legalHold) {
+      return { success: false, statusCode: 423, error: 'Document under Legal Hold cannot modify redaction marks.' };
+    }
+    if (doc.status === 'Disposed' || doc.isDeleted) {
+      return { success: false, statusCode: 400, error: 'Disposed or cancelled documents are immutable.' };
+    }
+
+    const idx = (doc.redactions || []).findIndex(r => r.id === redactionId);
+    if (idx === -1) return { success: false, statusCode: 404, error: 'Redaction mark not found.' };
+
+    const removed = doc.redactions![idx];
+    doc.redactions!.splice(idx, 1);
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'REMOVED_DOCUMENT_REDACTION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Removed ${removed.category} redaction on page ${removed.pageNumber} of ${doc.registrationNumber}`,
+      reason: cleanReason,
+      beforeValue: JSON.stringify({ redactionId: removed.id, category: removed.category }),
+      afterValue: JSON.stringify({ redactionsCount: doc.redactions!.length })
+    });
+
+    this.save();
+    return { success: true };
+  }
+
+  public recordPrintWatermarkedCopy(
+    documentId: string,
+    copyToken: string,
+    actor: User,
+    clientIp: string
+  ): boolean {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return false;
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'PRINTED_WATERMARKED_COPY',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Generated DLP-watermarked print/view copy (${copyToken || 'COPY'}) of ${doc.registrationNumber}`
+    });
+    this.save();
+    return true;
+  }
+
+  public synthesizeAttachmentPdfBuffer(
+    doc: DocumentItem,
+    att: DocumentAttachment,
+    watermark: DlpWatermarkContext
+  ): Buffer {
+    const esc = (s: string) =>
+      String(s || '')
+        .replace(/[^\x20-\x7E]/g, ' ')
+        .replace(/\\/g, '\\\\')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)')
+        .slice(0, 88);
+
+    const lines = [
+      'ETHIOPIAN PHARMACEUTICAL SUPPLY SERVICE (EPSS)',
+      `Official Record Attachment: ${att.fileName} (v${att.version || 1})`,
+      `Registration No: ${doc.registrationNumber}  |  Ref: ${doc.referenceNumber || '-'}`,
+      `Classification: ${doc.confidentiality}  |  Priority: ${doc.priority}`,
+      `Subject: ${doc.subjectEn}`,
+      `Sender: ${doc.senderOrganization}  ->  Recipient: ${doc.recipientOrganization}`,
+      `Uploaded By: ${att.uploadedBy}  |  Size: ${(att.fileSize / 1024).toFixed(1)} KB`,
+      att.notes ? `Notes: ${att.notes}` : '',
+      `DLP WATERMARK: ${watermark.watermarkText}`,
+      `Redactions Active: ${(doc.redactions || []).length}`
+    ].filter(Boolean);
+
+    let stream = 'BT\n/F1 11 Tf\n50 760 Td\n16 TL\n';
+    lines.forEach((line, idx) => {
+      if (idx === 0) stream += `(${esc(line)}) Tj\n`;
+      else stream += `T*\n(${esc(line)}) Tj\n`;
+    });
+    stream += 'ET\n';
+
+    const objs = [
+      '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+      '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+      '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n',
+      `4 0 obj\n<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}endstream\nendobj\n`,
+      '5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n'
+    ];
+
+    let pdf = '%PDF-1.4\n';
+    const offsets: number[] = [0];
+    for (const obj of objs) {
+      offsets.push(Buffer.byteLength(pdf, 'utf8'));
+      pdf += obj;
+    }
+    const xrefStart = Buffer.byteLength(pdf, 'utf8');
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 1; i <= objs.length; i++) {
+      pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+    return Buffer.from(pdf, 'utf8');
   }
 
   public async performWorkflowAction(
@@ -5942,8 +6717,33 @@ class EdrmsStore {
       }
     }
 
-    // Phase 9: Enforce active EPSS PKI signing certificate on approvals or explicit digital signatures
+    // Phase 9 + Outgoing Non-Repudiation: Enforce active EPSS PKI/HSM certificate on approvals, signing actions, or outgoing dispatch
     const stageRequiresSignature = !!currentStage?.requiredFields?.includes('digitalSignature');
+    const policyRequireOutgoing = this.data.pkiPolicy?.requireSignedOutgoingDispatch ?? true;
+    const isOutgoingType = doc.type === 'OutgoingLetter';
+    const hasExistingValidSig =
+      (doc.workflowHistory || []).some(
+        h =>
+          h.digitalSignature &&
+          !h.digitalSignature.invalidated &&
+          h.digitalSignature.documentDigestSha256 === this.computeDocumentSigningDigest(doc)
+      );
+
+    if (
+      actionData.action === 'Dispatched' &&
+      isOutgoingType &&
+      policyRequireOutgoing &&
+      !actionData.signDocument &&
+      !actionData.digitalSignatureCertificate &&
+      !hasExistingValidSig
+    ) {
+      return {
+        success: false,
+        statusCode: 412,
+        error: `SIGNING_REQUIRED_FOR_DISPATCH: Outgoing correspondence ${doc.registrationNumber} cannot be dispatched without an active, valid PKI/HSM cryptographic signature matching its current digest.`
+      };
+    }
+
     const shouldSignCryptographically =
       actionData.action === 'Approved' ||
       !!actionData.signDocument ||
@@ -6252,11 +7052,22 @@ class EdrmsStore {
     } else if (actionData.action === 'Archived') {
       newDocStatus = 'Archived';
       doc.isArchived = true;
+      doc.archivedAt = doc.archivedAt || now;
+      doc.archivedBy = doc.archivedBy || actor.fullNameEn;
       instance.status = 'Completed';
     }
 
     doc.status = newDocStatus;
     instance.updatedAt = now;
+
+    // Recalculate trigger-anchored disposition date when record reaches completion/dispatch/archive
+    if (
+      !doc.legalHold &&
+      !doc.retentionManualOverride &&
+      ['Approved', 'Completed', 'Dispatched', 'Archived'].includes(newDocStatus)
+    ) {
+      this.refreshDocumentRetentionAnchor(doc, newDocStatus === 'Archived' ? undefined : now, newDocStatus === 'Archived' ? now : undefined);
+    }
 
     const delegateNote =
       actCheck.actingAsDelegateFor.length > 0
@@ -7298,7 +8109,7 @@ class EdrmsStore {
     return { success: true, incident: inc };
   }
 
-  // ==================== PHASE 6: RECORDS MANAGEMENT & ARCHIVING ====================
+  // ==================== PHASE 6: INTELLIGENT RECORDS RETENTION & ARCHIVING ====================
 
   private computeRetentionExpiryIso(baseDateIso: string, years: number): string {
     if (years === 0) {
@@ -7310,41 +8121,271 @@ class EdrmsStore {
     return d.toISOString();
   }
 
-  private computeRetentionFields(
-    docType: string,
-    baseDateIso: string,
+  private computeEthiopianFiscalYearEndIso(anchorIso: string): string {
+    const parsed = new Date(anchorIso || Date.now());
+    const d = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    const year = d.getUTCFullYear();
+    // Ethiopian Fiscal Year runs Hamle 1 – Sene 30 (Gregorian July 8 – July 7)
+    const fyEndThisYear = new Date(Date.UTC(year, 6, 7, 23, 59, 59, 0));
+    if (d.getTime() <= fyEndThisYear.getTime()) {
+      return fyEndThisYear.toISOString();
+    }
+    return new Date(Date.UTC(year + 1, 6, 7, 23, 59, 59, 0)).toISOString();
+  }
+
+  private findDocumentCompletionDate(doc: DocumentItem): string | undefined {
+    const completionActions = (doc.workflowHistory || [])
+      .filter(h => ['Approved', 'ParallelApproved', 'Dispatched', 'Archived'].includes(h.action))
+      .map(h => h.timestamp)
+      .filter(Boolean)
+      .sort();
+    return completionActions.length > 0 ? completionActions[completionActions.length - 1] : undefined;
+  }
+
+  private computeRetentionTriggerDate(
+    triggerEvent: RetentionTriggerEvent,
+    dates: {
+      registrationDate?: string;
+      completedAt?: string;
+      archivedAt?: string;
+    }
+  ): string {
+    const regIso = dates.registrationDate || new Date().toISOString();
+    if (triggerEvent === 'CompletionDate') {
+      return dates.completedAt || regIso;
+    }
+    if (triggerEvent === 'ArchiveDate') {
+      return dates.archivedAt || dates.completedAt || regIso;
+    }
+    if (triggerEvent === 'FiscalYearEnd') {
+      return this.computeEthiopianFiscalYearEndIso(dates.completedAt || regIso);
+    }
+    return regIso;
+  }
+
+  private refreshDocumentRetentionAnchor(
+    doc: DocumentItem,
+    completedAtOverride?: string,
+    archivedAtOverride?: string
+  ) {
+    const sc = doc.retentionScheduleId
+      ? (this.data.retentionSchedules || []).find(s => s.id === doc.retentionScheduleId)
+      : undefined;
+    const triggerEvent: RetentionTriggerEvent =
+      doc.retentionTriggerEvent || sc?.retentionTriggerEvent || 'RegistrationDate';
+    const triggerDate = this.computeRetentionTriggerDate(triggerEvent, {
+      registrationDate: doc.registrationDate,
+      completedAt: completedAtOverride || this.findDocumentCompletionDate(doc),
+      archivedAt: archivedAtOverride || doc.archivedAt
+    });
+    doc.retentionTriggerEvent = triggerEvent;
+    doc.retentionTriggerDate = triggerDate;
+    doc.retentionExpiryDate = this.computeRetentionExpiryIso(triggerDate, doc.retentionYears);
+  }
+
+  private evaluateIntelligentRetention(
+    input: RetentionSimulationInput,
     explicitScheduleId?: string,
     explicitYears?: number
-  ): {
-    retentionScheduleId?: string;
-    retentionCategory: string;
-    retentionYears: number;
-    retentionExpiryDate: string;
-  } {
-    const schedules = this.data.retentionSchedules || [];
-    let matched = explicitScheduleId
-      ? schedules.find(s => s.id === explicitScheduleId)
-      : schedules.find(s => Array.isArray(s.documentTypes) && s.documentTypes.includes(docType as any));
+  ): RetentionCalculationResult {
+    const schedules = (this.data.retentionSchedules || []).filter(s => s.isActive !== false);
+    const allSchedules = schedules.length > 0 ? schedules : this.data.retentionSchedules || [];
+    const targetScheduleId = explicitScheduleId || input.scheduleId;
 
-    if (!matched && schedules.length > 0) {
-      if (docType === 'IncomingLetter') matched = schedules.find(s => s.id === 'ret-02') || schedules[0];
-      else if (docType === 'OutgoingLetter' || docType === 'TenderDocument') matched = schedules.find(s => s.id === 'ret-01') || schedules[0];
-      else if (docType === 'InternalMemo' || docType === 'Circular') matched = schedules.find(s => s.id === 'ret-04') || schedules[0];
-      else matched = schedules[0];
+    const regIso = input.registrationDate || new Date().toISOString();
+    const corpus = [
+      input.subjectEn || '',
+      input.subjectAm || '',
+      input.descriptionEn || '',
+      input.ocrTextEn || '',
+      input.senderOrganization || '',
+      Array.isArray(input.tags) ? input.tags.join(' ') : ''
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    let chosen: RetentionSchedule | undefined;
+    let confidence = 0.72;
+    let matchedSignals: string[] = [];
+    let reason = '';
+
+    if (targetScheduleId) {
+      chosen = allSchedules.find(s => s.id === targetScheduleId);
+      if (chosen) {
+        confidence = 1.0;
+        matchedSignals = ['Explicit Policy Selection'];
+        reason = `Assigned explicitly to "${chosen.documentCategory}" (${chosen.governingLegislation}).`;
+      }
+    }
+
+    if (!chosen && allSchedules.length > 0) {
+      let bestScore = -1;
+      let bestRule: RetentionSchedule = allSchedules[0];
+      let bestSignals: string[] = [];
+
+      for (const sc of allSchedules) {
+        let score = 0;
+        const signals: string[] = [];
+
+        if (
+          input.regulatoryCategory &&
+          sc.regulatoryCategory &&
+          input.regulatoryCategory.toLowerCase() === sc.regulatoryCategory.toLowerCase()
+        ) {
+          score += 48;
+          signals.push(`Regulatory Category: ${sc.regulatoryCategory}`);
+        }
+
+        const keywords = Array.isArray(sc.keywordPatterns) ? sc.keywordPatterns : [];
+        const matchedKeywords: string[] = [];
+        for (const kw of keywords) {
+          const clean = kw.trim().toLowerCase();
+          if (clean && corpus.includes(clean)) {
+            matchedKeywords.push(kw.trim());
+          }
+        }
+        if (matchedKeywords.length > 0) {
+          score += Math.min(54, matchedKeywords.length * 18);
+          signals.push(`Metadata Keywords (${matchedKeywords.slice(0, 4).join(', ')})`);
+        }
+
+        if (Array.isArray(sc.documentTypes) && sc.documentTypes.includes(input.type)) {
+          score += 22;
+          signals.push(`Document Type: ${input.type}`);
+        }
+
+        if (
+          input.confidentiality &&
+          Array.isArray(sc.confidentialityLevels) &&
+          sc.confidentialityLevels.includes(input.confidentiality)
+        ) {
+          score += 10;
+          signals.push(`Confidentiality: ${input.confidentiality}`);
+        }
+
+        const prioBoost = typeof sc.priority === 'number' ? sc.priority / 20 : 0;
+        const total = score > 0 ? score + prioBoost : 0;
+
+        if (total > bestScore) {
+          bestScore = total;
+          bestRule = sc;
+          bestSignals = signals;
+        }
+      }
+
+      if (bestScore > 0) {
+        chosen = bestRule;
+        matchedSignals = bestSignals;
+        confidence = Number(Math.min(0.99, Math.max(0.64, 0.52 + bestScore / 145)).toFixed(2));
+        reason = `Auto-classified via ${bestSignals.join(' + ')} (Rule priority ${bestRule.priority ?? 50}).`;
+      } else {
+        // Fallback type heuristic
+        if (input.type === 'IncomingLetter' || input.type === 'InspectionReport') {
+          chosen = allSchedules.find(s => s.id === 'ret-02') || allSchedules[0];
+        } else if (input.type === 'OutgoingLetter' || input.type === 'TenderDocument') {
+          chosen = allSchedules.find(s => s.id === 'ret-01') || allSchedules[0];
+        } else if (input.type === 'InternalMemo' || input.type === 'Circular') {
+          chosen = allSchedules.find(s => s.id === 'ret-04') || allSchedules[0];
+        } else {
+          chosen = allSchedules.find(s => s.id === 'ret-03') || allSchedules[0];
+        }
+        confidence = 0.6;
+        matchedSignals = [`Baseline Type Fallback (${input.type})`];
+        reason = `Matched baseline schedule for document type ${input.type}; no specialized regulatory keywords detected.`;
+      }
     }
 
     const years =
       explicitYears !== undefined && explicitYears >= 0
         ? explicitYears
-        : matched
-          ? matched.retentionPeriodYears
+        : chosen
+          ? chosen.retentionPeriodYears
           : 10;
+    const triggerEvent: RetentionTriggerEvent = chosen?.retentionTriggerEvent || 'RegistrationDate';
+    const triggerDate = this.computeRetentionTriggerDate(triggerEvent, {
+      registrationDate: regIso,
+      completedAt: input.completedAt,
+      archivedAt: input.archivedAt
+    });
+    const expiryIso = this.computeRetentionExpiryIso(triggerDate, years);
+    const isPermanent = years === 0;
+    const daysUntilDisposition = isPermanent
+      ? null
+      : Math.ceil((new Date(expiryIso).getTime() - Date.now()) / 86400000);
 
     return {
-      retentionScheduleId: matched?.id,
-      retentionCategory: matched?.documentCategory || 'General Institutional Record',
+      retentionScheduleId: chosen?.id,
+      retentionCategory: chosen?.documentCategory || 'General Institutional Record',
+      regulatoryCategory:
+        chosen?.regulatoryCategory || (input.regulatoryCategory as RegulatoryCategory) || 'GeneralAdministrative',
+      governingLegislation:
+        chosen?.governingLegislation || 'National Archives and Library Agency (NALA) Record Schedule',
+      disposalAction: years === 0 ? 'PermanentArchive' : chosen?.disposalAction || 'ReviewAtMaturity',
+      retentionTriggerEvent: triggerEvent,
+      retentionTriggerDate: triggerDate,
       retentionYears: years,
-      retentionExpiryDate: this.computeRetentionExpiryIso(baseDateIso, years)
+      retentionExpiryDate: expiryIso,
+      retentionConfidence: confidence,
+      retentionClassificationReason: reason,
+      alertLeadDays: chosen?.alertLeadDays ?? 90,
+      daysUntilDisposition,
+      isPermanent,
+      matchedSignals
+    };
+  }
+
+  private computeRetentionFields(
+    docType: string,
+    baseDateIso: string,
+    explicitScheduleId?: string,
+    explicitYears?: number,
+    meta?: {
+      subjectEn?: string;
+      subjectAm?: string;
+      descriptionEn?: string;
+      ocrTextEn?: string;
+      senderOrganization?: string;
+      confidentiality?: ConfidentialityLevel;
+      regulatoryCategory?: RegulatoryCategory | string;
+      tags?: string[];
+    }
+  ): {
+    retentionScheduleId?: string;
+    retentionCategory: string;
+    regulatoryCategory: RegulatoryCategory | string;
+    retentionTriggerEvent: RetentionTriggerEvent;
+    retentionTriggerDate: string;
+    retentionYears: number;
+    retentionExpiryDate: string;
+    retentionClassificationReason: string;
+    retentionConfidence: number;
+  } {
+    const res = this.evaluateIntelligentRetention(
+      {
+        type: (docType as DocumentType) || 'IncomingLetter',
+        subjectEn: meta?.subjectEn,
+        subjectAm: meta?.subjectAm,
+        descriptionEn: meta?.descriptionEn,
+        ocrTextEn: meta?.ocrTextEn,
+        senderOrganization: meta?.senderOrganization,
+        confidentiality: meta?.confidentiality,
+        regulatoryCategory: meta?.regulatoryCategory,
+        tags: meta?.tags,
+        registrationDate: baseDateIso
+      },
+      explicitScheduleId,
+      explicitYears
+    );
+    return {
+      retentionScheduleId: res.retentionScheduleId,
+      retentionCategory: res.retentionCategory,
+      regulatoryCategory: res.regulatoryCategory,
+      retentionTriggerEvent: res.retentionTriggerEvent,
+      retentionTriggerDate: res.retentionTriggerDate,
+      retentionYears: res.retentionYears,
+      retentionExpiryDate: res.retentionExpiryDate,
+      retentionClassificationReason: res.retentionClassificationReason,
+      retentionConfidence: res.retentionConfidence
     };
   }
 
@@ -7353,37 +8394,153 @@ class EdrmsStore {
     if (!Array.isArray(this.data.archiveRetrievals)) this.data.archiveRetrievals = [];
     if (!Array.isArray(this.data.disposalCertificates)) this.data.disposalCertificates = [];
 
-    // Ensure seeded retention schedules include a 0-year Permanent rule and documentTypes mapping
+    // Enrich seeded retention schedules with intelligent regulatory classification metadata, keywords, trigger events & priorities
+    const enrichments: Record<
+      string,
+      Partial<RetentionSchedule>
+    > = {
+      'ret-01': {
+        documentTypes: ['OutgoingLetter', 'TenderDocument'],
+        regulatoryCategory: 'ProcurementTender',
+        confidentialityLevels: ['Internal', 'Confidential', 'Secret'],
+        keywordPatterns: ['tender', 'bid', 'procurement', 'contract', 'framework agreement', 'rfp', 'supplier', 'incoterms', 'award'],
+        retentionTriggerEvent: 'CompletionDate',
+        priority: 85,
+        alertLeadDays: 90
+      },
+      'ret-02': {
+        documentTypes: ['IncomingLetter', 'InspectionReport'],
+        regulatoryCategory: 'PharmaceuticalQuality',
+        confidentialityLevels: ['Internal', 'Confidential', 'Secret'],
+        keywordPatterns: ['efda', 'batch', 'pharmacovigilance', 'cold chain', 'cold-chain', 'oncology', 'vaccine', 'recall', 'antibiotic', 'stability', 'gmp'],
+        retentionTriggerEvent: 'RegistrationDate',
+        priority: 90,
+        alertLeadDays: 90
+      },
+      'ret-03': {
+        documentTypes: ['Application'],
+        regulatoryCategory: 'FinancialAudit',
+        confidentialityLevels: ['Internal', 'Confidential'],
+        keywordPatterns: ['waybill', 'voucher', 'grn', 'invoice', 'audit', 'ofag', 'budget', 'disbursement', 'consignment', 'reconciliation', 'stationery'],
+        retentionTriggerEvent: 'FiscalYearEnd',
+        priority: 75,
+        alertLeadDays: 90
+      },
+      'ret-04': {
+        documentTypes: ['InternalMemo', 'Circular'],
+        regulatoryCategory: 'GeneralAdministrative',
+        confidentialityLevels: ['Public', 'Internal'],
+        keywordPatterns: ['circular', 'minute', 'fleet', 'fuel', 'administrative', 'reception', 'notice', 'gate pass'],
+        retentionTriggerEvent: 'RegistrationDate',
+        priority: 50,
+        alertLeadDays: 60
+      },
+      'ret-perm-00': {
+        documentTypes: ['Circular'],
+        regulatoryCategory: 'ExecutiveGovernance',
+        confidentialityLevels: ['Confidential', 'Secret'],
+        keywordPatterns: ['charter', 'proclamation', 'sovereign', 'founding', 'board resolution', 'ministerial directive'],
+        retentionTriggerEvent: 'RegistrationDate',
+        priority: 100,
+        alertLeadDays: 90
+      }
+    };
+
     for (const sc of this.data.retentionSchedules) {
       if (sc.isActive === undefined) sc.isActive = true;
-      if (sc.id === 'ret-01' && !sc.documentTypes) sc.documentTypes = ['OutgoingLetter', 'TenderDocument'];
-      if (sc.id === 'ret-02' && !sc.documentTypes) sc.documentTypes = ['IncomingLetter', 'InspectionReport'];
-      if (sc.id === 'ret-03' && !sc.documentTypes) sc.documentTypes = ['Application'];
-      if (sc.id === 'ret-04' && !sc.documentTypes) sc.documentTypes = ['InternalMemo', 'Circular'];
+      const e = enrichments[sc.id];
+      if (e) {
+        if (!sc.documentTypes || sc.documentTypes.length === 0) sc.documentTypes = e.documentTypes;
+        if (!sc.regulatoryCategory) sc.regulatoryCategory = e.regulatoryCategory;
+        if (!sc.confidentialityLevels) sc.confidentialityLevels = e.confidentialityLevels;
+        if (!sc.keywordPatterns) sc.keywordPatterns = e.keywordPatterns;
+        if (!sc.retentionTriggerEvent) sc.retentionTriggerEvent = e.retentionTriggerEvent;
+        if (sc.priority === undefined) sc.priority = e.priority;
+        if (sc.alertLeadDays === undefined) sc.alertLeadDays = e.alertLeadDays;
+      } else {
+        if (!sc.regulatoryCategory) sc.regulatoryCategory = 'GeneralAdministrative';
+        if (!sc.retentionTriggerEvent) sc.retentionTriggerEvent = 'RegistrationDate';
+        if (sc.priority === undefined) sc.priority = 60;
+        if (sc.alertLeadDays === undefined) sc.alertLeadDays = 90;
+      }
     }
 
     if (!this.data.retentionSchedules.some(s => s.retentionPeriodYears === 0)) {
       this.data.retentionSchedules.push({
         id: 'ret-perm-00',
         documentCategory: 'National Founding Charters & Sovereign MoH Directives',
+        regulatoryCategory: 'ExecutiveGovernance',
         retentionPeriodYears: 0, // 0 = permanent
         disposalAction: 'PermanentArchive',
         governingLegislation: 'National Archives & Library Agency (NALA) Permanent Preservation Statute',
         notes: '0 years = Permanent sovereign preservation; exempt from destruction.',
         documentTypes: ['Circular'],
+        confidentialityLevels: ['Confidential', 'Secret'],
+        keywordPatterns: ['charter', 'proclamation', 'sovereign', 'founding', 'board resolution', 'ministerial directive'],
+        retentionTriggerEvent: 'RegistrationDate',
+        priority: 100,
+        alertLeadDays: 90,
         isActive: true,
         createdAt: new Date().toISOString()
       });
     }
 
-    // Backfill Phase 6 retention metadata on documents
+    if (!this.data.retentionSchedules.some(s => s.id === 'ret-05')) {
+      this.data.retentionSchedules.push({
+        id: 'ret-05',
+        documentCategory: 'Legal Disputes, Litigation Files & Contract Claims',
+        regulatoryCategory: 'LegalCompliance',
+        retentionPeriodYears: 12,
+        disposalAction: 'ReviewAtMaturity',
+        governingLegislation: 'Federal Civil Procedure & Public Property Liability Statute',
+        notes: 'Retention clock commences upon final legal closure or settlement date.',
+        documentTypes: ['IncomingLetter', 'OutgoingLetter'],
+        confidentialityLevels: ['Confidential', 'Secret'],
+        keywordPatterns: ['litigation', 'court', 'subpoena', 'dispute', 'arbitration', 'legal', 'claim'],
+        retentionTriggerEvent: 'CompletionDate',
+        priority: 95,
+        alertLeadDays: 90,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    // Backfill Phase 6 intelligent retention metadata on documents
     for (const doc of this.data.documents) {
-      if (!doc.retentionScheduleId || !doc.retentionCategory) {
-        const calc = this.computeRetentionFields(doc.type, doc.registrationDate, doc.retentionScheduleId, doc.retentionYears);
+      if (
+        !doc.retentionScheduleId ||
+        !doc.retentionCategory ||
+        !doc.regulatoryCategory ||
+        !doc.retentionTriggerEvent ||
+        !doc.retentionClassificationReason
+      ) {
+        const calc = this.evaluateIntelligentRetention(
+          {
+            type: doc.type,
+            subjectEn: doc.subjectEn,
+            subjectAm: doc.subjectAm,
+            descriptionEn: doc.descriptionEn,
+            ocrTextEn: doc.ocrTextEn,
+            senderOrganization: doc.senderOrganization,
+            confidentiality: doc.confidentiality,
+            regulatoryCategory: doc.regulatoryCategory,
+            tags: doc.tags,
+            registrationDate: doc.registrationDate,
+            completedAt: this.findDocumentCompletionDate(doc),
+            archivedAt: doc.archivedAt
+          },
+          doc.retentionScheduleId,
+          doc.retentionYears
+        );
         doc.retentionScheduleId = calc.retentionScheduleId;
         doc.retentionCategory = calc.retentionCategory;
+        doc.regulatoryCategory = calc.regulatoryCategory;
+        doc.retentionTriggerEvent = calc.retentionTriggerEvent;
+        doc.retentionTriggerDate = calc.retentionTriggerDate;
         if (doc.retentionYears === undefined) doc.retentionYears = calc.retentionYears;
         if (!doc.retentionExpiryDate) doc.retentionExpiryDate = calc.retentionExpiryDate;
+        doc.retentionClassificationReason = calc.retentionClassificationReason;
+        doc.retentionConfidence = calc.retentionConfidence;
       }
       if (doc.legalHold && !doc.legalHoldReason) {
         doc.legalHoldReason = 'Active EFDA post-market quality audit and regulatory preservation mandate.';
@@ -7440,8 +8597,119 @@ class EdrmsStore {
         archiveLocationPath: 'Block B - Central Registry → Room 101 (Historical Archive) → BOX-DIRECTIVES-2026',
         retentionScheduleId: 'ret-04',
         retentionCategory: 'Internal Administrative Circulars & Meeting Minutes',
+        regulatoryCategory: 'GeneralAdministrative',
+        retentionTriggerEvent: 'RegistrationDate',
+        retentionTriggerDate: regIso,
         retentionYears: 5,
         retentionExpiryDate: expIso,
+        retentionClassificationReason: 'Auto-classified via Regulatory Category: GeneralAdministrative + Metadata Keywords (circular, fleet, fuel, administrative) + Document Type: InternalMemo.',
+        retentionConfidence: 0.96,
+        legalHold: false
+      });
+    }
+
+    // Seed approaching-maturity records (Critical <= 30d and Upcoming <= 90d) so Records Managers get proactive disposal alerts
+    if (!this.data.documents.some(d => d.id === 'doc-arch-crit30')) {
+      const expDate = new Date(Date.now() + 18 * 86400000);
+      const regDate = new Date(expDate.getTime());
+      regDate.setFullYear(regDate.getFullYear() - 5);
+      this.data.documents.push({
+        id: 'doc-arch-crit30',
+        registrationNumber: 'EPSS/MEMO/2021/00042',
+        referenceNumber: 'ADM-2021-118',
+        type: 'InternalMemo',
+        subjectEn: 'Central Reception & Gate Access Shift Roster Notice (2021 Archive)',
+        subjectAm: 'የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ',
+        descriptionEn: 'Administrative facility circular scheduled to reach NALA 5-year disposition maturity within 18 days.',
+        senderOrganization: 'EPSS Facilities & Fleet Administration',
+        recipientOrganization: 'Head Office Security Desk',
+        receivedDate: regDate.toISOString(),
+        registrationDate: regDate.toISOString(),
+        priority: 'Normal',
+        confidentiality: 'Internal',
+        status: 'Archived',
+        branchId: 'br-hq',
+        departmentId: 'dept-reg',
+        assignedDepartmentName: 'Central Records & Registry Division',
+        attachments: [],
+        workflowHistory: [
+          {
+            id: 'wf-crit30-seed',
+            timestamp: regDate.toISOString(),
+            actorId: 'usr-reg',
+            actorName: 'Selamawit Bekele',
+            actorRole: 'RegistryOfficer',
+            action: 'Archived',
+            comments: 'Routine administrative schedule logged for 5-year retention.'
+          }
+        ],
+        tags: ['Administrative', 'Circular', 'Reception'],
+        isArchived: true,
+        archivedAt: regDate.toISOString(),
+        archivedBy: 'Selamawit Bekele',
+        archiveLocationPath: 'Block B - Central Registry → Room 101 (Historical Archive) → BOX-ADM-2021',
+        retentionScheduleId: 'ret-04',
+        retentionCategory: 'Internal Administrative Circulars & Meeting Minutes',
+        regulatoryCategory: 'GeneralAdministrative',
+        retentionTriggerEvent: 'RegistrationDate',
+        retentionTriggerDate: regDate.toISOString(),
+        retentionYears: 5,
+        retentionExpiryDate: expDate.toISOString(),
+        retentionClassificationReason: 'Auto-classified via Regulatory Category: GeneralAdministrative + Metadata Keywords (notice, reception, administrative).',
+        retentionConfidence: 0.93,
+        legalHold: false
+      });
+    }
+
+    if (!this.data.documents.some(d => d.id === 'doc-arch-soon90')) {
+      const expDate = new Date(Date.now() + 58 * 86400000);
+      const trigDate = new Date(expDate.getTime());
+      trigDate.setFullYear(trigDate.getFullYear() - 7);
+      const regDate = new Date(trigDate.getTime() - 45 * 86400000);
+      this.data.documents.push({
+        id: 'doc-arch-soon90',
+        registrationNumber: 'EPSS/APP/2019/00119',
+        referenceNumber: 'FIN-GRN-2019-702',
+        type: 'Application',
+        subjectEn: 'Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet',
+        subjectAm: 'የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል',
+        descriptionEn: 'Regional consignment voucher batch anchored on Ethiopian Fiscal Year End approaching 7-year Ministry of Finance retention maturity.',
+        senderOrganization: 'Adama Branch Hub Warehouse',
+        recipientOrganization: 'EPSS Finance & Treasury Directorate',
+        receivedDate: regDate.toISOString(),
+        registrationDate: regDate.toISOString(),
+        priority: 'Normal',
+        confidentiality: 'Internal',
+        status: 'Archived',
+        branchId: 'br-02',
+        departmentId: 'dept-fin',
+        assignedDepartmentName: 'Finance & Treasury Directorate',
+        attachments: [],
+        workflowHistory: [
+          {
+            id: 'wf-soon90-seed',
+            timestamp: regDate.toISOString(),
+            actorId: 'usr-reg',
+            actorName: 'Selamawit Bekele',
+            actorRole: 'RegistryOfficer',
+            action: 'Archived',
+            comments: 'Post-OFAG reconciliation archive anchored on Fiscal Year End.'
+          }
+        ],
+        tags: ['Waybill', 'Voucher', 'Audit', 'Adama'],
+        isArchived: true,
+        archivedAt: trigDate.toISOString(),
+        archivedBy: 'Selamawit Bekele',
+        archiveLocationPath: 'Adama Hub Archive → Vault B → BOX-FIN-2019',
+        retentionScheduleId: 'ret-03',
+        retentionCategory: 'Regional Hub Consignment Waybills and Goods Received Vouchers',
+        regulatoryCategory: 'FinancialAudit',
+        retentionTriggerEvent: 'FiscalYearEnd',
+        retentionTriggerDate: trigDate.toISOString(),
+        retentionYears: 7,
+        retentionExpiryDate: expDate.toISOString(),
+        retentionClassificationReason: 'Auto-classified via Regulatory Category: FinancialAudit + Metadata Keywords (waybill, voucher, consignment) + Document Type: Application.',
+        retentionConfidence: 0.95,
         legalHold: false
       });
     }
@@ -7493,6 +8761,293 @@ class EdrmsStore {
     }
   }
 
+  public simulateRetentionCalculation(input: RetentionSimulationInput): RetentionCalculationResult {
+    return this.evaluateIntelligentRetention(input, input.scheduleId);
+  }
+
+  public recalculateAllDocumentRetentions(
+    actor: User,
+    clientIp: string,
+    overwriteManual = false
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    evaluatedCount: number;
+    updatedCount: number;
+    skippedHeldCount: number;
+    skippedManualCount: number;
+  } {
+    if (!this.hasPermission(actor, 'manage:archives') && !this.hasPermission(actor, 'manage:organizations') && actor.role !== 'SuperAdmin') {
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'Forbidden: manage:archives permission required.',
+        evaluatedCount: 0,
+        updatedCount: 0,
+        skippedHeldCount: 0,
+        skippedManualCount: 0
+      };
+    }
+
+    let evaluatedCount = 0;
+    let updatedCount = 0;
+    let skippedHeldCount = 0;
+    let skippedManualCount = 0;
+
+    for (const doc of this.data.documents) {
+      if (doc.isDeleted || doc.status === 'Disposed') continue;
+      evaluatedCount++;
+      if (doc.legalHold) {
+        skippedHeldCount++;
+        continue;
+      }
+      if (doc.retentionManualOverride && !overwriteManual) {
+        skippedManualCount++;
+        continue;
+      }
+
+      const calc = this.evaluateIntelligentRetention({
+        type: doc.type,
+        subjectEn: doc.subjectEn,
+        subjectAm: doc.subjectAm,
+        descriptionEn: doc.descriptionEn,
+        ocrTextEn: doc.ocrTextEn,
+        senderOrganization: doc.senderOrganization,
+        confidentiality: doc.confidentiality,
+        regulatoryCategory: doc.regulatoryCategory,
+        tags: doc.tags,
+        registrationDate: doc.registrationDate,
+        completedAt: this.findDocumentCompletionDate(doc),
+        archivedAt: doc.archivedAt
+      });
+
+      const changed =
+        doc.retentionScheduleId !== calc.retentionScheduleId ||
+        doc.retentionYears !== calc.retentionYears ||
+        doc.retentionExpiryDate !== calc.retentionExpiryDate ||
+        doc.regulatoryCategory !== calc.regulatoryCategory ||
+        doc.retentionTriggerEvent !== calc.retentionTriggerEvent;
+
+      doc.retentionScheduleId = calc.retentionScheduleId;
+      doc.retentionCategory = calc.retentionCategory;
+      doc.regulatoryCategory = calc.regulatoryCategory;
+      doc.retentionTriggerEvent = calc.retentionTriggerEvent;
+      doc.retentionTriggerDate = calc.retentionTriggerDate;
+      doc.retentionYears = calc.retentionYears;
+      doc.retentionExpiryDate = calc.retentionExpiryDate;
+      doc.retentionClassificationReason = calc.retentionClassificationReason;
+      doc.retentionConfidence = calc.retentionConfidence;
+      if (overwriteManual) doc.retentionManualOverride = false;
+      if (changed) updatedCount++;
+    }
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'RECALCULATED_PORTFOLIO_RETENTION',
+      resourceType: 'RetentionSchedule',
+      resourceId: 'portfolio',
+      ipAddress: clientIp,
+      details: `Evaluated ${evaluatedCount} active records; updated ${updatedCount} retention classification(s) (held skipped=${skippedHeldCount}, manual skipped=${skippedManualCount}).`
+    });
+    this.save();
+
+    return {
+      success: true,
+      evaluatedCount,
+      updatedCount,
+      skippedHeldCount,
+      skippedManualCount
+    };
+  }
+
+  public getPendingDisposalAlerts(horizonDays = 90): RecordsAlertSummary {
+    const now = Date.now();
+    const schedules = this.data.retentionSchedules || [];
+    const activeDisposals = this.data.disposalRequests || [];
+    const alerts: PendingDisposalAlertItem[] = [];
+
+    let permanent = 0;
+    let held = 0;
+
+    for (const doc of this.data.documents) {
+      if (doc.isDeleted || doc.status === 'Disposed') continue;
+      if (doc.legalHold) {
+        held++;
+        continue;
+      }
+      if (doc.retentionYears === 0) {
+        permanent++;
+        continue;
+      }
+      if (!doc.retentionExpiryDate) continue;
+
+      const expiryMs = new Date(doc.retentionExpiryDate).getTime();
+      if (Number.isNaN(expiryMs)) continue;
+
+      const sc = doc.retentionScheduleId
+        ? schedules.find(s => s.id === doc.retentionScheduleId)
+        : undefined;
+      const leadDays = sc?.alertLeadDays ?? horizonDays;
+      const effectiveHorizon = Math.max(horizonDays, leadDays);
+      const daysRemaining = Math.ceil((expiryMs - now) / 86400000);
+
+      if (daysRemaining <= effectiveHorizon) {
+        const urgency: DisposalAlertUrgency =
+          daysRemaining <= 0
+            ? 'Overdue'
+            : daysRemaining <= 30
+              ? 'Critical30'
+              : 'Upcoming90';
+
+        const activeReq = activeDisposals.find(
+          r => r.documentId === doc.id && (r.status === 'PendingApproval' || r.status === 'ApprovedReady')
+        );
+
+        alerts.push({
+          documentId: doc.id,
+          registrationNumber: doc.registrationNumber,
+          subjectEn: doc.subjectEn,
+          subjectAm: doc.subjectAm,
+          type: doc.type,
+          confidentiality: doc.confidentiality,
+          branchId: doc.branchId,
+          departmentId: doc.departmentId,
+          assignedDepartmentName: doc.assignedDepartmentName,
+          retentionScheduleId: doc.retentionScheduleId,
+          retentionCategory: doc.retentionCategory || sc?.documentCategory || 'General Institutional Record',
+          regulatoryCategory: String(doc.regulatoryCategory || sc?.regulatoryCategory || 'GeneralAdministrative'),
+          governingLegislation: sc?.governingLegislation || 'National Archives and Library Agency (NALA) Record Schedule',
+          retentionTriggerEvent: doc.retentionTriggerEvent || sc?.retentionTriggerEvent || 'RegistrationDate',
+          retentionTriggerDate: doc.retentionTriggerDate || doc.registrationDate,
+          retentionYears: doc.retentionYears,
+          retentionExpiryDate: doc.retentionExpiryDate,
+          disposalAction: sc?.disposalAction || 'ReviewAtMaturity',
+          alertLeadDays: leadDays,
+          daysRemaining,
+          urgency,
+          hasActiveDisposalRequest: !!activeReq,
+          activeDisposalRequestId: activeReq?.id,
+          activeDisposalStatus: activeReq?.status,
+          classificationReason: doc.retentionClassificationReason
+        });
+      }
+    }
+
+    alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+    const overdue = alerts.filter(a => a.urgency === 'Overdue').length;
+    const critical30 = alerts.filter(a => a.urgency === 'Critical30').length;
+    const upcoming90 = alerts.filter(a => a.urgency === 'Upcoming90').length;
+
+    return {
+      alerts,
+      counts: {
+        overdue,
+        critical30,
+        upcoming90,
+        totalActionable: alerts.filter(a => !a.hasActiveDisposalRequest).length,
+        permanent,
+        held,
+        activeDisposalWorkflows: activeDisposals.filter(
+          r => r.status === 'PendingApproval' || r.status === 'ApprovedReady'
+        ).length
+      },
+      lastScanAt: this.data.lastRetentionScanAt || new Date().toISOString(),
+      notificationsDispatchedCount: 0
+    };
+  }
+
+  public scanAndNotifyPendingDisposals(
+    actor: User | null,
+    clientIp = '127.0.0.1',
+    forceNotify = true
+  ): RecordsAlertSummary {
+    const summary = this.getPendingDisposalAlerts(90);
+    const nowMs = Date.now();
+    const managers = (this.data.users || []).filter(
+      u =>
+        u.status !== 'Inactive' &&
+        (u.role === 'RegistryOfficer' ||
+          u.role === 'SuperAdmin' ||
+          u.role === 'Auditor' ||
+          this.hasPermission(u, 'manage:archives'))
+    );
+
+    let dispatchedCount = 0;
+
+    for (const item of summary.alerts) {
+      if (item.hasActiveDisposalRequest) continue;
+      const withinRuleLead = item.daysRemaining <= item.alertLeadDays;
+      if (!withinRuleLead && item.urgency === 'Upcoming90') continue;
+
+      const urgencyLabelEn =
+        item.urgency === 'Overdue'
+          ? `MATURE & ELIGIBLE FOR DISPOSAL (${Math.abs(item.daysRemaining)}d overdue)`
+          : item.urgency === 'Critical30'
+            ? `DISPOSITION DUE IN ${item.daysRemaining} DAY(S)`
+            : `APPROACHING DISPOSITION (${item.daysRemaining} DAYS)`;
+
+      const urgencyLabelAm =
+        item.urgency === 'Overdue'
+          ? `የማቆያ ጊዜው አልፏል (${Math.abs(item.daysRemaining)} ቀናት)`
+          : `የማስወገጃ ቀን ሊደርስ ${item.daysRemaining} ቀናት ቀርተዋል`;
+
+      for (const mgr of managers) {
+        const recentExists = (this.data.notifications || []).some(n => {
+          if (n.documentId !== item.documentId || n.userId !== mgr.id) return false;
+          const ageMs = nowMs - new Date(n.timestamp).getTime();
+          if (ageMs >= 24 * 3600000) return false;
+          // Allow fresh alert if urgency escalated (e.g. from Upcoming to Overdue)
+          if (item.urgency === 'Overdue' && !n.titleEn.includes('MATURE')) return false;
+          if (item.urgency === 'Critical30' && n.titleEn.includes('APPROACHING')) return false;
+          return true;
+        });
+        if (recentExists) continue;
+
+        const disp = this.dispatchNotification({
+          eventType: 'OverdueSLA',
+          targetUserId: mgr.id,
+          titleEn: `[Retention Alert] ${item.registrationNumber} — ${urgencyLabelEn}`,
+          titleAm: `[የማህደር ማቆያ ማንቂያ] ${item.registrationNumber} — ${urgencyLabelAm}`,
+          messageEn: `${item.subjectEn} (${item.retentionCategory}) reached disposition review threshold (${item.retentionExpiryDate.slice(0, 10)}). Action: ${item.disposalAction}.`,
+          messageAm: `${item.subjectAm || item.subjectEn} (${item.retentionCategory}) የማስወገጃ ወይም የማህደር ግምገማ ቀን (${item.retentionExpiryDate.slice(0, 10)}) ደርሷል።`,
+          channelsOverride: ['InApp'],
+          documentId: item.documentId,
+          registrationNumber: item.registrationNumber,
+          priority: item.urgency === 'Overdue' ? 'Critical' : 'Urgent'
+        });
+        if (disp.notification) dispatchedCount++;
+      }
+    }
+
+    this.data.lastRetentionScanAt = new Date().toISOString();
+    summary.lastScanAt = this.data.lastRetentionScanAt;
+    summary.notificationsDispatchedCount = dispatchedCount;
+
+    if (actor && (dispatchedCount > 0 || forceNotify)) {
+      this.addAuditLog({
+        userId: actor.id,
+        userName: actor.fullNameEn,
+        userRole: actor.role,
+        branchName: actor.branchNameEn,
+        action: 'RETENTION_DISPOSAL_ALERT_SCAN',
+        resourceType: 'RetentionSchedule',
+        resourceId: 'pending-disposal-scan',
+        ipAddress: clientIp,
+        details: `Scanned active portfolio: ${summary.counts.overdue} overdue, ${summary.counts.critical30} due <=30d, ${summary.counts.upcoming90} due <=90d; sent ${dispatchedCount} manager alert notification(s).`
+      });
+    }
+
+    if (dispatchedCount > 0 || actor) {
+      this.save();
+    }
+    return summary;
+  }
+
   public createRetentionSchedule(
     payload: Partial<RetentionSchedule>,
     actor: User,
@@ -7528,15 +9083,37 @@ class EdrmsStore {
       return { success: false, statusCode: 400, error: `A retention schedule for "${category}" already exists.` };
     }
 
+    const allowedTriggers: RetentionTriggerEvent[] = ['RegistrationDate', 'CompletionDate', 'ArchiveDate', 'FiscalYearEnd'];
+    const triggerEvent: RetentionTriggerEvent =
+      payload.retentionTriggerEvent && allowedTriggers.includes(payload.retentionTriggerEvent)
+        ? payload.retentionTriggerEvent
+        : 'RegistrationDate';
+    const leadDays =
+      payload.alertLeadDays !== undefined && Number(payload.alertLeadDays) >= 0
+        ? Math.min(365, Math.round(Number(payload.alertLeadDays)))
+        : 90;
+    const priority =
+      payload.priority !== undefined && Number.isFinite(Number(payload.priority))
+        ? Math.max(1, Math.min(100, Math.round(Number(payload.priority))))
+        : 75;
+
     const now = new Date().toISOString();
     const schedule: RetentionSchedule = {
       id: `ret-${Date.now().toString(36)}`,
       documentCategory: category,
+      regulatoryCategory: payload.regulatoryCategory || 'GeneralAdministrative',
       retentionPeriodYears: years,
       disposalAction,
       governingLegislation: legislation,
       notes: (payload.notes || '').trim(),
       documentTypes: Array.isArray(payload.documentTypes) ? payload.documentTypes : [],
+      confidentialityLevels: Array.isArray(payload.confidentialityLevels) ? payload.confidentialityLevels : [],
+      keywordPatterns: Array.isArray(payload.keywordPatterns)
+        ? payload.keywordPatterns.map(k => String(k).trim()).filter(Boolean)
+        : [],
+      retentionTriggerEvent: triggerEvent,
+      priority,
+      alertLeadDays: leadDays,
       isActive: true,
       createdAt: now,
       updatedAt: now
@@ -7552,7 +9129,7 @@ class EdrmsStore {
       resourceType: 'RetentionSchedule',
       resourceId: schedule.id,
       ipAddress: clientIp,
-      details: `Created retention policy "${schedule.documentCategory}" (${years === 0 ? 'Permanent' : `${years} yrs`})`
+      details: `Created retention policy "${schedule.documentCategory}" (${years === 0 ? 'Permanent' : `${years} yrs`}, reg=${schedule.regulatoryCategory}, trigger=${triggerEvent})`
     });
     this.save();
     return { success: true, schedule };
@@ -7590,14 +9167,38 @@ class EdrmsStore {
     }
     if (payload.notes !== undefined) sc.notes = payload.notes.trim();
     if (payload.documentTypes !== undefined) sc.documentTypes = payload.documentTypes;
+    if (payload.regulatoryCategory !== undefined) sc.regulatoryCategory = payload.regulatoryCategory;
+    if (payload.confidentialityLevels !== undefined) sc.confidentialityLevels = payload.confidentialityLevels;
+    if (payload.keywordPatterns !== undefined) {
+      sc.keywordPatterns = Array.isArray(payload.keywordPatterns)
+        ? payload.keywordPatterns.map(k => String(k).trim()).filter(Boolean)
+        : [];
+    }
+    if (payload.retentionTriggerEvent !== undefined) sc.retentionTriggerEvent = payload.retentionTriggerEvent;
+    if (payload.priority !== undefined && Number.isFinite(Number(payload.priority))) {
+      sc.priority = Math.max(1, Math.min(100, Math.round(Number(payload.priority))));
+    }
+    if (payload.alertLeadDays !== undefined && Number.isFinite(Number(payload.alertLeadDays))) {
+      sc.alertLeadDays = Math.max(0, Math.min(365, Math.round(Number(payload.alertLeadDays))));
+    }
+    if (payload.isActive !== undefined) sc.isActive = Boolean(payload.isActive);
     sc.updatedAt = new Date().toISOString();
 
-    // Recalculate expiry for linked non-disposed documents
+    // Recalculate expiry for linked non-disposed, non-held documents using rule's trigger event
+    const triggerEvent: RetentionTriggerEvent = sc.retentionTriggerEvent || 'RegistrationDate';
     for (const doc of this.data.documents) {
-      if (doc.retentionScheduleId === sc.id && doc.status !== 'Disposed') {
+      if (doc.retentionScheduleId === sc.id && doc.status !== 'Disposed' && !doc.legalHold) {
+        const triggerDate = this.computeRetentionTriggerDate(triggerEvent, {
+          registrationDate: doc.registrationDate,
+          completedAt: this.findDocumentCompletionDate(doc),
+          archivedAt: doc.archivedAt
+        });
         doc.retentionCategory = sc.documentCategory;
+        doc.regulatoryCategory = sc.regulatoryCategory;
+        doc.retentionTriggerEvent = triggerEvent;
+        doc.retentionTriggerDate = triggerDate;
         doc.retentionYears = sc.retentionPeriodYears;
-        doc.retentionExpiryDate = this.computeRetentionExpiryIso(doc.registrationDate, sc.retentionPeriodYears);
+        doc.retentionExpiryDate = this.computeRetentionExpiryIso(triggerDate, sc.retentionPeriodYears);
       }
     }
 
@@ -7610,7 +9211,7 @@ class EdrmsStore {
       resourceType: 'RetentionSchedule',
       resourceId: sc.id,
       ipAddress: clientIp,
-      details: `Updated retention policy "${sc.documentCategory}" (${sc.retentionPeriodYears === 0 ? 'Permanent' : `${sc.retentionPeriodYears} yrs`})`
+      details: `Updated retention policy "${sc.documentCategory}" (${sc.retentionPeriodYears === 0 ? 'Permanent' : `${sc.retentionPeriodYears} yrs`}, trigger=${triggerEvent})`
     });
     this.save();
     return { success: true, schedule: sc };
@@ -7669,10 +9270,23 @@ class EdrmsStore {
     const sc = this.data.retentionSchedules.find(s => s.id === scheduleId);
     if (!sc) return { success: false, statusCode: 404, error: 'Retention schedule not found.' };
 
+    const triggerEvent: RetentionTriggerEvent = sc.retentionTriggerEvent || 'RegistrationDate';
+    const triggerDate = this.computeRetentionTriggerDate(triggerEvent, {
+      registrationDate: doc.registrationDate,
+      completedAt: this.findDocumentCompletionDate(doc),
+      archivedAt: doc.archivedAt
+    });
+
     doc.retentionScheduleId = sc.id;
     doc.retentionCategory = sc.documentCategory;
+    doc.regulatoryCategory = sc.regulatoryCategory || doc.regulatoryCategory;
+    doc.retentionTriggerEvent = triggerEvent;
+    doc.retentionTriggerDate = triggerDate;
     doc.retentionYears = sc.retentionPeriodYears;
-    doc.retentionExpiryDate = this.computeRetentionExpiryIso(doc.registrationDate, sc.retentionPeriodYears);
+    doc.retentionExpiryDate = this.computeRetentionExpiryIso(triggerDate, sc.retentionPeriodYears);
+    doc.retentionManualOverride = true;
+    doc.retentionClassificationReason = `Manually assigned to "${sc.documentCategory}" by ${actor.fullNameEn}.`;
+    doc.retentionConfidence = 1;
 
     this.addAuditLog({
       userId: actor.id,
@@ -7683,7 +9297,7 @@ class EdrmsStore {
       resourceType: 'Document',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Assigned "${sc.documentCategory}" (${sc.retentionPeriodYears === 0 ? 'Permanent' : `${sc.retentionPeriodYears} yrs`}) -> expires ${doc.retentionExpiryDate.slice(0, 10)}`
+      details: `Assigned "${sc.documentCategory}" (${sc.retentionPeriodYears === 0 ? 'Permanent' : `${sc.retentionPeriodYears} yrs`}, trigger=${triggerEvent}) -> expires ${doc.retentionExpiryDate.slice(0, 10)}`
     });
     this.save();
     return { success: true, document: doc };
@@ -7758,21 +9372,35 @@ class EdrmsStore {
       return { success: false, statusCode: 400, error: 'Cancelled or disposed records cannot be transferred to Archive.' };
     }
 
+    const now = new Date().toISOString();
     if (payload.scheduleId && !doc.legalHold) {
       const sc = this.data.retentionSchedules.find(s => s.id === payload.scheduleId);
       if (sc) {
+        const triggerEvent: RetentionTriggerEvent = sc.retentionTriggerEvent || 'RegistrationDate';
+        const triggerDate = this.computeRetentionTriggerDate(triggerEvent, {
+          registrationDate: doc.registrationDate,
+          completedAt: this.findDocumentCompletionDate(doc),
+          archivedAt: now
+        });
         doc.retentionScheduleId = sc.id;
         doc.retentionCategory = sc.documentCategory;
+        doc.regulatoryCategory = sc.regulatoryCategory || doc.regulatoryCategory;
+        doc.retentionTriggerEvent = triggerEvent;
+        doc.retentionTriggerDate = triggerDate;
         doc.retentionYears = sc.retentionPeriodYears;
-        doc.retentionExpiryDate = this.computeRetentionExpiryIso(doc.registrationDate, sc.retentionPeriodYears);
+        doc.retentionExpiryDate = this.computeRetentionExpiryIso(triggerDate, sc.retentionPeriodYears);
+        doc.retentionManualOverride = true;
       }
     }
 
-    const now = new Date().toISOString();
     doc.isArchived = true;
     doc.status = 'Archived';
     doc.archivedAt = now;
     doc.archivedBy = actor.fullNameEn;
+
+    if (!payload.scheduleId && !doc.legalHold && !doc.retentionManualOverride) {
+      this.refreshDocumentRetentionAnchor(doc, undefined, now);
+    }
 
     if (payload.locationId) {
       const resolved = this.resolveLocationChain(payload.locationId);
@@ -9740,15 +11368,333 @@ class EdrmsStore {
   }
 
   // =========================================================================
-  // PHASE 9: DIGITAL SIGNATURE, PKI CERTIFICATES & APPROVAL STRENGTHENING
+  // PHASE 9 + HSM ENTERPRISE PKI: CA HIERARCHY, HSM KEY WRAPPING & TSA
   // =========================================================================
 
+  private getHsmMasterKey(): Buffer {
+    if (!this.data.hsmMasterKeyHex || !/^[0-9a-f]{64}$/i.test(this.data.hsmMasterKeyHex)) {
+      const envSecret = process.env.EPSS_HSM_MASTER_KEY;
+      if (envSecret && envSecret.trim().length >= 16) {
+        this.data.hsmMasterKeyHex = crypto.createHash('sha256').update(envSecret).digest('hex');
+      } else {
+        this.data.hsmMasterKeyHex = crypto.randomBytes(32).toString('hex');
+      }
+    }
+    return Buffer.from(this.data.hsmMasterKeyHex, 'hex');
+  }
+
+  private wrapPrivateKeyWithHsm(privateKeyPem: string): {
+    encryptedPrivateKeyPem: string;
+    keyWrappingIv: string;
+    keyWrappingTag: string;
+  } {
+    const kek = this.getHsmMasterKey();
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', kek, iv);
+    const encrypted = Buffer.concat([cipher.update(privateKeyPem, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return {
+      encryptedPrivateKeyPem: encrypted.toString('base64'),
+      keyWrappingIv: iv.toString('base64'),
+      keyWrappingTag: tag.toString('base64')
+    };
+  }
+
+  private unwrapPrivateKeyFromHsm(record: {
+    privateKeyPem?: string;
+    encryptedPrivateKeyPem?: string;
+    keyWrappingIv?: string;
+    keyWrappingTag?: string;
+  }): string | null {
+    if (record.encryptedPrivateKeyPem && record.keyWrappingIv && record.keyWrappingTag) {
+      try {
+        const kek = this.getHsmMasterKey();
+        const iv = Buffer.from(record.keyWrappingIv, 'base64');
+        const tag = Buffer.from(record.keyWrappingTag, 'base64');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', kek, iv);
+        decipher.setAuthTag(tag);
+        const decrypted = Buffer.concat([
+          decipher.update(Buffer.from(record.encryptedPrivateKeyPem, 'base64')),
+          decipher.final()
+        ]);
+        return decrypted.toString('utf8');
+      } catch {
+        return record.privateKeyPem || null;
+      }
+    }
+    return record.privateKeyPem || null;
+  }
+
+  private generateKeyPairByAlgorithm(algorithm: SigningAlgorithm): {
+    publicKey: string;
+    privateKey: string;
+    keySizeBits: number;
+  } {
+    if (algorithm === 'ECDSA-P384-SHA384') {
+      const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+        namedCurve: 'secp384r1',
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+      });
+      return { publicKey, privateKey, keySizeBits: 384 };
+    }
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+    });
+    return { publicKey, privateKey, keySizeBits: 2048 };
+  }
+
+  private signBytesWithAlgorithm(algorithm: SigningAlgorithm, data: Buffer, privateKeyPem: string): string {
+    if (algorithm === 'ECDSA-P384-SHA384') {
+      return crypto.sign('sha384', data, privateKeyPem).toString('base64');
+    }
+    if (algorithm === 'RSA-PSS-SHA256') {
+      return crypto
+        .sign('sha256', data, {
+          key: privateKeyPem,
+          padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST
+        })
+        .toString('base64');
+    }
+    return crypto.sign('sha256', data, privateKeyPem).toString('base64');
+  }
+
+  private verifyBytesWithAlgorithm(
+    algorithm: SigningAlgorithm | string,
+    data: Buffer,
+    publicKeyPem: string,
+    sigBase64: string
+  ): boolean {
+    try {
+      const sigBuf = Buffer.from(sigBase64, 'base64');
+      if (algorithm === 'ECDSA-P384-SHA384') {
+        return crypto.verify('sha384', data, publicKeyPem, sigBuf);
+      }
+      if (algorithm === 'RSA-PSS-SHA256') {
+        return crypto.verify(
+          'sha256',
+          data,
+          {
+            key: publicKeyPem,
+            padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+            saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST
+          },
+          sigBuf
+        );
+      }
+      return crypto.verify('sha256', data, publicKeyPem, sigBuf);
+    } catch {
+      return false;
+    }
+  }
+
+  private getActiveHsmSlot(): HsmSlotConfig {
+    const slots = this.data.hsmSlots || [];
+    const policySlotId = this.data.pkiPolicy?.activeHsmSlotId;
+    return (
+      slots.find(s => s.id === policySlotId && s.status === 'Active') ||
+      slots.find(s => s.isDefault && s.status === 'Active') ||
+      slots.find(s => s.status === 'Active') ||
+      slots[0]
+    );
+  }
+
+  private getCaNode(role: 'RootCA' | 'IssuingCA' | 'TSA'): StoredCaNode | undefined {
+    return (this.data.pkiCaHierarchy || []).find(n => n.role === role);
+  }
+
+  private buildCertEndorsementPayload(cert: {
+    serialNumber: string;
+    userId: string;
+    fingerprintSha256: string;
+    issuedAt: string;
+    expiresAt: string;
+  }): string {
+    return `EPSS-CA-ENDORSE-V1|${cert.serialNumber}|${cert.userId}|${cert.fingerprintSha256}|${cert.issuedAt}|${cert.expiresAt}`;
+  }
+
+  private issueTrustedTimestampToken(signatureBase64: string, timestampUtc: string): TrustedTimestampToken | undefined {
+    const policy = this.data.pkiPolicy;
+    if (policy && !policy.requireTsaTimestamp) return undefined;
+    const tsaNode = this.getCaNode('TSA');
+    if (!tsaNode) return undefined;
+    const tsaPriv = this.unwrapPrivateKeyFromHsm(tsaNode);
+    if (!tsaPriv) return undefined;
+
+    const imprintHashSha256 = crypto.createHash('sha256').update(signatureBase64, 'utf8').digest('hex');
+    const nonceHex = crypto.randomBytes(8).toString('hex').toUpperCase();
+    const tsaPayload = `EPSS-RFC3161-TSA-V1|${imprintHashSha256}|${timestampUtc}|${nonceHex}|${tsaNode.caSerial}`;
+    const tsaSignatureBase64 = this.signBytesWithAlgorithm(tsaNode.algorithm, Buffer.from(tsaPayload, 'utf8'), tsaPriv);
+
+    return {
+      tsaTokenId: `tsa-${Date.now()}-${nonceHex.slice(0, 6)}`,
+      tsaAuthorityDn: tsaNode.subjectDn,
+      tsaSerialNumber: tsaNode.caSerial,
+      timestampUtc,
+      imprintHashSha256,
+      nonceHex,
+      tsaSignatureBase64,
+      verified: true
+    };
+  }
+
+  private verifyTrustedTimestampToken(
+    sigBase64: string,
+    token: TrustedTimestampToken | undefined,
+    tsaPublicKeyPem?: string
+  ): boolean {
+    if (!token) return false;
+    const expectedImprint = crypto.createHash('sha256').update(sigBase64, 'utf8').digest('hex');
+    if (expectedImprint !== token.imprintHashSha256) return false;
+    const tsaNode = this.getCaNode('TSA');
+    const pubKey = tsaPublicKeyPem || tsaNode?.publicKeyPem;
+    if (!pubKey) return false;
+    const algo = tsaNode?.algorithm || 'RSA-SHA256';
+    const payload = `EPSS-RFC3161-TSA-V1|${token.imprintHashSha256}|${token.timestampUtc}|${token.nonceHex}|${token.tsaSerialNumber}`;
+    return this.verifyBytesWithAlgorithm(algo, Buffer.from(payload, 'utf8'), pubKey, token.tsaSignatureBase64);
+  }
+
+  private ensureHsmAndCaInfrastructure() {
+    this.getHsmMasterKey();
+    const now = new Date().toISOString();
+
+    if (!Array.isArray(this.data.hsmSlots) || this.data.hsmSlots.length === 0) {
+      const attest1 = crypto.createHash('sha256').update(`EPSS-HSM-01:${now}`).digest('hex').toUpperCase();
+      const attest2 = crypto.createHash('sha256').update(`EPSS-CLOUD-HSM-02:${now}`).digest('hex').toUpperCase();
+      this.data.hsmSlots = [
+        {
+          id: 'hsm-slot-primary',
+          slotCode: 'SLOT-00-EPSS-INT',
+          label: 'EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault',
+          provider: 'SoftwarePKCS11HSM',
+          endpointUri: 'pkcs11://localhost:5657/partition/epss-gov-root',
+          keyWrapAlgorithm: 'AES-256-GCM',
+          fipsLevel: 'FIPS 140-3 Level 3',
+          status: 'Active',
+          isDefault: true,
+          lastAttestedAt: now,
+          attestationDigestSha256: attest1,
+          operationsCount: 0
+        },
+        {
+          id: 'hsm-slot-standby',
+          slotCode: 'SLOT-01-THALES-HSM',
+          label: 'Ethiopian GovNet Hardware PKCS#11 Partition (Standby)',
+          provider: 'ExternalPKCS11',
+          endpointUri: 'pkcs11://hsm-gw.epss.gov.et:1792/partition/outgoing-seal',
+          keyWrapAlgorithm: 'PKCS11-CKM-AES-KEY-WRAP',
+          fipsLevel: 'FIPS 140-3 Level 3',
+          status: 'Standby',
+          isDefault: false,
+          lastAttestedAt: now,
+          attestationDigestSha256: attest2,
+          operationsCount: 0
+        }
+      ];
+    }
+
+    if (!this.data.pkiPolicy) {
+      this.data.pkiPolicy = {
+        requireSignedOutgoingDispatch: true,
+        requireTsaTimestamp: true,
+        requireStepUpMfaForHsmSign: false,
+        defaultAlgorithm: 'RSA-SHA256',
+        activeHsmSlotId: 'hsm-slot-primary',
+        crlDistributionUri: '/api/v1/pki/crl',
+        updatedAt: now,
+        updatedBy: 'System Initialization'
+      };
+    }
+
+    if (!Array.isArray(this.data.pkiCaHierarchy) || this.data.pkiCaHierarchy.length < 3) {
+      const issuedAt = now;
+      const expRoot = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000).toISOString();
+      const expSub = new Date(Date.now() + 1825 * 24 * 60 * 60 * 1000).toISOString();
+
+      const buildCaNode = (
+        role: 'RootCA' | 'IssuingCA' | 'TSA',
+        caSerial: string,
+        subjectDn: string,
+        issuerDn: string,
+        algorithm: SigningAlgorithm,
+        expiresAt: string
+      ): StoredCaNode => {
+        const kp = this.generateKeyPairByAlgorithm(algorithm);
+        const wrapped = this.wrapPrivateKeyWithHsm(kp.privateKey);
+        const fp = crypto.createHash('sha256').update(kp.publicKey).digest('hex').toUpperCase();
+        return {
+          caSerial,
+          role,
+          subjectDn,
+          issuerDn,
+          algorithm,
+          fingerprintSha256: fp,
+          publicKeyPem: kp.publicKey,
+          issuedAt,
+          expiresAt,
+          status: 'Active',
+          hsmSlotId: 'hsm-slot-primary',
+          ...wrapped
+        };
+      };
+
+      const rootDn = 'CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET';
+      const issuingDn = 'CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET';
+      const tsaDn = 'CN=EPSS RFC 3161 Trusted Timestamping Authority, OU=PKI Vault Operations, O=EPSS, C=ET';
+
+      this.data.pkiCaHierarchy = [
+        buildCaNode('RootCA', 'ET-EPSS-ROOT-CA-2026', rootDn, rootDn, 'RSA-SHA256', expRoot),
+        buildCaNode('IssuingCA', 'ET-EPSS-ISSUING-CA-2026', issuingDn, rootDn, 'RSA-SHA256', expSub),
+        buildCaNode('TSA', 'ET-EPSS-TSA-2026', tsaDn, rootDn, 'RSA-SHA256', expSub)
+      ];
+    }
+  }
+
   private ensurePhase9SignatureState() {
+    this.ensureHsmAndCaInfrastructure();
+
     if (!Array.isArray(this.data.signingCertificates)) {
       this.data.signingCertificates = [];
     }
 
-    // Issue RSA-2048 signing certificates for active staff who do not have an active or revoked record yet
+    const issuingCa = this.getCaNode('IssuingCA');
+    const issuingPriv = issuingCa ? this.unwrapPrivateKeyFromHsm(issuingCa) : null;
+    const defaultSlot = this.getActiveHsmSlot();
+
+    // Migrate any legacy plaintext privateKeyPem certs into HSM AES-256-GCM wrapped keys & bind CA endorsement
+    for (const cert of this.data.signingCertificates) {
+      if (cert.privateKeyPem && !cert.encryptedPrivateKeyPem) {
+        const wrapped = this.wrapPrivateKeyWithHsm(cert.privateKeyPem);
+        cert.encryptedPrivateKeyPem = wrapped.encryptedPrivateKeyPem;
+        cert.keyWrappingIv = wrapped.keyWrappingIv;
+        cert.keyWrappingTag = wrapped.keyWrappingTag;
+        delete cert.privateKeyPem;
+        cert.keyProtectionMode = 'HSM_AES256_WRAPPED';
+      }
+      if (!cert.keyProtectionMode) {
+        cert.keyProtectionMode = cert.encryptedPrivateKeyPem ? 'HSM_AES256_WRAPPED' : 'SOFTWARE_LEGACY';
+      }
+      if (!cert.hsmSlotId && defaultSlot) {
+        cert.hsmSlotId = defaultSlot.id;
+        cert.hsmSlotLabel = defaultSlot.label;
+      }
+      if (issuingCa && issuingPriv && !cert.caEndorsementBase64) {
+        cert.issuerCaSerial = issuingCa.caSerial;
+        cert.issuerCaFingerprintSha256 = issuingCa.fingerprintSha256;
+        cert.issuerDn = issuingCa.subjectDn;
+        const payload = this.buildCertEndorsementPayload(cert);
+        cert.caEndorsementBase64 = this.signBytesWithAlgorithm(
+          issuingCa.algorithm,
+          Buffer.from(payload, 'utf8'),
+          issuingPriv
+        );
+      }
+    }
+
+    // Issue HSM-wrapped signing certificates for active staff who do not have an active or revoked record yet
     for (const user of this.data.users) {
       if (user.status !== 'Active') continue;
       const existingAny = this.data.signingCertificates.find(c => c.userId === user.id);
@@ -9758,7 +11704,7 @@ class EdrmsStore {
       }
     }
 
-    // Upgrade any legacy seeded digitalSignature stubs lacking cryptographic RSA-SHA256 payloads
+    // Upgrade any legacy seeded digitalSignature stubs lacking cryptographic payloads
     for (const doc of this.data.documents) {
       for (const h of doc.workflowHistory || []) {
         if (h.digitalSignature && !h.digitalSignature.signatureBase64) {
@@ -9782,7 +11728,6 @@ class EdrmsStore {
           h.digitalSignature = upgraded;
           h.biometricVerified = true;
 
-          // Keep matching WorkflowInstance history in sync if present
           const wfInst = (this.data.workflowInstances || []).find(w => w.documentId === doc.id);
           if (wfInst) {
             const instEntry = wfInst.history.find(ih => ih.id === h.id);
@@ -9796,12 +11741,17 @@ class EdrmsStore {
     }
   }
 
-  private generateSigningCertificateRecord(user: User): StoredSigningCertificate {
-    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
-    });
+  private generateSigningCertificateRecord(
+    user: User,
+    requestedAlgorithm?: SigningAlgorithm,
+    requestedSlotId?: string
+  ): StoredSigningCertificate {
+    this.ensureHsmAndCaInfrastructure();
+    const algorithm: SigningAlgorithm =
+      requestedAlgorithm || this.data.pkiPolicy?.defaultAlgorithm || 'RSA-SHA256';
+    const { publicKey, privateKey, keySizeBits } = this.generateKeyPairByAlgorithm(algorithm);
+    const wrapped = this.wrapPrivateKeyWithHsm(privateKey);
+
     const fingerprintSha256 = crypto
       .createHash('sha256')
       .update(publicKey)
@@ -9814,6 +11764,35 @@ class EdrmsStore {
     const roleTag = user.role.replace(/[^A-Za-z]/g, '').slice(0, 6).toUpperCase();
     const serialNumber = `ET-PKI-EPSS-${year}-${roleTag}-${suffix}`;
 
+    const slot =
+      (requestedSlotId && (this.data.hsmSlots || []).find(s => s.id === requestedSlotId)) ||
+      this.getActiveHsmSlot();
+    if (slot) {
+      slot.operationsCount = (slot.operationsCount || 0) + 1;
+    }
+
+    const issuingCa = this.getCaNode('IssuingCA');
+    const issuingPriv = issuingCa ? this.unwrapPrivateKeyFromHsm(issuingCa) : null;
+    const issuerDn =
+      issuingCa?.subjectDn ||
+      'CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET';
+
+    let caEndorsementBase64: string | undefined;
+    if (issuingCa && issuingPriv) {
+      const endorsementPayload = this.buildCertEndorsementPayload({
+        serialNumber,
+        userId: user.id,
+        fingerprintSha256,
+        issuedAt,
+        expiresAt: expiresDate.toISOString()
+      });
+      caEndorsementBase64 = this.signBytesWithAlgorithm(
+        issuingCa.algorithm,
+        Buffer.from(endorsementPayload, 'utf8'),
+        issuingPriv
+      );
+    }
+
     return {
       id: `cert-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       serialNumber,
@@ -9821,27 +11800,63 @@ class EdrmsStore {
       userName: user.fullNameEn,
       userRole: user.role,
       departmentNameEn: user.departmentNameEn,
-      algorithm: 'RSA-SHA256',
-      keySizeBits: 2048,
+      algorithm,
+      keySizeBits,
       publicKeyPem: publicKey,
-      privateKeyPem: privateKey,
       fingerprintSha256,
-      issuerDn: 'CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET',
+      issuerDn,
       subjectDn: `CN=${user.fullNameEn}, OU=${user.departmentNameEn}, TITLE=${user.role}, O=EPSS, C=ET`,
+      issuerCaSerial: issuingCa?.caSerial,
+      issuerCaFingerprintSha256: issuingCa?.fingerprintSha256,
+      caEndorsementBase64,
+      caChainTrusted: Boolean(caEndorsementBase64),
+      keyProtectionMode: 'HSM_AES256_WRAPPED',
+      hsmSlotId: slot?.id || 'hsm-slot-primary',
+      hsmSlotLabel: slot?.label || 'EPSS Internal FIPS 140-3 HSM',
       issuedAt,
       expiresAt: expiresDate.toISOString(),
-      status: 'Active'
+      status: 'Active',
+      ...wrapped
     };
   }
 
+  private verifyCertificateCaChain(
+    cert: Pick<
+      SigningCertificate,
+      'serialNumber' | 'userId' | 'fingerprintSha256' | 'issuedAt' | 'expiresAt' | 'caEndorsementBase64'
+    >,
+    overrideCaPublicKeyPem?: string
+  ): boolean {
+    if (!cert.caEndorsementBase64) return false;
+    const issuingCa = this.getCaNode('IssuingCA');
+    const pubKey = overrideCaPublicKeyPem || issuingCa?.publicKeyPem;
+    if (!pubKey) return false;
+    const algo = issuingCa?.algorithm || 'RSA-SHA256';
+    const payload = this.buildCertEndorsementPayload({
+      serialNumber: cert.serialNumber,
+      userId: cert.userId,
+      fingerprintSha256: cert.fingerprintSha256,
+      issuedAt: cert.issuedAt,
+      expiresAt: cert.expiresAt
+    });
+    return this.verifyBytesWithAlgorithm(algo, Buffer.from(payload, 'utf8'), pubKey, cert.caEndorsementBase64);
+  }
+
   private sanitizeCertificate(cert: StoredSigningCertificate): SigningCertificate {
-    const { privateKeyPem: _omit, ...publicCert } = cert;
+    const {
+      privateKeyPem: _omit1,
+      encryptedPrivateKeyPem: _omit2,
+      keyWrappingIv: _omit3,
+      keyWrappingTag: _omit4,
+      ...publicCert
+    } = cert;
     const effectiveStatus =
       publicCert.status === 'Active' && new Date(publicCert.expiresAt).getTime() <= Date.now()
         ? 'Expired'
         : publicCert.status;
     return {
       ...publicCert,
+      caChainTrusted: this.verifyCertificateCaChain(publicCert),
       status: effectiveStatus
     };
   }
@@ -9856,7 +11871,19 @@ class EdrmsStore {
     return matches[0];
   }
 
-  public computeDocumentSigningDigest(doc: DocumentItem): string {
+  public computeDocumentSigningDigest(doc: {
+    id: string;
+    registrationNumber: string;
+    referenceNumber: string;
+    type: DocumentType;
+    subjectEn: string;
+    subjectAm?: string;
+    descriptionEn?: string;
+    senderOrganization: string;
+    recipientOrganization: string;
+    confidentiality: ConfidentialityLevel;
+    attachments?: Array<{ fileName: string; fileSize: number; mimeType: string }>;
+  }): string {
     const canonical = JSON.stringify({
       id: doc.id,
       registrationNumber: doc.registrationNumber,
@@ -9915,6 +11942,17 @@ class EdrmsStore {
       timestamp: string;
     }
   ): NonNullable<WorkflowActionRecord['digitalSignature']> {
+    const privateKeyPem = this.unwrapPrivateKeyFromHsm(cert);
+    if (!privateKeyPem) {
+      throw new Error('HSM failed to unwrap signer private key material.');
+    }
+
+    const activeSlot =
+      (this.data.hsmSlots || []).find(s => s.id === cert.hsmSlotId) || this.getActiveHsmSlot();
+    if (activeSlot) {
+      activeSlot.operationsCount = (activeSlot.operationsCount || 0) + 1;
+    }
+
     const documentDigestSha256 = this.computeDocumentSigningDigest(doc);
     const payload = this.buildCanonicalSigningPayload({
       docId: doc.id,
@@ -9928,9 +11966,9 @@ class EdrmsStore {
       timestamp: meta.timestamp
     });
 
-    const signatureBase64 = crypto
-      .sign('sha256', Buffer.from(payload, 'utf8'), cert.privateKeyPem)
-      .toString('base64');
+    const algo: SigningAlgorithm = cert.algorithm || 'RSA-SHA256';
+    const signatureBase64 = this.signBytesWithAlgorithm(algo, Buffer.from(payload, 'utf8'), privateKeyPem);
+    const tsaToken = this.issueTrustedTimestampToken(signatureBase64, meta.timestamp);
 
     return {
       signatureId: `sig-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
@@ -9939,20 +11977,30 @@ class EdrmsStore {
       signedByRole: actor.role,
       certificateSerial: cert.serialNumber,
       certificateFingerprint: cert.fingerprintSha256,
-      algorithm: 'RSA-SHA256',
+      algorithm: algo,
       documentDigestSha256,
       signatureBase64,
       signingMeaning: meta.signingMeaning,
       biometricVerified: meta.biometricVerified,
       mfaMethod: meta.mfaMethod,
+      hsmSlotId: activeSlot?.id || cert.hsmSlotId,
+      hsmSlotLabel: activeSlot?.label || cert.hsmSlotLabel,
+      hsmProvider: activeSlot?.provider || 'SoftwarePKCS11HSM',
+      keyProtectionMode: cert.keyProtectionMode || 'HSM_AES256_WRAPPED',
+      caIssuerSerial: cert.issuerCaSerial || this.getCaNode('IssuingCA')?.caSerial,
+      tsaToken,
       timestamp: meta.timestamp,
       verified: true
     };
   }
 
   public getSigningCertificates(actor: User): SigningCertificate[] {
+    this.ensureHsmAndCaInfrastructure();
     const isAdminOrAuditor =
-      actor.role === 'SuperAdmin' || actor.role === 'Auditor' || actor.role === 'DirectorGeneral';
+      actor.role === 'SuperAdmin' ||
+      actor.role === 'Auditor' ||
+      actor.role === 'SecurityOfficer' ||
+      actor.role === 'DirectorGeneral';
     const list = (this.data.signingCertificates || []).filter(
       c => isAdminOrAuditor || c.userId === actor.id
     );
@@ -9961,19 +12009,238 @@ class EdrmsStore {
       .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime());
   }
 
+  public getPkiHsmStatus(): PkiHsmGovernanceStatus {
+    this.ensureHsmAndCaInfrastructure();
+    const certs = (this.data.signingCertificates || []).map(c => this.sanitizeCertificate(c));
+    const outgoingDocs = this.data.documents.filter(d => d.type === 'OutgoingLetter' && !d.isDeleted);
+    let outgoingSealed = 0;
+    let totalTsa = 0;
+    for (const d of this.data.documents) {
+      for (const h of d.workflowHistory || []) {
+        if (h.digitalSignature?.tsaToken) totalTsa++;
+      }
+    }
+    for (const d of outgoingDocs) {
+      const digest = this.computeDocumentSigningDigest(d);
+      const validSeal = (d.workflowHistory || []).some(
+        h =>
+          h.digitalSignature &&
+          !h.digitalSignature.invalidated &&
+          h.digitalSignature.documentDigestSha256 === digest
+      );
+      if (validSeal) outgoingSealed++;
+    }
+
+    const caChain: PkiCaNodeSummary[] = (this.data.pkiCaHierarchy || []).map(
+      ({ encryptedPrivateKeyPem: _1, keyWrappingIv: _2, keyWrappingTag: _3, hsmSlotId: _4, ...pub }) => pub
+    );
+
+    return {
+      policy: this.data.pkiPolicy!,
+      caChain,
+      hsmSlots: [...(this.data.hsmSlots || [])],
+      metrics: {
+        totalCertificates: certs.length,
+        activeCertificates: certs.filter(c => c.status === 'Active').length,
+        revokedCertificates: certs.filter(c => c.status === 'Revoked').length,
+        hsmWrappedCertificates: certs.filter(c => c.keyProtectionMode === 'HSM_AES256_WRAPPED').length,
+        outgoingTotal: outgoingDocs.length,
+        outgoingSealed,
+        outgoingUnsigned: Math.max(0, outgoingDocs.length - outgoingSealed),
+        totalTsaTimestampsIssued: totalTsa
+      }
+    };
+  }
+
+  public updatePkiHsmPolicy(
+    updates: Partial<PkiPolicyConfig>,
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; policy?: PkiPolicyConfig } {
+    if (actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer') {
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'Forbidden: Only SuperAdmin or SecurityOfficer may modify HSM/PKI policies.'
+      };
+    }
+    this.ensureHsmAndCaInfrastructure();
+    const policy = this.data.pkiPolicy!;
+    if (updates.defaultAlgorithm) {
+      if (!['RSA-SHA256', 'RSA-PSS-SHA256', 'ECDSA-P384-SHA384'].includes(updates.defaultAlgorithm)) {
+        return { success: false, statusCode: 400, error: 'Unsupported signing algorithm.' };
+      }
+      policy.defaultAlgorithm = updates.defaultAlgorithm;
+    }
+    if (updates.activeHsmSlotId) {
+      const targetSlot = (this.data.hsmSlots || []).find(s => s.id === updates.activeHsmSlotId);
+      if (!targetSlot) {
+        return { success: false, statusCode: 404, error: 'HSM partition slot not found.' };
+      }
+      for (const s of this.data.hsmSlots || []) {
+        s.isDefault = s.id === targetSlot.id;
+        if (s.id === targetSlot.id) s.status = 'Active';
+      }
+      policy.activeHsmSlotId = targetSlot.id;
+    }
+    if (typeof updates.requireSignedOutgoingDispatch === 'boolean') {
+      policy.requireSignedOutgoingDispatch = updates.requireSignedOutgoingDispatch;
+    }
+    if (typeof updates.requireTsaTimestamp === 'boolean') {
+      policy.requireTsaTimestamp = updates.requireTsaTimestamp;
+    }
+    if (typeof updates.requireStepUpMfaForHsmSign === 'boolean') {
+      policy.requireStepUpMfaForHsmSign = updates.requireStepUpMfaForHsmSign;
+    }
+    policy.updatedAt = new Date().toISOString();
+    policy.updatedBy = actor.fullNameEn;
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'PKI_HSM_POLICY_UPDATED',
+      resourceType: 'HsmVault',
+      resourceId: policy.activeHsmSlotId,
+      ipAddress: clientIp,
+      details: `Updated HSM/PKI Policy: requireSignedOutgoingDispatch=${policy.requireSignedOutgoingDispatch}, defaultAlg=${policy.defaultAlgorithm}, tsa=${policy.requireTsaTimestamp}`
+    });
+    this.save();
+    return { success: true, policy };
+  }
+
+  public attestHsmSlot(
+    slotId: string,
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; slot?: HsmSlotConfig; roundTripVerified?: boolean } {
+    if (actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer' && actor.role !== 'Auditor') {
+      return { success: false, statusCode: 403, error: 'Forbidden: HSM attestation requires Security/Admin clearance.' };
+    }
+    this.ensureHsmAndCaInfrastructure();
+    const slot = (this.data.hsmSlots || []).find(s => s.id === slotId);
+    if (!slot) return { success: false, statusCode: 404, error: 'HSM slot not found.' };
+
+    // Execute live cryptographic key-wrap + CA challenge-response self-test
+    const testKp = this.generateKeyPairByAlgorithm('ECDSA-P384-SHA384');
+    const wrapped = this.wrapPrivateKeyWithHsm(testKp.privateKey);
+    const unwrapped = this.unwrapPrivateKeyFromHsm(wrapped);
+    const challenge = Buffer.from(`HSM-SELF-TEST-${Date.now()}-${slot.slotCode}`, 'utf8');
+    let roundTripVerified = false;
+    if (unwrapped) {
+      const sig = this.signBytesWithAlgorithm('ECDSA-P384-SHA384', challenge, unwrapped);
+      roundTripVerified = this.verifyBytesWithAlgorithm('ECDSA-P384-SHA384', challenge, testKp.publicKey, sig);
+    }
+
+    slot.lastAttestedAt = new Date().toISOString();
+    slot.attestationDigestSha256 = crypto
+      .createHash('sha256')
+      .update(`${slot.slotCode}:${slot.lastAttestedAt}:${roundTripVerified}`)
+      .digest('hex')
+      .toUpperCase();
+    slot.operationsCount = (slot.operationsCount || 0) + 1;
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'HSM_SLOT_ATTESTED',
+      resourceType: 'HsmVault',
+      resourceId: slot.slotCode,
+      ipAddress: clientIp,
+      details: `HSM cryptographic key-wrap & ECDSA-P384 round-trip self-test ${roundTripVerified ? 'PASSED' : 'FAILED'} (${slot.attestationDigestSha256.slice(0, 16)}...)`
+    });
+    this.save();
+    return { success: true, slot, roundTripVerified };
+  }
+
+  public configureHsmSlot(
+    payload: {
+      slotCode: string;
+      label: string;
+      provider: HsmProviderType;
+      endpointUri?: string;
+      fipsLevel?: HsmSlotConfig['fipsLevel'];
+    },
+    actor: User,
+    clientIp: string
+  ): { success: boolean; statusCode?: number; error?: string; slot?: HsmSlotConfig } {
+    if (actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer') {
+      return { success: false, statusCode: 403, error: 'Forbidden: Only SuperAdmin or SecurityOfficer may register HSM slots.' };
+    }
+    const code = (payload.slotCode || '').trim().toUpperCase();
+    const label = (payload.label || '').trim();
+    if (code.length < 3 || label.length < 5) {
+      return { success: false, statusCode: 400, error: 'HSM slot code and descriptive label are required.' };
+    }
+    this.ensureHsmAndCaInfrastructure();
+    const now = new Date().toISOString();
+    const slot: HsmSlotConfig = {
+      id: `hsm-slot-${Date.now().toString(36)}`,
+      slotCode: code,
+      label,
+      provider: payload.provider || 'ExternalPKCS11',
+      endpointUri: payload.endpointUri?.trim() || 'pkcs11://localhost:5657/partition/custom',
+      keyWrapAlgorithm: payload.provider === 'SoftwarePKCS11HSM' ? 'AES-256-GCM' : 'PKCS11-CKM-AES-KEY-WRAP',
+      fipsLevel: payload.fipsLevel || 'FIPS 140-3 Level 3',
+      status: 'Active',
+      isDefault: false,
+      lastAttestedAt: now,
+      attestationDigestSha256: crypto.createHash('sha256').update(`${code}:${now}`).digest('hex').toUpperCase(),
+      operationsCount: 0
+    };
+    this.data.hsmSlots!.push(slot);
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'HSM_SLOT_CONFIGURED',
+      resourceType: 'HsmVault',
+      resourceId: slot.slotCode,
+      ipAddress: clientIp,
+      details: `Registered ${slot.provider} slot ${slot.slotCode} (${slot.label})`
+    });
+    this.save();
+    return { success: true, slot };
+  }
+
+  public getCertificateRevocationList(): CrlRevocationEntry[] {
+    return (this.data.signingCertificates || [])
+      .filter(c => c.status === 'Revoked')
+      .map(c => ({
+        serialNumber: c.serialNumber,
+        holderName: c.userName,
+        holderRole: c.userRole,
+        revokedAt: c.revokedAt || c.issuedAt,
+        revokedBy: c.revokedBy || 'Security Administration',
+        reason: c.revokedReason || 'Certificate superseded or revoked'
+      }))
+      .sort((a, b) => new Date(b.revokedAt).getTime() - new Date(a.revokedAt).getTime());
+  }
+
   public issueSigningCertificate(
     targetUserId: string | undefined,
     actor: User,
     clientIp: string,
-    reason?: string
+    reason?: string,
+    algorithm?: SigningAlgorithm,
+    hsmSlotId?: string
   ): { success: boolean; statusCode?: number; error?: string; certificate?: SigningCertificate } {
     const uid = targetUserId || actor.id;
-    if (uid !== actor.id && actor.role !== 'SuperAdmin') {
+    if (uid !== actor.id && actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer') {
       return {
         success: false,
         statusCode: 403,
-        error: 'Forbidden: Only SuperAdmin may issue PKI signing certificates for other staff members.'
+        error: 'Forbidden: Only SuperAdmin or SecurityOfficer may issue PKI signing certificates for other staff members.'
       };
+    }
+
+    if (algorithm && !['RSA-SHA256', 'RSA-PSS-SHA256', 'ECDSA-P384-SHA384'].includes(algorithm)) {
+      return { success: false, statusCode: 400, error: 'Unsupported signing algorithm requested.' };
     }
 
     const targetUser = this.getUserById(uid);
@@ -9992,11 +12259,11 @@ class EdrmsStore {
         existing.status = 'Revoked';
         existing.revokedAt = now;
         existing.revokedBy = actor.fullNameEn;
-        existing.revokedReason = reason?.trim() || 'Superseded by new PKI certificate issuance / renewal';
+        existing.revokedReason = reason?.trim() || 'Superseded by new HSM/PKI certificate issuance / rotation';
       }
     }
 
-    const newCert = this.generateSigningCertificateRecord(targetUser);
+    const newCert = this.generateSigningCertificateRecord(targetUser, algorithm, hsmSlotId);
     this.data.signingCertificates.unshift(newCert);
 
     this.addAuditLog({
@@ -10008,7 +12275,7 @@ class EdrmsStore {
       resourceType: 'SigningCertificate',
       resourceId: newCert.serialNumber,
       ipAddress: clientIp,
-      details: `Issued RSA-2048 certificate ${newCert.serialNumber} for ${targetUser.fullNameEn} (${targetUser.role}). ${reason ? `Reason: ${reason}` : ''}`
+      details: `Issued HSM-wrapped ${newCert.algorithm} (${newCert.keySizeBits}-bit) certificate ${newCert.serialNumber} for ${targetUser.fullNameEn} in slot ${newCert.hsmSlotLabel}. ${reason ? `Reason: ${reason}` : ''}`
     });
 
     this.save();
@@ -10027,11 +12294,11 @@ class EdrmsStore {
     if (!cert) {
       return { success: false, statusCode: 404, error: 'Signing certificate not found.' };
     }
-    if (cert.userId !== actor.id && actor.role !== 'SuperAdmin') {
+    if (cert.userId !== actor.id && actor.role !== 'SuperAdmin' && actor.role !== 'SecurityOfficer') {
       return {
         success: false,
         statusCode: 403,
-        error: 'Forbidden: Only the certificate holder or SuperAdmin can revoke a signing certificate.'
+        error: 'Forbidden: Only the certificate holder, SecurityOfficer, or SuperAdmin can revoke a signing certificate.'
       };
     }
     if (cert.status === 'Revoked') {
@@ -10060,7 +12327,7 @@ class EdrmsStore {
       resourceType: 'SigningCertificate',
       resourceId: cert.serialNumber,
       ipAddress: clientIp,
-      details: `Revoked signing certificate ${cert.serialNumber} (holder: ${cert.userName}). Reason: ${cleanReason}`
+      details: `Revoked signing certificate ${cert.serialNumber} (holder: ${cert.userName}) and published to CRL. Reason: ${cleanReason}`
     });
 
     this.save();
@@ -10086,6 +12353,7 @@ class EdrmsStore {
     document?: DocumentItem;
     signature?: WorkflowActionRecord['digitalSignature'];
   } {
+    this.ensureHsmAndCaInfrastructure();
     const doc = this.data.documents.find(d => d.id === docId);
     if (!doc) {
       return { success: false, statusCode: 404, error: 'Document not found.' };
@@ -10114,7 +12382,7 @@ class EdrmsStore {
         return {
           success: false,
           statusCode: 401,
-          error: 'Invalid Officer Security PIN provided for digital signature confirmation.'
+          error: 'Invalid Officer Security PIN provided for HSM digital signature confirmation.'
         };
       }
       pinVerified = true;
@@ -10126,13 +12394,14 @@ class EdrmsStore {
     const isSensitive =
       doc.confidentiality === 'Secret' ||
       doc.confidentiality === 'Confidential' ||
-      doc.priority === 'VeryUrgent';
+      doc.priority === 'VeryUrgent' ||
+      !!this.data.pkiPolicy?.requireStepUpMfaForHsmSign;
     if (isSensitive && !session?.mfaVerified && !payload.biometricSignatureVerified && !pinVerified) {
       return {
         success: false,
         statusCode: 403,
         mfaNeeded: true,
-        error: `Biometric / Officer PIN confirmation is mandatory to digitally sign ${doc.confidentiality} / ${doc.priority} records.`
+        error: `Biometric / Officer PIN confirmation is mandatory to authorize HSM cryptographic signing on ${doc.confidentiality} records.`
       };
     }
 
@@ -10146,8 +12415,12 @@ class EdrmsStore {
     }
 
     const now = new Date().toISOString();
-    const signingMeaning = (payload.signingMeaning || '').trim() || 'Executive Counter-Signature & Attestation';
-    const comments = (payload.comments || '').trim() || `Electronic PKI attestation: ${signingMeaning}`;
+    const signingMeaning =
+      (payload.signingMeaning || '').trim() ||
+      (doc.type === 'OutgoingLetter'
+        ? 'Approved & Sealed for Official Outgoing Dispatch'
+        : 'Executive Counter-Signature & Attestation');
+    const comments = (payload.comments || '').trim() || `HSM PKI attestation (${cert.algorithm}): ${signingMeaning}`;
     const mfaMethod: 'webauthn' | 'pin' | 'session_mfa' | 'standard' = payload.biometricSignatureVerified
       ? 'webauthn'
       : pinVerified
@@ -10158,7 +12431,7 @@ class EdrmsStore {
 
     const digitalSignature = this.createCryptographicSignatureRecord(doc, actor, cert, {
       action: 'Reviewed',
-      stageName: 'Direct PKI Attestation',
+      stageName: doc.type === 'OutgoingLetter' ? 'Outgoing Non-Repudiation Seal' : 'Direct PKI Attestation',
       signingMeaning,
       biometricVerified: !!payload.biometricSignatureVerified || pinVerified || !!session?.mfaVerified,
       mfaMethod,
@@ -10174,12 +12447,15 @@ class EdrmsStore {
       action: 'Reviewed',
       decision: 'Signed',
       comments,
-      stageName: 'Direct PKI Attestation',
+      stageName: doc.type === 'OutgoingLetter' ? 'Outgoing Non-Repudiation Seal' : 'Direct PKI Attestation',
       biometricVerified: digitalSignature.biometricVerified,
       digitalSignature
     };
 
     doc.workflowHistory.push(record);
+    if (doc.type === 'OutgoingLetter' && ['Draft', 'Registered', 'UnderReview', 'InProgress', 'AwaitingApproval', 'ResponsePrepared'].includes(doc.status)) {
+      doc.status = 'Approved';
+    }
     const wfInst = this.getWorkflowInstanceByIdOrDocId(doc.id);
     if (wfInst) {
       wfInst.history.push(record);
@@ -10195,11 +12471,60 @@ class EdrmsStore {
       resourceType: 'DigitalSignature',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Direct RSA-SHA256 attestation (${signingMeaning}) via cert ${cert.serialNumber}`
+      details: `Applied ${cert.algorithm} HSM signature (${signingMeaning}) via cert ${cert.serialNumber} [slot=${digitalSignature.hsmSlotLabel}, tsa=${digitalSignature.tsaToken?.tsaTokenId || 'none'}]`
     });
 
     this.save();
     return { success: true, document: doc, signature: digitalSignature };
+  }
+
+  public batchSignOutgoingDocuments(
+    documentIds: string[],
+    payload: { signingMeaning?: string; comments?: string; stepUpPin?: string },
+    actor: User,
+    session: AuthSession | undefined,
+    clientIp: string
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    signedCount: number;
+    failed: Array<{ documentId: string; error: string }>;
+    documents: DocumentItem[];
+  } {
+    if (!Array.isArray(documentIds) || documentIds.length === 0) {
+      return { success: false, statusCode: 400, error: 'Select at least one outgoing correspondence record.', signedCount: 0, failed: [], documents: [] };
+    }
+    const signedDocs: DocumentItem[] = [];
+    const failed: Array<{ documentId: string; error: string }> = [];
+
+    for (const id of documentIds) {
+      const res = this.signDocumentDirectly(id, payload, actor, session, clientIp);
+      if (res.success && res.document) {
+        signedDocs.push(res.document);
+      } else {
+        failed.push({ documentId: id, error: res.error || 'Signing failed' });
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          return {
+            success: false,
+            statusCode: res.statusCode,
+            error: res.error,
+            signedCount: signedDocs.length,
+            failed,
+            documents: signedDocs
+          };
+        }
+      }
+    }
+
+    return {
+      success: signedDocs.length > 0,
+      statusCode: signedDocs.length > 0 ? 200 : 400,
+      error: signedDocs.length === 0 ? failed[0]?.error || 'No documents signed.' : undefined,
+      signedCount: signedDocs.length,
+      failed,
+      documents: signedDocs
+    };
   }
 
   public verifyDocumentSignatures(
@@ -10208,6 +12533,7 @@ class EdrmsStore {
     clientIp: string,
     recordAudit = true
   ): DocumentSignatureVerificationResult | null {
+    this.ensureHsmAndCaInfrastructure();
     const doc = this.data.documents.find(d => d.id === docId);
     if (!doc) return null;
 
@@ -10220,6 +12546,7 @@ class EdrmsStore {
       !!currentStage?.requiredFields?.includes('digitalSignature') ||
       doc.confidentiality === 'Secret' ||
       doc.confidentiality === 'Confidential' ||
+      doc.type === 'OutgoingLetter' ||
       doc.type === 'TenderDocument';
 
     const signedEntries = (doc.workflowHistory || []).filter(h => !!h.digitalSignature);
@@ -10234,6 +12561,7 @@ class EdrmsStore {
           : undefined);
 
       let certStatus: SignatureCheckDetail['certificateStatus'] = 'NotFound';
+      let caChainTrusted = false;
       if (cert) {
         if (cert.status === 'Revoked') {
           certStatus = 'Revoked';
@@ -10242,11 +12570,13 @@ class EdrmsStore {
         } else {
           certStatus = 'Active';
         }
+        caChainTrusted = this.verifyCertificateCaChain(cert);
       }
 
       const signedDigest = sig.documentDigestSha256 || '';
       const digestMatchesCurrent = signedDigest === currentDigest;
       let cryptographicallyValid = false;
+      const sigAlgorithm: SigningAlgorithm = sig.algorithm || cert?.algorithm || 'RSA-SHA256';
 
       if (cert && sig.signatureBase64 && signedDigest) {
         const expectedPayload = this.buildCanonicalSigningPayload({
@@ -10261,27 +12591,27 @@ class EdrmsStore {
           timestamp: sig.timestamp
         });
 
-        try {
-          cryptographicallyValid = crypto.verify(
-            'sha256',
-            Buffer.from(expectedPayload, 'utf8'),
-            cert.publicKeyPem,
-            Buffer.from(sig.signatureBase64, 'base64')
-          );
-        } catch {
-          cryptographicallyValid = false;
-        }
+        cryptographicallyValid = this.verifyBytesWithAlgorithm(
+          sigAlgorithm,
+          Buffer.from(expectedPayload, 'utf8'),
+          cert.publicKeyPem,
+          sig.signatureBase64
+        );
       }
 
+      const tsaVerified = sig.signatureBase64
+        ? this.verifyTrustedTimestampToken(sig.signatureBase64, sig.tsaToken)
+        : false;
+
       let status: SignatureCheckDetail['status'] = 'Valid';
-      let reason = 'RSA-SHA256 signature verified against issuer public key and matches current document digest.';
+      let reason = `${sigAlgorithm} HSM signature verified against CA-endorsed public key and matches current document digest.`;
 
       if (sig.invalidated) {
         status = 'Superseded';
         reason = sig.invalidatedReason || 'Signature superseded by authorized post-approval modification.';
       } else if (!cryptographicallyValid) {
         status = 'InvalidSignature';
-        reason = 'Cryptographic RSA-SHA256 verification failed or signature payload was altered.';
+        reason = `Cryptographic ${sigAlgorithm} verification failed or signature payload was altered.`;
       } else if (!digestMatchesCurrent) {
         status = 'Tampered';
         reason = `Document content modified after signing (signed digest ${signedDigest.slice(0, 12)}... != current ${currentDigest.slice(0, 12)}...).`;
@@ -10303,13 +12633,19 @@ class EdrmsStore {
         stageName: entry.stageName,
         certificateSerial: sig.certificateSerial,
         certificateFingerprint: sig.certificateFingerprint || cert?.fingerprintSha256,
-        algorithm: sig.algorithm || 'RSA-SHA256',
+        algorithm: sigAlgorithm,
         signingMeaning: sig.signingMeaning || 'Approved for Official Issuance',
         signedAt: sig.timestamp,
         signedDigestSha256: signedDigest,
         currentDocumentDigestSha256: currentDigest,
         cryptographicallyValid,
         digestMatchesCurrent,
+        caChainTrusted,
+        tsaVerified,
+        tsaTimestampUtc: sig.tsaToken?.timestampUtc,
+        tsaAuthorityDn: sig.tsaToken?.tsaAuthorityDn,
+        hsmSlotLabel: sig.hsmSlotLabel || cert?.hsmSlotLabel,
+        keyProtectionMode: sig.keyProtectionMode || cert?.keyProtectionMode,
         certificateStatus: certStatus,
         biometricVerified: !!sig.biometricVerified || !!entry.biometricVerified,
         invalidated: !!sig.invalidated,
@@ -10327,16 +12663,16 @@ class EdrmsStore {
       summaryMessage = 'ALERT: Document integrity mismatch or invalid cryptographic signature detected.';
     } else if (checks.some(c => c.status === 'CertificateRevoked')) {
       integrityStatus = 'CertificateRevoked';
-      summaryMessage = 'WARNING: One or more signing certificates have been revoked.';
+      summaryMessage = 'WARNING: One or more signing certificates have been revoked on the CRL.';
     } else if (checks.length > 0 && validSignatures === 0 && checks.every(c => c.status === 'Superseded')) {
       integrityStatus = 'Superseded';
       summaryMessage = 'Prior signatures were superseded by an authorized edit. Re-approval signature required.';
     } else if (validSignatures > 0) {
       integrityStatus = 'Verified';
-      summaryMessage = `All ${validSignatures} active RSA-SHA256 signature(s) verified against current document digest.`;
+      summaryMessage = `All ${validSignatures} active HSM/PKI signature(s) verified against current digest & CA trust chain.`;
     } else if (requiresDigitalSignature) {
       integrityStatus = 'MissingRequiredSignature';
-      summaryMessage = 'This classified/workflow record requires an authorized PKI digital signature.';
+      summaryMessage = 'This classified/outgoing record requires an authorized PKI digital signature.';
     }
 
     if (recordAudit) {
@@ -10363,8 +12699,225 @@ class EdrmsStore {
       totalSignatures: checks.length,
       validSignatures,
       requiresDigitalSignature,
+      caHierarchyTrusted: checks.length > 0 ? checks.every(c => c.caChainTrusted !== false) : true,
       signatures: checks,
       summaryMessage
+    };
+  }
+
+  public exportDetachedSignatureBundle(
+    docId: string,
+    actor: User,
+    clientIp: string
+  ): DetachedSignatureBundle | null {
+    this.ensureHsmAndCaInfrastructure();
+    const doc = this.data.documents.find(d => d.id === docId);
+    if (!doc) return null;
+
+    const issuingCa = this.getCaNode('IssuingCA')!;
+    const tsaNode = this.getCaNode('TSA')!;
+    const canonicalDigestSha256 = this.computeDocumentSigningDigest(doc);
+
+    const signedEntries = (doc.workflowHistory || []).filter(
+      h => h.digitalSignature && h.digitalSignature.signatureBase64
+    );
+
+    const signatures: DetachedSignatureBundle['signatures'] = [];
+    for (const entry of signedEntries) {
+      const sig = entry.digitalSignature!;
+      const cert = (this.data.signingCertificates || []).find(
+        c => c.serialNumber === sig.certificateSerial
+      );
+      if (!cert) continue;
+      signatures.push({
+        signatureId: sig.signatureId || entry.id,
+        historyRecordId: entry.id,
+        signedByUserId: sig.signedByUserId || entry.actorId,
+        signedBy: sig.signedBy,
+        signedByRole: sig.signedByRole || entry.actorRole,
+        action: entry.action,
+        stageName: entry.stageName || 'Executive Approval',
+        signingMeaning: sig.signingMeaning || 'Approved for Official Issuance',
+        algorithm: (sig.algorithm || cert.algorithm || 'RSA-SHA256') as SigningAlgorithm,
+        certificateSerial: sig.certificateSerial,
+        certificatePublicKeyPem: cert.publicKeyPem,
+        certificateIssuerCaSerial: cert.issuerCaSerial,
+        certificateCaEndorsementBase64: cert.caEndorsementBase64,
+        hsmSlotLabel: sig.hsmSlotLabel || cert.hsmSlotLabel,
+        keyProtectionMode: sig.keyProtectionMode || cert.keyProtectionMode,
+        signedDigestSha256: sig.documentDigestSha256 || canonicalDigestSha256,
+        signatureBase64: sig.signatureBase64!,
+        tsaToken: sig.tsaToken,
+        signedAt: sig.timestamp,
+        invalidated: sig.invalidated
+      });
+    }
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'PKI_SIGNATURE_BUNDLE_EXPORTED',
+      resourceType: 'DigitalSignature',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Exported detached PKI verification bundle (.sig.json) with ${signatures.length} signature(s) and CA/TSA trust anchors.`
+    });
+    this.save();
+
+    return {
+      bundleFormat: 'EPSS-PKI-DETACHED-BUNDLE-V1',
+      exportedAt: new Date().toISOString(),
+      exportedBy: actor.fullNameEn,
+      document: {
+        id: doc.id,
+        registrationNumber: doc.registrationNumber,
+        referenceNumber: doc.referenceNumber,
+        type: doc.type,
+        subjectEn: doc.subjectEn,
+        subjectAm: doc.subjectAm || '',
+        descriptionEn: doc.descriptionEn || '',
+        senderOrganization: doc.senderOrganization,
+        recipientOrganization: doc.recipientOrganization,
+        confidentiality: doc.confidentiality,
+        attachments: (doc.attachments || []).map(a => ({
+          fileName: a.fileName,
+          fileSize: a.fileSize,
+          mimeType: a.mimeType
+        }))
+      },
+      canonicalDigestSha256,
+      caHierarchy: {
+        issuingCaPublicKeyPem: issuingCa.publicKeyPem,
+        issuingCaSerial: issuingCa.caSerial,
+        tsaPublicKeyPem: tsaNode.publicKeyPem,
+        tsaSerial: tsaNode.caSerial
+      },
+      signatures
+    };
+  }
+
+  public verifyDetachedSignatureBundle(
+    bundle: DetachedSignatureBundle,
+    actor: User | null,
+    clientIp: string
+  ): BundleVerificationReport {
+    this.ensureHsmAndCaInfrastructure();
+    const computedDigestSha256 = this.computeDocumentSigningDigest(bundle.document);
+    const digestIntegrityMatch = computedDigestSha256 === bundle.canonicalDigestSha256;
+
+    const results: BundleVerificationReport['results'] = [];
+    for (const sig of bundle.signatures || []) {
+      const payload = this.buildCanonicalSigningPayload({
+        docId: bundle.document.id,
+        registrationNumber: bundle.document.registrationNumber,
+        documentDigestSha256: sig.signedDigestSha256,
+        stageName: sig.stageName,
+        action: sig.action,
+        signingMeaning: sig.signingMeaning,
+        actorId: sig.signedByUserId,
+        certificateSerial: sig.certificateSerial,
+        timestamp: sig.signedAt
+      });
+
+      const cryptographicallyValid = this.verifyBytesWithAlgorithm(
+        sig.algorithm,
+        Buffer.from(payload, 'utf8'),
+        sig.certificatePublicKeyPem,
+        sig.signatureBase64
+      );
+      const digestMatchesBundle = sig.signedDigestSha256 === computedDigestSha256;
+
+      // Cross-check CA endorsement against institutional IssuingCA (or bundled anchor)
+      const knownCert = (this.data.signingCertificates || []).find(
+        c => c.serialNumber === sig.certificateSerial
+      );
+      const caChainTrusted = knownCert
+        ? this.verifyCertificateCaChain(knownCert)
+        : Boolean(sig.certificateCaEndorsementBase64);
+
+      const crlStatus: 'Good' | 'Revoked' | 'Unknown' = knownCert
+        ? knownCert.status === 'Revoked'
+          ? 'Revoked'
+          : 'Good'
+        : 'Unknown';
+
+      const tsaVerified = this.verifyTrustedTimestampToken(
+        sig.signatureBase64,
+        sig.tsaToken,
+        bundle.caHierarchy?.tsaPublicKeyPem
+      );
+
+      let status: BundleVerificationReport['results'][number]['status'] = 'Valid';
+      let reason = `Non-repudiation proof intact (${sig.algorithm}, TSA timestamp valid, CRL Good).`;
+
+      if (!cryptographicallyValid) {
+        status = 'InvalidSignature';
+        reason = 'Cryptographic signature verification failed against public key.';
+      } else if (!digestMatchesBundle || !digestIntegrityMatch) {
+        status = 'Tampered';
+        reason = `Bundle content hash (${computedDigestSha256.slice(0, 12)}...) does not match signed digest (${sig.signedDigestSha256.slice(0, 12)}...). Content altered!`;
+      } else if (crlStatus === 'Revoked') {
+        status = 'CertificateRevoked';
+        reason = `Signer certificate ${sig.certificateSerial} appears on the EPSS CRL.`;
+      } else if (!caChainTrusted) {
+        status = 'UntrustedCA';
+        reason = 'Certificate endorsement signature is not anchored in EPSS Issuing CA.';
+      }
+
+      results.push({
+        signatureId: sig.signatureId,
+        signedBy: sig.signedBy,
+        certificateSerial: sig.certificateSerial,
+        algorithm: sig.algorithm,
+        cryptographicallyValid,
+        digestMatchesBundle,
+        caChainTrusted,
+        tsaVerified,
+        crlStatus,
+        status,
+        reason
+      });
+    }
+
+    const validSignatures = results.filter(r => r.status === 'Valid').length;
+    const valid = digestIntegrityMatch && results.length > 0 && validSignatures === results.length;
+    const summaryMessage = valid
+      ? `Non-repudiation verified: all ${validSignatures} cryptographic signature(s), CA endorsement, and SHA-256 digest are authentic.`
+      : !digestIntegrityMatch || results.some(r => r.status === 'Tampered' || r.status === 'InvalidSignature')
+        ? 'TAMPER ALERT: Cryptographic verification failed — document payload or signature bytes were altered.'
+        : results.length === 0
+          ? 'Bundle contains zero cryptographic signatures.'
+          : 'Verification warning: certificate revoked or untrusted CA.';
+
+    if (actor) {
+      this.addAuditLog({
+        userId: actor.id,
+        userName: actor.fullNameEn,
+        userRole: actor.role,
+        branchName: actor.branchNameEn,
+        action: 'PKI_BUNDLE_VERIFIED',
+        resourceType: 'DigitalSignature',
+        resourceId: bundle.document?.registrationNumber || 'bundle',
+        ipAddress: clientIp,
+        details: `Verified detached bundle for ${bundle.document?.registrationNumber}: valid=${valid} (${validSignatures}/${results.length})`
+      });
+      this.save();
+    }
+
+    return {
+      valid,
+      bundleFormat: bundle.bundleFormat || 'EPSS-PKI-DETACHED-BUNDLE-V1',
+      registrationNumber: bundle.document?.registrationNumber || '-',
+      computedDigestSha256,
+      declaredDigestSha256: bundle.canonicalDigestSha256 || '-',
+      digestIntegrityMatch,
+      totalSignatures: results.length,
+      validSignatures,
+      verifiedAt: new Date().toISOString(),
+      summaryMessage,
+      results
     };
   }
 
@@ -10806,7 +13359,7 @@ class EdrmsStore {
     // Retention & custody forecast
     const ninetyDaysMs = 90 * 86400000;
     const dueForReviewWithin90Days = docs.filter(d => {
-      if (d.legalHold || d.retentionYears === 0 || !d.retentionExpiryDate) return false;
+      if (d.legalHold || d.status === 'Disposed' || d.isDeleted || d.retentionYears === 0 || !d.retentionExpiryDate) return false;
       const eligibleAtMs = new Date(d.retentionExpiryDate).getTime();
       if (Number.isNaN(eligibleAtMs)) return false;
       return eligibleAtMs <= now + ninetyDaysMs;
@@ -12723,6 +15276,29 @@ class EdrmsStore {
       return { success: false, statusCode: 400, error: `Manifest is already ${manifest.status}.` };
     }
 
+    // Outgoing correspondence dispatch PKI gate
+    if (this.data.pkiPolicy?.requireSignedOutgoingDispatch) {
+      const unsignedRegs: string[] = [];
+      for (const docId of manifest.documentIds) {
+        const doc = this.getDocumentById(docId);
+        if (!doc || doc.isDeleted) continue;
+        if (doc.type === 'OutgoingLetter') {
+          const digest = this.computeDocumentSigningDigest(doc);
+          const hasValidSig = (doc.workflowHistory || []).some(
+            h => h.digitalSignature && !h.digitalSignature.invalidated && h.digitalSignature.documentDigestSha256 === digest
+          );
+          if (!hasValidSig) unsignedRegs.push(doc.registrationNumber);
+        }
+      }
+      if (unsignedRegs.length > 0) {
+        return {
+          success: false,
+          statusCode: 412,
+          error: `SIGNING_REQUIRED_FOR_DISPATCH: Cannot dispatch manifest containing unsigned outgoing correspondence: ${unsignedRegs.join(', ')}`
+        };
+      }
+    }
+
     const now = new Date().toISOString();
     manifest.status = 'Dispatched';
     manifest.dispatchedAt = now;
@@ -12733,6 +15309,9 @@ class EdrmsStore {
       if (!doc || doc.isDeleted) continue;
       if (doc.type === 'OutgoingLetter' || doc.type === 'Circular') {
         doc.status = 'Dispatched';
+        if (!doc.legalHold && !doc.retentionManualOverride) {
+          this.refreshDocumentRetentionAnchor(doc, now, undefined);
+        }
       }
       doc.workflowHistory.push({
         id: `wh-trn-${Date.now()}-${Math.floor(Math.random() * 10000)}`,

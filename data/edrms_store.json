@@ -379,7 +379,8 @@
       "mfaPinHash": "343ed67960ed404160461309b6d14558:f0f396abb375c771d4f5e90408ba6b83c2bb8710f69b9a812185e83377db3bd9",
       "failedLoginAttempts": 0,
       "lockedUntil": null,
-      "lastLoginAt": "2026-11-14T15:11:18.553Z"
+      "lastLoginAt": "2026-11-18T21:38:16.787Z",
+      "nextAllowedLoginAt": null
     },
     {
       "id": "usr-dg",
@@ -681,7 +682,12 @@
       "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
       "ocrTextEn": "WHO Direct Shipment Notification for Polio Vaccines.  Reference REF-1883 from World Health Organization (WHO) to EPSS.",
       "ocrTextAm": "የዓለም ጤና ድርጅት የፖሊዮ ክትባቶች ቀጥታ ጭነት ማሳወቂያ.  የማጣቀሻ ቁጥር REF-1883 ከWorld Health Organization (WHO)።",
-      "contentHash": "78aec8d98be92926b91cfc9c97c5f00ed35bab8291ff5fdc1c4b1aa806e414be"
+      "contentHash": "78aec8d98be92926b91cfc9c97c5f00ed35bab8291ff5fdc1c4b1aa806e414be",
+      "regulatoryCategory": "PharmaceuticalQuality",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2026-11-08T17:30:28.173Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Regulatory Drug Clearance & EFDA Certifications\" (Ethiopian Food and Drug Authority Proclamation No. 1112/2019).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-001",
@@ -776,7 +782,12 @@
       "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
       "ocrTextEn": "Batch Clearance Certificate for Pediatric Antibiotics & Essential Oncology Medications. Official batch release and laboratory safety clearance for 45,000 vials of Amoxicillin and Cisplatin arrived at Bole International Airport customs terminal. Reference EFDA/04/1892/2026 from Ethiopian Food and Drug Authority (EFDA) to EPSS - Quality Assurance & Regulatory Directorate.",
       "ocrTextAm": "ለህፃናት አንቲባዮቲክስ እና ለአስፈላጊ የካንሰር ህክምና መድኃኒቶች የጥራት ማረጋገጫ የምስክር ወረቀት. በቦሌ ዓለም አቀፍ አውሮፕላን ማረፊያ ለደረሱ 45,000 የህፃናት አሞክሲሲሊን እና ሲስፕላቲን መድኃኒቶች የተሰጠ የላቦራቶሪ ምርመራ እና የጥራት ፈቃድ። የማጣቀሻ ቁጥር EFDA/04/1892/2026 ከEthiopian Food and Drug Authority (EFDA)።",
-      "contentHash": "d6bd98e9da80163af7a09cdbbc41f8dd84fc8588d7ccf961f9e1545e294bf7d1"
+      "contentHash": "d6bd98e9da80163af7a09cdbbc41f8dd84fc8588d7ccf961f9e1545e294bf7d1",
+      "regulatoryCategory": "PharmaceuticalQuality",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2026-11-04T09:15:00Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Regulatory Drug Clearance & EFDA Certifications\" (Ethiopian Food and Drug Authority Proclamation No. 1112/2019).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-002",
@@ -871,7 +882,12 @@
       "retentionCategory": "Regulatory Drug Clearance & EFDA Certifications",
       "ocrTextEn": "Urgent Allocation Request: Cholera Response & IV Fluid Kits for Somali and Afar Hubs. Ministry of Health national disaster coordination desk requests immediate dispatch of 200,000 Ringer Lactate bags and water purification tablets to Semera and Jijiga hubs. Reference MoH/EMERG/889/26 from Federal Ministry of Health (MoH) to EPSS - Office of the Director General.",
       "ocrTextAm": "አስቸኳይ የመድኃኒት ጥያቄ፦ ለሶማሌ እና አፋር ቅርንጫፎች የኮሌራ መከላከያና የደም ሥር ፈሳሾች ድልድል. የጤና ሚኒስቴር የአደጋ መከላከል አስተባባሪ ዴስክ 200,000 ሪንገር ላክቴት እና የውሃ ማከሚያ ኬሚካሎች በአስቸኳይ ለሰመራ እና ጅጅጋ ቅርንጫፎች እንዲላኩ ያቀረበው መመሪያ። የማጣቀሻ ቁጥር MoH/EMERG/889/26 ከFederal Ministry of Health (MoH)።",
-      "contentHash": "a1ec553bbf85ae65575663578868f5d072b30b86fd1150a57d7f6bb840730e97"
+      "contentHash": "a1ec553bbf85ae65575663578868f5d072b30b86fd1150a57d7f6bb840730e97",
+      "regulatoryCategory": "PharmaceuticalQuality",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2026-11-05T10:25:00Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Regulatory Drug Clearance & EFDA Certifications\" (Ethiopian Food and Drug Authority Proclamation No. 1112/2019).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-003",
@@ -974,7 +990,12 @@
       "retentionCategory": "International Pharmaceutical Procurement Contracts",
       "ocrTextEn": "Award Notification & Contract Finalization: Global Pharmaceutical Supply Tender No. ICB/EPSS/08/2026. Formal award letter addressed to international pre-qualified manufacturers for the delivery of essential maternal health and diabetes insulin consignments. Reference EPSS/PROC/INTL/904/26 from Ethiopian Pharmaceutical Supply Service (EPSS) to Pre-qualified Global Pharmaceutical Consortium (Geneva / Mumbai).",
       "ocrTextAm": "የጨረታ አሸናፊነት ማሳወቂያ እና የውል ፊርማ ጥሪ፦ ዓለም አቀፍ መድኃኒት አቅርቦት ግዥ ቁጥር ICB/EPSS/08/2026. ለእናቶች ጤና እና ለስኳር ህመም የኢንሱሊን መድኃኒቶች አቅርቦት ላሸነፉ ዓለም አቀፍ አምራች ኩባንያዎች የተላከ ይፋዊ የውል ፊርማ እና የጨረታ ውጤት ማሳወቂያ። የማጣቀሻ ቁጥር EPSS/PROC/INTL/904/26 ከEthiopian Pharmaceutical Supply Service (EPSS)።",
-      "contentHash": "87b73e140cb57cf92adba07c46c195bad6ab31a605a3860be3649f7a3aa040ec"
+      "contentHash": "87b73e140cb57cf92adba07c46c195bad6ab31a605a3860be3649f7a3aa040ec",
+      "regulatoryCategory": "ProcurementTender",
+      "retentionTriggerEvent": "CompletionDate",
+      "retentionTriggerDate": "2026-11-03T16:00:00Z",
+      "retentionClassificationReason": "Assigned explicitly to \"International Pharmaceutical Procurement Contracts\" (Ethiopian Public Procurement & Property Authority Directive No. 42/2011).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-004",
@@ -1068,7 +1089,12 @@
       "legalHoldAppliedAt": "2026-11-01T08:30:00Z",
       "ocrTextEn": "Executive Directive: Nationwide Implementation of EDRMS and Deprecation of Unsigned Paper Correspondence. All 19 regional branch hubs and central directorates are mandated to execute correspondence intake, approval, and physical movement logging exclusively via the new EPSS EDRMS. Reference EPSS/DG/DIR/2026/014 from EPSS - Office of the Director General to All 19 Regional Branch Managers & Directorate Heads.",
       "ocrTextAm": "የአመራር መመሪያ፦ የሰነድና መዛግብት ኤሌክትሮኒክስ ሥርዓት (EDRMS) አጠቃቀም እና ያልተፈቀዱ የወረቀት ዝውውሮችን ማቆም. ሁሉም 19 የክልል ቅርንጫፍ ማዕከላት እና የማዕከላዊ ዳይሬክቶሬቶች የደብዳቤ መቀበል፣ ማጽደቅ እና የአካላዊ ሰነድ ዝውውርን በአዲሱ የኢ.መ.አ.አ የኤሌክትሮኒክስ ሥርዓት ብቻ እንዲያከናውኑ የሚያዝ መመሪያ። የማጣቀሻ ቁጥር EPSS/DG/DIR/2026/014 ከEPSS - Office of the Director General።",
-      "contentHash": "503a7761259f0f348fb8492d4951741fe948163b2b7cf8dce1ccaea953b5404c"
+      "contentHash": "503a7761259f0f348fb8492d4951741fe948163b2b7cf8dce1ccaea953b5404c",
+      "regulatoryCategory": "GeneralAdministrative",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2026-11-01T08:30:00Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Internal Administrative Circulars & Meeting Minutes\" (National Archives and Library Agency (NALA) Record Schedule).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-005",
@@ -1147,7 +1173,12 @@
       "legalHoldAppliedAt": "2026-11-06T11:45:00Z",
       "ocrTextEn": "Application for Annual Good Distribution Practice (GDP) Warehouse Inspection & Re-Certification. Cadila Pharmaceuticals Ethiopia PLC submits pre-audit compliance checklist and fee payment receipt for renewal of central pharmaceutical storage clearance. Reference APP/CADILA/ETH/2026/08 from Cadila Pharmaceuticals Ethiopia PLC to EPSS - Quality Assurance & Inspection Directorate.",
       "ocrTextAm": "የዓመታዊ የመልካም መድኃኒት ስርጭት ልምድ (GDP) የመጋዘን ፍተሻ እና የምስክር ወረቀት ዕድሳት ማመልከቻ. ካዲላ ፋርማሲዩቲካልስ ኢትዮጵያ ኃ.የተ.የግ.ማህበር ለማዕከላዊ መድኃኒት ማከማቻ ፍተሻ እና የፍቃድ ዕድሳት ያቀረበው ማመልከቻና የክፍያ ማረጋገጫ። የማጣቀሻ ቁጥር APP/CADILA/ETH/2026/08 ከCadila Pharmaceuticals Ethiopia PLC።",
-      "contentHash": "8d61b9cec1f7e567e76473d768ccd59da0b904574adb7dd6180eea2ad37e3207"
+      "contentHash": "8d61b9cec1f7e567e76473d768ccd59da0b904574adb7dd6180eea2ad37e3207",
+      "regulatoryCategory": "FinancialAudit",
+      "retentionTriggerEvent": "FiscalYearEnd",
+      "retentionTriggerDate": "2027-07-07T23:59:59.000Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Regional Hub Consignment Waybills and Goods Received Vouchers\" (Ministry of Finance Financial Administration Directive).",
+      "retentionConfidence": 1
     },
     {
       "id": "doc-arch-mature",
@@ -1195,7 +1226,119 @@
       "legalHold": false,
       "ocrTextEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020). Archived 2020 administrative circular whose mandatory 5-year NALA retention period matured in March 2025. Reference ADM-2020-044 from EPSS Corporate Services Directorate to All Regional Hubs.",
       "ocrTextAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ.  የማጣቀሻ ቁጥር ADM-2020-044 ከEPSS Corporate Services Directorate።",
-      "contentHash": "cdc2fe5ae6171850b7d4610845b29d71b113c5699b2af1b42d3305416cb8f2d3"
+      "contentHash": "cdc2fe5ae6171850b7d4610845b29d71b113c5699b2af1b42d3305416cb8f2d3",
+      "regulatoryCategory": "GeneralAdministrative",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2020-03-15T09:00:00.000Z",
+      "retentionClassificationReason": "Assigned explicitly to \"Internal Administrative Circulars & Meeting Minutes\" (National Archives and Library Agency (NALA) Record Schedule).",
+      "retentionConfidence": 1
+    },
+    {
+      "id": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042",
+      "referenceNumber": "ADM-2021-118",
+      "type": "InternalMemo",
+      "subjectEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive)",
+      "subjectAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ",
+      "descriptionEn": "Administrative facility circular scheduled to reach NALA 5-year disposition maturity within 18 days.",
+      "senderOrganization": "EPSS Facilities & Fleet Administration",
+      "recipientOrganization": "Head Office Security Desk",
+      "receivedDate": "2021-12-06T21:45:23.158Z",
+      "registrationDate": "2021-12-06T21:45:23.158Z",
+      "priority": "Normal",
+      "confidentiality": "Internal",
+      "status": "Archived",
+      "branchId": "br-hq",
+      "departmentId": "dept-reg",
+      "assignedDepartmentName": "Central Records & Registry Division",
+      "attachments": [],
+      "workflowHistory": [
+        {
+          "id": "wf-crit30-seed",
+          "timestamp": "2021-12-06T21:45:23.158Z",
+          "actorId": "usr-reg",
+          "actorName": "Selamawit Bekele",
+          "actorRole": "RegistryOfficer",
+          "action": "Archived",
+          "comments": "Routine administrative schedule logged for 5-year retention."
+        }
+      ],
+      "tags": [
+        "Administrative",
+        "Circular",
+        "Reception"
+      ],
+      "isArchived": true,
+      "archivedAt": "2021-12-06T21:45:23.158Z",
+      "archivedBy": "Selamawit Bekele",
+      "archiveLocationPath": "Block B - Central Registry → Room 101 (Historical Archive) → BOX-ADM-2021",
+      "retentionScheduleId": "ret-04",
+      "retentionCategory": "Internal Administrative Circulars & Meeting Minutes",
+      "regulatoryCategory": "GeneralAdministrative",
+      "retentionTriggerEvent": "RegistrationDate",
+      "retentionTriggerDate": "2021-12-06T21:45:23.158Z",
+      "retentionYears": 5,
+      "retentionExpiryDate": "2026-12-06T21:45:23.158Z",
+      "retentionClassificationReason": "Auto-classified via Regulatory Category: GeneralAdministrative + Metadata Keywords (notice, reception, administrative).",
+      "retentionConfidence": 0.93,
+      "legalHold": false,
+      "ocrTextEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive). Administrative facility circular scheduled to reach NALA 5-year disposition maturity within 18 days. Reference ADM-2021-118 from EPSS Facilities & Fleet Administration to Head Office Security Desk.",
+      "ocrTextAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ.  የማጣቀሻ ቁጥር ADM-2021-118 ከEPSS Facilities & Fleet Administration።",
+      "contentHash": "2cb480c429fce239d08b18010cf08a61700a8c129da387eeb081c6503c780722"
+    },
+    {
+      "id": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119",
+      "referenceNumber": "FIN-GRN-2019-702",
+      "type": "Application",
+      "subjectEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet",
+      "subjectAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል",
+      "descriptionEn": "Regional consignment voucher batch anchored on Ethiopian Fiscal Year End approaching 7-year Ministry of Finance retention maturity.",
+      "senderOrganization": "Adama Branch Hub Warehouse",
+      "recipientOrganization": "EPSS Finance & Treasury Directorate",
+      "receivedDate": "2019-12-01T21:45:23.158Z",
+      "registrationDate": "2019-12-01T21:45:23.158Z",
+      "priority": "Normal",
+      "confidentiality": "Internal",
+      "status": "Archived",
+      "branchId": "br-02",
+      "departmentId": "dept-fin",
+      "assignedDepartmentName": "Finance & Treasury Directorate",
+      "attachments": [],
+      "workflowHistory": [
+        {
+          "id": "wf-soon90-seed",
+          "timestamp": "2019-12-01T21:45:23.158Z",
+          "actorId": "usr-reg",
+          "actorName": "Selamawit Bekele",
+          "actorRole": "RegistryOfficer",
+          "action": "Archived",
+          "comments": "Post-OFAG reconciliation archive anchored on Fiscal Year End."
+        }
+      ],
+      "tags": [
+        "Waybill",
+        "Voucher",
+        "Audit",
+        "Adama"
+      ],
+      "isArchived": true,
+      "archivedAt": "2020-01-15T21:45:23.158Z",
+      "archivedBy": "Selamawit Bekele",
+      "archiveLocationPath": "Adama Hub Archive → Vault B → BOX-FIN-2019",
+      "retentionScheduleId": "ret-03",
+      "retentionCategory": "Regional Hub Consignment Waybills and Goods Received Vouchers",
+      "regulatoryCategory": "FinancialAudit",
+      "retentionTriggerEvent": "FiscalYearEnd",
+      "retentionTriggerDate": "2020-01-15T21:45:23.158Z",
+      "retentionYears": 7,
+      "retentionExpiryDate": "2027-01-15T21:45:23.158Z",
+      "retentionClassificationReason": "Auto-classified via Regulatory Category: FinancialAudit + Metadata Keywords (waybill, voucher, consignment) + Document Type: Application.",
+      "retentionConfidence": 0.95,
+      "legalHold": false,
+      "ocrTextEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet. Regional consignment voucher batch anchored on Ethiopian Fiscal Year End approaching 7-year Ministry of Finance retention maturity. Reference FIN-GRN-2019-702 from Adama Branch Hub Warehouse to EPSS Finance & Treasury Directorate.",
+      "ocrTextAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል.  የማጣቀሻ ቁጥር FIN-GRN-2019-702 ከAdama Branch Hub Warehouse።",
+      "contentHash": "e42da0902278aac9f7e4a590e1f35697b89cbafe0deb8149a71eea49222c8636"
     }
   ],
   "retentionSchedules": [
@@ -1210,7 +1353,27 @@
       "documentTypes": [
         "OutgoingLetter",
         "TenderDocument"
-      ]
+      ],
+      "regulatoryCategory": "ProcurementTender",
+      "confidentialityLevels": [
+        "Internal",
+        "Confidential",
+        "Secret"
+      ],
+      "keywordPatterns": [
+        "tender",
+        "bid",
+        "procurement",
+        "contract",
+        "framework agreement",
+        "rfp",
+        "supplier",
+        "incoterms",
+        "award"
+      ],
+      "retentionTriggerEvent": "CompletionDate",
+      "priority": 85,
+      "alertLeadDays": 90
     },
     {
       "id": "ret-02",
@@ -1223,7 +1386,29 @@
       "documentTypes": [
         "IncomingLetter",
         "InspectionReport"
-      ]
+      ],
+      "regulatoryCategory": "PharmaceuticalQuality",
+      "confidentialityLevels": [
+        "Internal",
+        "Confidential",
+        "Secret"
+      ],
+      "keywordPatterns": [
+        "efda",
+        "batch",
+        "pharmacovigilance",
+        "cold chain",
+        "cold-chain",
+        "oncology",
+        "vaccine",
+        "recall",
+        "antibiotic",
+        "stability",
+        "gmp"
+      ],
+      "retentionTriggerEvent": "RegistrationDate",
+      "priority": 90,
+      "alertLeadDays": 90
     },
     {
       "id": "ret-03",
@@ -1235,7 +1420,28 @@
       "isActive": true,
       "documentTypes": [
         "Application"
-      ]
+      ],
+      "regulatoryCategory": "FinancialAudit",
+      "confidentialityLevels": [
+        "Internal",
+        "Confidential"
+      ],
+      "keywordPatterns": [
+        "waybill",
+        "voucher",
+        "grn",
+        "invoice",
+        "audit",
+        "ofag",
+        "budget",
+        "disbursement",
+        "consignment",
+        "reconciliation",
+        "stationery"
+      ],
+      "retentionTriggerEvent": "FiscalYearEnd",
+      "priority": 75,
+      "alertLeadDays": 90
     },
     {
       "id": "ret-04",
@@ -1248,7 +1454,25 @@
       "documentTypes": [
         "InternalMemo",
         "Circular"
-      ]
+      ],
+      "regulatoryCategory": "GeneralAdministrative",
+      "confidentialityLevels": [
+        "Public",
+        "Internal"
+      ],
+      "keywordPatterns": [
+        "circular",
+        "minute",
+        "fleet",
+        "fuel",
+        "administrative",
+        "reception",
+        "notice",
+        "gate pass"
+      ],
+      "retentionTriggerEvent": "RegistrationDate",
+      "priority": 50,
+      "alertLeadDays": 60
     },
     {
       "id": "ret-perm-00",
@@ -1261,7 +1485,54 @@
         "Circular"
       ],
       "isActive": true,
-      "createdAt": "2026-11-13T06:58:27.695Z"
+      "createdAt": "2026-11-13T06:58:27.695Z",
+      "regulatoryCategory": "ExecutiveGovernance",
+      "confidentialityLevels": [
+        "Confidential",
+        "Secret"
+      ],
+      "keywordPatterns": [
+        "charter",
+        "proclamation",
+        "sovereign",
+        "founding",
+        "board resolution",
+        "ministerial directive"
+      ],
+      "retentionTriggerEvent": "RegistrationDate",
+      "priority": 100,
+      "alertLeadDays": 90
+    },
+    {
+      "id": "ret-05",
+      "documentCategory": "Legal Disputes, Litigation Files & Contract Claims",
+      "regulatoryCategory": "LegalCompliance",
+      "retentionPeriodYears": 12,
+      "disposalAction": "ReviewAtMaturity",
+      "governingLegislation": "Federal Civil Procedure & Public Property Liability Statute",
+      "notes": "Retention clock commences upon final legal closure or settlement date.",
+      "documentTypes": [
+        "IncomingLetter",
+        "OutgoingLetter"
+      ],
+      "confidentialityLevels": [
+        "Confidential",
+        "Secret"
+      ],
+      "keywordPatterns": [
+        "litigation",
+        "court",
+        "subpoena",
+        "dispute",
+        "arbitration",
+        "legal",
+        "claim"
+      ],
+      "retentionTriggerEvent": "CompletionDate",
+      "priority": 95,
+      "alertLeadDays": 90,
+      "isActive": true,
+      "createdAt": "2026-11-18T21:45:23.156Z"
     }
   ],
   "handovers": [
@@ -1308,6 +1579,32 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit-1795037896787-mkr1j1",
+      "timestamp": "2026-11-18T21:38:16.787Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwmn7tjn-qdwt",
+      "ipAddress": "127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
+    {
+      "id": "audit-1795031596920-nquqdy",
+      "timestamp": "2026-11-18T19:53:16.920Z",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwmjgsjb-gnkk",
+      "ipAddress": "127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
     {
       "id": "audit-1795030209014-99n9dz",
       "timestamp": "2026-11-18T19:30:09.014Z",
@@ -2370,6 +2667,276 @@
   },
   "notifications": [
     {
+      "id": "notif-mwmngyoq-41z2",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.354Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-audit",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyol-p0q9",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.349Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-store",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyoh-3dc5",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.345Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-proc",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyod-v0as",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.341Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-reg",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyo8-s3e7",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.336Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-dg",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyo4-722e",
+      "titleEn": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/APP/2019/00119 — የማስወገጃ ቀን ሊደርስ 58 ቀናት ቀርተዋል",
+      "messageEn": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers) reached disposition review threshold (2027-01-15). Action: ReviewAtMaturity.",
+      "messageAm": "የአዳማ ቅርንጫፍ የዕቃ መረከቢያ ሰነድ እና የሂሳብ ማስታረቂያ ፋይል (Regional Hub Consignment Waybills and Goods Received Vouchers) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2027-01-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.332Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-admin",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-soon90",
+      "registrationNumber": "EPSS/APP/2019/00119"
+    },
+    {
+      "id": "notif-mwmngyo0-7i6n",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.328Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-audit",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngynw-dbgg",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.324Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-store",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngyns-syi3",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.320Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-proc",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngynn-ds0c",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.315Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-reg",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngynj-f3xl",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.311Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-dg",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngyne-2dg3",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2021/00042 — የማስወገጃ ቀን ሊደርስ 18 ቀናት ቀርተዋል",
+      "messageEn": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2026-12-06). Action: AuthorizedDestruction.",
+      "messageAm": "የ2013 ዓ.ም የዋና መሥሪያ ቤት የጥበቃና እንግዳ መቀበያ የፈረቃ መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2026-12-06) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.306Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-admin",
+      "channel": "InApp",
+      "priority": "Urgent",
+      "documentId": "doc-arch-crit30",
+      "registrationNumber": "EPSS/MEMO/2021/00042"
+    },
+    {
+      "id": "notif-mwmngyna-f2s8",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.302Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-audit",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
+      "id": "notif-mwmngyn6-etzb",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.298Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-store",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
+      "id": "notif-mwmngyn1-vk30",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.293Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-proc",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
+      "id": "notif-mwmngymw-6nfj",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.288Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-reg",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
+      "id": "notif-mwmngyms-vk21",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.284Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-dg",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
+      "id": "notif-mwmngymo-thnt",
+      "titleEn": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "titleAm": "[የማህደር ማቆያ ማንቂያ] EPSS/MEMO/2020/00018 — የማቆያ ጊዜው አልፏል (613 ቀናት)",
+      "messageEn": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached disposition review threshold (2025-03-15). Action: AuthorizedDestruction.",
+      "messageAm": "የ2012 ዓ.ም ዓመታዊ የነዳጅና የጽሕፈት መሣሪያዎች ድልድል መመሪያ (Internal Administrative Circulars & Meeting Minutes) የማስወገጃ ወይም የማህደር ግምገማ ቀን (2025-03-15) ደርሷል።",
+      "timestamp": "2026-11-18T21:45:23.280Z",
+      "type": "OverdueSLA",
+      "isRead": false,
+      "userId": "usr-admin",
+      "channel": "InApp",
+      "priority": "Critical",
+      "documentId": "doc-arch-mature",
+      "registrationNumber": "EPSS/MEMO/2020/00018"
+    },
+    {
       "id": "notif-esc-1794552284486",
       "titleEn": "Workflow SLA Escalated: EPSS/APP/2026/00013",
       "titleAm": "የሥራ ፍሰት ቀነ-ገደብ ማሳሰቢያ፡ EPSS/APP/2026/00013",
@@ -2888,6 +3455,36 @@
   },
   "sessions": [
     {
+      "id": "sess-mwmn7tjn-qdwt",
+      "token": "d65d855e247da7da17039afd0fbb562f79aa19bea1828308901eb14ef8241d62",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "createdAt": "2026-11-18T21:38:16.787Z",
+      "lastActiveAt": "2026-11-18T21:38:16.787Z",
+      "idleExpiresAt": "2026-11-18T22:08:16.787Z",
+      "expiresAt": "2026-11-19T05:38:16.787Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
+    {
+      "id": "sess-mwmjgsjb-gnkk",
+      "token": "866002e1ab2290e934388d11987f9be59d8c1cc503db9502134cf3838f46c429",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "userRole": "SuperAdmin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "createdAt": "2026-11-18T19:53:16.919Z",
+      "lastActiveAt": "2026-11-18T19:53:16.919Z",
+      "idleExpiresAt": "2026-11-18T20:23:16.919Z",
+      "expiresAt": "2026-11-19T03:53:16.919Z",
+      "mfaVerified": true,
+      "isRevoked": true
+    },
+    {
       "id": "sess-mwmin1me-4cam",
       "token": "62a202275ad86df8166e88f766bf0c7c7d3ffece63788555d92b3a1fc606f6e2",
       "userId": "usr-audit",
@@ -3264,6 +3861,54 @@
     }
   ],
   "loginHistory": [
+    {
+      "id": "lhist-1795037896787-kjio",
+      "timestamp": "2026-11-18T21:38:16.787Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1795037879262-xg0r",
+      "timestamp": "2026-11-18T21:37:59.262Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
+    {
+      "id": "lhist-1795031596920-r1av",
+      "timestamp": "2026-11-18T19:53:16.920Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1795031587800-5xx8",
+      "timestamp": "2026-11-18T19:53:07.800Z",
+      "usernameAttempted": "superadmin",
+      "userId": "usr-admin",
+      "userName": "System Security Administrator",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
     {
       "id": "lhist-1795030209014-6hqr",
       "timestamp": "2026-11-18T19:30:09.014Z",
@@ -5881,6 +6526,222 @@
   ],
   "notificationDeliveryLogs": [
     {
+      "id": "dlog-mwmngyoq-inapp",
+      "timestamp": "2026-11-18T21:45:23.354Z",
+      "notificationId": "notif-mwmngyoq-41z2",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-audit",
+      "recipientAddress": "tigist.h",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyol-inapp",
+      "timestamp": "2026-11-18T21:45:23.349Z",
+      "notificationId": "notif-mwmngyol-p0q9",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-store",
+      "recipientAddress": "hiwot.t",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyoh-inapp",
+      "timestamp": "2026-11-18T21:45:23.345Z",
+      "notificationId": "notif-mwmngyoh-3dc5",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-proc",
+      "recipientAddress": "dawit.t",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyod-inapp",
+      "timestamp": "2026-11-18T21:45:23.341Z",
+      "notificationId": "notif-mwmngyod-v0as",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-reg",
+      "recipientAddress": "selamawit.b",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyo8-inapp",
+      "timestamp": "2026-11-18T21:45:23.336Z",
+      "notificationId": "notif-mwmngyo8-s3e7",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-dg",
+      "recipientAddress": "abdulkadir.g",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyo4-inapp",
+      "timestamp": "2026-11-18T21:45:23.332Z",
+      "notificationId": "notif-mwmngyo4-722e",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-admin",
+      "recipientAddress": "superadmin",
+      "subject": "[Retention Alert] EPSS/APP/2019/00119 — APPROACHING DISPOSITION (58 DAYS)",
+      "bodyPreview": "Adama Hub Consignment Waybill & Goods Received Voucher Reconciliation Packet (Regional Hub Consignment Waybills and Goods Received Vouchers)",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyo0-inapp",
+      "timestamp": "2026-11-18T21:45:23.328Z",
+      "notificationId": "notif-mwmngyo0-7i6n",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-audit",
+      "recipientAddress": "tigist.h",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngynw-inapp",
+      "timestamp": "2026-11-18T21:45:23.324Z",
+      "notificationId": "notif-mwmngynw-dbgg",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-store",
+      "recipientAddress": "hiwot.t",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyns-inapp",
+      "timestamp": "2026-11-18T21:45:23.320Z",
+      "notificationId": "notif-mwmngyns-syi3",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-proc",
+      "recipientAddress": "dawit.t",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngynn-inapp",
+      "timestamp": "2026-11-18T21:45:23.315Z",
+      "notificationId": "notif-mwmngynn-ds0c",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-reg",
+      "recipientAddress": "selamawit.b",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngynj-inapp",
+      "timestamp": "2026-11-18T21:45:23.311Z",
+      "notificationId": "notif-mwmngynj-f3xl",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-dg",
+      "recipientAddress": "abdulkadir.g",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyne-inapp",
+      "timestamp": "2026-11-18T21:45:23.306Z",
+      "notificationId": "notif-mwmngyne-2dg3",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-admin",
+      "recipientAddress": "superadmin",
+      "subject": "[Retention Alert] EPSS/MEMO/2021/00042 — DISPOSITION DUE IN 18 DAY(S)",
+      "bodyPreview": "Central Reception & Gate Access Shift Roster Notice (2021 Archive) (Internal Administrative Circulars & Meeting Minutes) reached disposition",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyna-inapp",
+      "timestamp": "2026-11-18T21:45:23.302Z",
+      "notificationId": "notif-mwmngyna-f2s8",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-audit",
+      "recipientAddress": "tigist.h",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyn6-inapp",
+      "timestamp": "2026-11-18T21:45:23.298Z",
+      "notificationId": "notif-mwmngyn6-etzb",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-store",
+      "recipientAddress": "hiwot.t",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyn1-inapp",
+      "timestamp": "2026-11-18T21:45:23.293Z",
+      "notificationId": "notif-mwmngyn1-vk30",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-proc",
+      "recipientAddress": "dawit.t",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngymw-inapp",
+      "timestamp": "2026-11-18T21:45:23.288Z",
+      "notificationId": "notif-mwmngymw-6nfj",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-reg",
+      "recipientAddress": "selamawit.b",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngyms-inapp",
+      "timestamp": "2026-11-18T21:45:23.284Z",
+      "notificationId": "notif-mwmngyms-vk21",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-dg",
+      "recipientAddress": "abdulkadir.g",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
+      "id": "dlog-mwmngymo-inapp",
+      "timestamp": "2026-11-18T21:45:23.280Z",
+      "notificationId": "notif-mwmngymo-thnt",
+      "eventType": "OverdueSLA",
+      "channel": "InApp",
+      "recipientUserId": "usr-admin",
+      "recipientAddress": "superadmin",
+      "subject": "[Retention Alert] EPSS/MEMO/2020/00018 — MATURE & ELIGIBLE FOR DISPOSAL (613d overdue)",
+      "bodyPreview": "Annual Fleet Fuel & Routine Stationery Allocation Circular (FY 2020) (Internal Administrative Circulars & Meeting Minutes) reached dispositi",
+      "status": "Delivered"
+    },
+    {
       "id": "dlog-seed-1",
       "timestamp": "2026-11-08T08:31:00Z",
       "notificationId": "notif-1",
@@ -5956,13 +6817,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt0kznKcfrZROLjtdVaty\nvHLNSqveaWFDTnV5tof6TaXPA8d0LcuXWmD55Z0IPXGmkYgH5I8VHpwld4FDlKMj\nzHDaQAIrAPtb6Z2GmgEdEQIvnAMyH5K8TVGjbHJgcr2G58Wus3wdycJ1XpVfPWvD\ncUaaFRUa3N+queI5WUO0tDLfGh3hieFnGZ/v/dLWC0hEEYo4TFRXFflnwMpmnuxJ\nb9bK2ESwMvC2Nzf2vb67R5f5zOtCQ24q/vDoCt9NT0Syon7ZNGBkQgLe6h7q+nyx\nY3nQBD+wG8OEKbb+wBkeuFoPlbZqUL8+97WVJ4q2ggDO8aFxE4V9ySPet7m1lY2r\njwIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3STOcpx+tlE4u\nO11Vq3K8cs1Kq95pYUNOdXm2h/pNpc8Dx3Qty5daYPnlnQg9caaRiAfkjxUenCV3\ngUOUoyPMcNpAAisA+1vpnYaaAR0RAi+cAzIfkrxNUaNscmByvYbnxa6zfB3JwnVe\nlV89a8NxRpoVFRrc36q54jlZQ7S0Mt8aHeGJ4WcZn+/90tYLSEQRijhMVFcV+WfA\nymae7Elv1srYRLAy8LY3N/a9vrtHl/nM60JDbir+8OgK301PRLKiftk0YGRCAt7q\nHur6fLFjedAEP7Abw4Qptv7AGR64Wg+VtmpQvz73tZUniraCAM7xoXEThX3JI963\nubWVjauPAgMBAAECggEACcC7UaO/XUd6rR4bXNKNlxznjKIkzxtN70MnOCdeXweQ\n9b5rkbMQ+WewoUW5j9Kk20vPc7UjZnVGzxs4D+HQc75lKd1gd9U1C/M5NUFHtsVH\n6ERvqqg7UES+uyeo6mIbmoJCRhDqlHckmX694/EaI/eh4+sZrbtSUXRwVC4n072Y\n/VJNjlndDChkRYFVa9YnFGi1b/yqseSpmowzq3Yo6M+NZJAZjCWTQRdF+CBuh4ni\nmoqK9kElx5hn6y1byIeCYIEJIvEGH3T4n1oAkfrQTKwKobIcM/YeTCRVSHD1OLvp\nuubFo2ikv0rQfePkxZV5L0JGV1nHeyNxRukHc+a1zQKBgQDbfsvj+eeSYpy4I3UY\nF9E5zbPIPvGqh8bys8l8X+Tp0XiI3qp9r3pJgEBiLEB6cOWcof0N3fmsq3kVZA5G\n35d1RMnrCsLgkXg4bAb23YVEWOpXpveSukmk5cdktcn6Dj4eJjeh+ZW9/ZpbhaCm\nm/kuBYLhq5jz2lRi8cwzW2Ev7QKBgQDVxMKlW3UfL97iw7vWBErU9UEAoc+uRNID\nLXq6oNoNgzeIucfokoRk9TVx+lfv11HT4/g/MAqzbzmjCiXwxEgJi6Uz/bgvxQQQ\nOsLElP3lEt/rSKaQLEC3/o381hcVVHPlt+YLXzHF3nD0HvXthc05/i5X2RUypeJP\n05a6HmnB6wKBgEAKKZC1TAQgs1riNXq3EDtOMeL9wmKfxMLxA5s/GznA/OrqFFIh\nTYt+WMqL4LAYmlVtybgvCHaBfQ1pqOSyvazgSg1CkYMVzj6f/hQuo4BCdPTn6Rmt\nMmljBR70Dx7e4u7G9bpTaIYLJOsI/Ms/fJ8ZyorvFuwmyjIoHAzr31otAoGBANNL\n0IX397Xi8HG+vUzXI0yKOz0vtANyfQ+tBZGxardOizb3Q5UsNfdAtRo7NG6aq4RA\n4uE6UGl6OENixYvNx9K/mITidgupttF/84KyLqAd3v1G63S4eSQlVh2jVF++AW0A\nMD/vUVhe/dEfRUEJL4jyKMamiaBtfVwgLe08IJcPAoGAQMJdJYaVbV1eCwRR3pYo\neizUCgHKYh1/YQ7pjdND7bDpemOnPWJVHturhanzjK6IBmD1hsB9nmgS+FwaD9ac\nexZvw22yIvKTAyir1wQSv/10DWdRzpwbHUTUVNTJZHZ30YTgH0tmx+q8Zrhh+Hgc\nUZS+hGN/HFthuJ2zDqztZlo=\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "6A0193A1F0DAE03E044CFC7E3E558B6E8B5932AC8F8D7AF6E09D092ED99B470F",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=System Security Administrator, OU=ICT & Security Infrastructure Directorate, TITLE=SuperAdmin, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:48.662Z",
       "expiresAt": "2028-11-12T18:47:48.662Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "QNKMG7tIBWey9bu/",
+      "keyWrappingTag": "6kuRfff0PrCsdEd668Xbcw==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "kW2zqGLHDOvT4jIKMqEjxe1we5xc6+84KXZzPd7DqRyvGxKatyfSAGzsFfjSxcnCRdVjJkba5/ZhMB9vgpJc89vKnLrf6Z1ofuZE7pKzTt5K12cuO186LhE3qKrlUIMXUNDCMPzha5GJejP5hvG6sb/JQGZ7Ilxm9/Pz3TW1R5gjLEnboPnCkPuLrCnjX+HTV0MiezPm18aQmwm+Bw09jQn+JPVIPSpzxM5IuhCp8mJynF1J4dQqqQswzhvfVYf6pw9116EC2IckCRSnMUbnWO5BQuQh1X0Q8hraHbK2vItELJRG769K5a/fmZ3+EV5Hr3diUEEkEh1zo8Rm/qgeAg=="
     },
     {
       "id": "cert-1794595668691-mqm7",
@@ -5974,13 +6843,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAucWZSfzwhownYlZRmo0C\nXj5Vvht5qvppeMc2HRCF0SHW3w82HclLnESj0w/YhYMWDUI/WpqZ8kJw8X/2TjjF\nziqcc80Z8ajGJUp4SPzRbNMGVKh+6C4Cz7jGv5QSmQOioPQGTJYwxGZOT3Tci2cP\nBTClWltNF8tujFqSSTI9MbBQg3kF6rZgzvNY50/gRZlktCapS+QnDPk1nAPr9nea\nTZbPFguWXlePntkmbBhneys+qxC6wdBBq/jOiZev3HseS0sdJXC75hMWKIIBLcdk\nUDuIPhD9SKZ+IXHGQ17TfZNaoOkLIufX9jzk6+XUmRzKy2uSI/no9SYsB6eRw30L\nEwIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC5xZlJ/PCGjCdi\nVlGajQJePlW+G3mq+ml4xzYdEIXRIdbfDzYdyUucRKPTD9iFgxYNQj9ampnyQnDx\nf/ZOOMXOKpxzzRnxqMYlSnhI/NFs0wZUqH7oLgLPuMa/lBKZA6Kg9AZMljDEZk5P\ndNyLZw8FMKVaW00Xy26MWpJJMj0xsFCDeQXqtmDO81jnT+BFmWS0JqlL5CcM+TWc\nA+v2d5pNls8WC5ZeV4+e2SZsGGd7Kz6rELrB0EGr+M6Jl6/cex5LSx0lcLvmExYo\nggEtx2RQO4g+EP1Ipn4hccZDXtN9k1qg6Qsi59f2POTr5dSZHMrLa5Ij+ej1JiwH\np5HDfQsTAgMBAAECggEAHlmlEIxtc13kdVFq5ZgSAfmnInb0qrVck+nf8mGnqyIf\nK7QdgEJJww8HwMy+8BkZejMPjKrjacvnDd19DQyDbIpToyuoCG4taRxAiJQdVu0n\nBJ++lAooVW13swbq/uq0IB2eBdcnwn6AXsTV30SIFK385cUy1CddOTr22VSG4N4I\n1UgWEqzZOs4DIxp4l/pGCltUl4vdjkESE4x6RpWYGxmeYrLeVLOP07dEB+70uNLN\nUoouY9jHzYsT/s1RvyPnz5HX67QGHkEWPSbEdo2z3h7xrFBqQBSnXy+/oONho1I2\nvFRtlw573i0H7TLw0gzr2LPf4nTZdc8mqTNFPSd6GQKBgQDtepwbKoev1OnLpteJ\nDWtc7Kh1qJA4osZV4JnFLlJrhvPceDumANGooL0Ab2/nGtcrVrM555okROS4gfGj\noAFvTWixGq5eKE9fh3704A4zhu2iYWfLuXjqVFfLsqMtuKGpI0BuvpOgoAshHchN\nVC6mnFJcsAsE9uPBmAF0HkOxLwKBgQDIQqFlxXHCjv0AKJgBFhyfr4z0hQYB7BWm\nBf/UaWsmS5q2Ed0EStQM1bl0pQ3ETwd9ViV8HhxNBddLhLxwHpi+SFLC8LkX8Ujm\n5Y+AkXquSsFcu/lx0QDhJwvmg47+6VBr+QEaKy7rQ7b2dsz5/NlXq5o1/q/XzrZp\n8xTg4YfjXQKBgQCWLfSsxV+blZToojEpzd+4mz0JczkJZ/7vbiMwbFPZBjYPlcV6\n/IeaEVSVAuQMjY/HK4QaOVnkV+EgwaRzaoudvKFZZtsgVnOjoQdrionQkiKTju/a\nCQfrgL0o52aEUn+Be/aSUlj/ulZvcesq4/LAkJkRXo8Ja6yq0BsTONRsJwKBgQCj\nZYJNCJHufj6+P2DvGfyW6mTnKhahwOBVC3YW+UC9CVkdj2u3Udq88jGUlAusjhL9\nWCnToLnUupxU+OPL05srPtWQS1uqxmuGQe4ZqBniVgp5QMKh9Dd0fih+l/83zGSb\nBJu6n1t0CFcjuAE9Q+qOVuzHe5w8SGScBAOYDUyT3QKBgAoUoBdFe1fiZN1YrSDS\nYLlPMzivgNtRxb276xh+2y8viytoc+uhf7JXSYJPtqk5KXiiKfD0ARQJuPqIMBqs\nr+L8wKYGyxyk9xaoZopMFT7ogIIT1Tnc0hPLAk+opHyXF55iX5sp4p07zia01FPM\nWNhzP2anxunEepxVmKE++Lhd\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "F4128930C8E40A844930F9705118F0BF17E708F2B1264D0C08A9C30CB6217706",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Dr. Abdulkadir Gelgelo, OU=Director General Office, TITLE=DirectorGeneral, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:48.691Z",
       "expiresAt": "2028-11-12T18:47:48.691Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "yG29lX7XmrsgtBSr",
+      "keyWrappingTag": "2Dg0GvbI1Gga0gboQ9rxrg==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "k2GHKk9g9dWJE4G6p90GMvzfOPc5Egs2GCyPI3Hoch2uQ3jyweNtdOeCATPvwnn7P/djDaZjidysn8+OpYNswJaDXVQ7+7aCURq91WJ5DOS62I0F6zvoIHdlerijX6RYV0ZH5hHA9/noDYbgsipo1VqUu2pPCrb/nPpIzVd4ZBKl3QNMpCK2j3ILcmr4whXbFBBbt4VZP0K3pkozk9SmdyEZF+TQClDLjP4223y8W9u855beihsjEEHXE5+aWIasS9fHp4C93azXlTlfbB8zqEHQxUWdrav/rO2MEedFV1Fu5dvcqqtTvYtAVCbNdOq60im+nEknLSoj8hfR2Sy3Dw=="
     },
     {
       "id": "cert-1794595668836-c9mh",
@@ -5992,13 +6869,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAslSaTXtOXsZ4wMEpf1DL\nIxWyi0SVFDBM9Y7dtqoIjPjsd5jM0/TBEuHc20bmCUnwrhwUU5CgoUnL9cw+vbTB\nPKsKdmvt+JJABYBuxDYGmq5JGFE0vSC3/35kQNKooCfT9s6F9c5I4mO6waN6YwwJ\nBZonY+1xLunhYVwh3exyToVWwNHT6ptByQpJOvryAR4mD7qhjf/DEfWxNL286wjW\nggPP8bWg9aCShZ2M9W5kg9nRUnVsrgKpXSzZwsS3ZbpgKCIrQU42mMt+ANc+qXz6\nkabRb2sgHzgJ5OD81pIOEiUIW9Tc0VYCDzjSRWjiXqFRzahDREBSetvcjlUB7ntK\nnQIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCyVJpNe05exnjA\nwSl/UMsjFbKLRJUUMEz1jt22qgiM+Ox3mMzT9MES4dzbRuYJSfCuHBRTkKChScv1\nzD69tME8qwp2a+34kkAFgG7ENgaarkkYUTS9ILf/fmRA0qigJ9P2zoX1zkjiY7rB\no3pjDAkFmidj7XEu6eFhXCHd7HJOhVbA0dPqm0HJCkk6+vIBHiYPuqGN/8MR9bE0\nvbzrCNaCA8/xtaD1oJKFnYz1bmSD2dFSdWyuAqldLNnCxLdlumAoIitBTjaYy34A\n1z6pfPqRptFvayAfOAnk4PzWkg4SJQhb1NzRVgIPONJFaOJeoVHNqENEQFJ629yO\nVQHue0qdAgMBAAECggEABQLzJifHs0qlFJepFKKe3tDKiHboMJ3N393AtdQv8tRB\nAvhokzFO5rqxs/jZWJv7F02DNbj8BqRWBsWTYs3sW0ncPKk6UhC8G1t5YWq6Q0kQ\nFU6c6o67lQLGivrQkdWks4wowBhovHH8itoPA68QJtfm8Pw4gM7CTnPiIMQ3DyVM\nmVM2n3U/ys3IVWH8Sl8j2lZgxNn3e19XH+WrbQrK8bId6Zc3/q1SRS21VBVHnETp\nD8ntW7qIDzcUkPnhFM1uQo30P2qzsv4xM1qYf1JlfHMVNbasoT7FdPasszcsQ6Qw\nUEKoxt9POdqhFgkt2bs20KxarFB5aTNOlvNpFL3iiQKBgQDljCLBD/ct7/FIweaC\nzpw8kchIhUYQgOFOtFUVly6pOe2jopbjN9ZidtyrtHDaMTp/n/+payKpQUW37LDK\nRG1SAXR8ytLZeZDHI+KosiQZofbGp4DDu9FtxFnC1SNRgqPHL6m/IVuSKv4KexIR\nWSjwIZjJpNpDlH89f2Gq2gOMOQKBgQDG4YT/yZi/yA9bbKFAD98u9aB2ihCy5t3C\nRetNQxKTy1yqNm3+N16KedrEcNNT1CGMmswPaR1lyWNSneU3BGNAZqhJveYz2OBo\ndjHM6q2o1k+XBhBURKBey9NFR5wNhKKEJFqCWj02Se1MGACVeRuYAFbfPd70kfWn\nHoSxcUD5hQKBgGtgx20qi8UoZeVUFwF/puRKibcq6OCVeU/42YhVBVXSLFEMoKq/\nlwDOe2Gy8cuPlb7X2J+m5zrntrZX+UdVBRKEbbpmooVq8YfGSKQDWRHIiwjYmEp3\nlHtVi2uximj5xKVLrYskDpLsm5PJiGUnIRhbjv5cqGFOmMrqyIREob45AoGAcByR\nLOAoC3Rrs8342HQaDA7K9ge+ghtCx1FC47r7rfTlt84XE0eDM+ydNj+j4Y2jm+9n\nOQi4Wbi9FMWNgQYoLRWxqGA0dOW9GyYFzM4+Nv8YvrncWqSVAttDrbpAbh5mvrb/\njpvwBbqG2m5tZdVviLAoSJBILvZY1GyPwLdnOUECgYEAn2jMPGkP1zQ5Qwg3WhM7\nZZCBRDMFpROPWIJJf/ecULE1qQA1SYir//8TCpo4k34xMyz10SUi+GyjHyjXiBII\nbk4WjniRVkY8K/9c54ubANErEOAyGvvz1XhTmluvqqvrUtLbkdex4aiEtv2hjxrX\nEMxXQVh/QAlfLoWZ5YN4CdQ=\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "E1F092A4F214122A00AB52254C8206D05ADD17CA59D1D40B6300919D13AA536C",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Selamawit Bekele, OU=Central Registry, Documentation & Archive, TITLE=RegistryOfficer, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:48.836Z",
       "expiresAt": "2028-11-12T18:47:48.836Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "E8bh79k1K59KPxrf",
+      "keyWrappingTag": "SxFwSiE4EDNrSwzCTw9iqw==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "ZlJNufNGvegZImwx8wR9sQ97cJRPvRLrlGT7TBFAYLCq1/PjoDLfoB+QzHxDkUZTrBsKc0Wp/T/na+veNt7EAy60i2eZnre1hP8OGNRvVDlDOFEUaeTtraphsz+CmEsyEthNJ1uSeGG2uOCClVNUcz75D6SxC2iktXTavYMYBdA/uuzFFfbnNUbnddTNo4s4FguAeW8qL7SFK2yKEubfcIDDpTGXuKtrGZGPl2mp1r5EKX9Bcpl11Fv/CUFJGsNSYVmuT/XAdUtPLy8JmOXQO1O5zPNWnd9JLIxc4+h2ld6vjw+1UNotNipKzk19rSRQno6Mlmu0aw15+ociVdzqoA=="
     },
     {
       "id": "cert-1794595668882-61o7",
@@ -6010,13 +6895,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnNQNaIW/2u8f0Bp6agVl\nt7wxe2T2iTHDK3V6JO2zwcqe2igwnXgiXrSBLOYkX40pDkftpSRgw/RcCeJ5wlJA\ngv9Vc32/6MWS4i1g8wHO/cEahwPdaIBiegBene2pl5LQkvzrxmCPLttoKVcZfUg3\n+Ec0oTP2wFd4gV1jMtsumxX59GJnZI8B0VDCaAxSv5tIeaAC+psHIJCGA9N8GUts\nKXpjfDKemdo/1mIWr2kepPaOdnD0yF88qrrv9dZdf82bijc2BeQqay++xkQRF7O6\nHfZZGlA1t9uoNtkGtJvbMImRWuSZdFT6feEEUD5sV29mTrPxQhv63/u/uSDuRRYT\nOwIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCc1A1ohb/a7x/Q\nGnpqBWW3vDF7ZPaJMcMrdXok7bPByp7aKDCdeCJetIEs5iRfjSkOR+2lJGDD9FwJ\n4nnCUkCC/1Vzfb/oxZLiLWDzAc79wRqHA91ogGJ6AF6d7amXktCS/OvGYI8u22gp\nVxl9SDf4RzShM/bAV3iBXWMy2y6bFfn0YmdkjwHRUMJoDFK/m0h5oAL6mwcgkIYD\n03wZS2wpemN8Mp6Z2j/WYhavaR6k9o52cPTIXzyquu/11l1/zZuKNzYF5CprL77G\nRBEXs7od9lkaUDW326g22Qa0m9swiZFa5Jl0VPp94QRQPmxXb2ZOs/FCG/rf+7+5\nIO5FFhM7AgMBAAECggEASEPydcKD+KeNmkBJPkeEapjemESa0fdLPuBgS1n5Jghv\nEInKdRVhiRBWIdFe22TZkUoVuK49pK4aJzfj8WYjcfmkb5Z3cxRvradJcFDaB9YO\nmj5urPPT7PH0p4NXTZAKamD/aCcgc3AI3FvVVASOPerZ1ppyTok/7ySQTGPxYuaR\n37DdUuZdqTFNuO+JH3gGcgWVjRROB8kUHkpAAkSEWIBl7dPxyhGLuqEZ2DFA1vgP\n1njRft2XJRMdKS2/d6p5Zrgf/U6ukaFSsg/Dnt7kemxCX8UXb5sVHupqNvTKgutd\nd8VmDA2hw8NTwy071ufViypKaeeHemT8tFWoAWnj0QKBgQDJ7TsQUt4mD/Rioyhw\nMVVGR/AINils+7Ir5DqOzlAYhlCOrRyBWTkSMxNUBs6ti9iGXvI/y806rMtVI6go\nGqgXL6F8AJ5W5UiC+k+ptgBoz1qeOAflSX/JF/iaggcEjOUO1fJnoAOXQeTvVzWh\nqNNohJ7M28+KA+DxZtwcI2kmcwKBgQDG0yyfCIEaJokMlM5NQcqzjTblcRtJj1cM\nwh4Dz+pKf7beockrvV4Iadnu9Ru5zejHtCNDxw/o3DQQWFcDCaDVNPEr7qZw2v0k\n5ZO70RF6cZqhNN71gh1WmvoU7DRW8U+VPFC9xiWdCUygfBLLaPBVsD7rwQM2YHzX\nwO8w1CLmGQKBgFAmHqSLD+wxtwIT2vA1VLCxyx+nR+gfO4habbfTQk2Jup33LnJV\nFOcZaNmYXh7afFZRh3w1C7/3aDniDlPkyMVzPXi30iGRnqeGbWpieGUhsMlOWivz\ncYpDPoUtiVWQCzdJSo9BH0vBdvpdNkd1eHxq75FGymjwwy9ucX2lvI3rAoGATbK6\nzk9ZfGmwxxzj3icm2rIF0PY5jq6YeyDk7+JxkbmFMk2ROymetLUA+LQKqLrCDEDm\nQxdorTxYkEalgkdh9c/hq6RwoMvDf4bEC/Kw3OPGZNcvhkvZwT2BG2oPLibRTeWr\nO+5SRqMaseCqy5jvyty8Sg88fSSJxRrdnnxYQwkCgYBISrVgGvx40WPAemiXRs99\nNV8m5yC9Y3zMp7wJXIqFy5mgZhy5uxTczUlc7DGoMbK+z0tQJ6WSY0+Ut9nK0hDq\nFa0IJULr2LnTz6SS565r1LeXaTGaiPZ4fIKmvEQNkfHtmbRrcvurWaqVjBDDeIKa\naGywD0SvyfhetnqL94iaGw==\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "3EC538790AE53456F3FB83F0DDD2F41EF624FE30DDE2F55DE7168F3515A0F559",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Dawit Tefera, OU=Procurement Directorate, TITLE=Director, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:48.882Z",
       "expiresAt": "2028-11-12T18:47:48.882Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "ic3Om8hH+eOiNwcF",
+      "keyWrappingTag": "6gJUK/43pj+hSbYg4Xo1aA==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "Tlq0TtwjvTUwqXGzEk9UvjS8XjsaBe1eMYrImddmjattW6lSMder9cInKBQmPwyceQuJxtXPpF6zUfe58tfXua4DN7/k/qm3KmNDXIjOeW6qYbK0WUpaQ75E2I2AtCBcPmHOtDbyTArbAoW05uV2yhkgW9C4VLyd1788VzkrscQ77BazxIBIl/Ki14/vvwHsm+kD2xWZre3cr3oJ/aZL4VyCNvdLgzkxumo1zCR2qYhU16ILLTfugX4406qah1KNqIBRWGmUTCiv4u/HEzt1NSYq4xmZ2oL4jxyDNeg+upTWeozLpsotLOFhM+tiT9RZKcXHZHfoOSJWQi1VUJekgw=="
     },
     {
       "id": "cert-1794595668994-gst3",
@@ -6028,13 +6921,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAocYYqArY6cj/7VfdpVVC\n4Hsoqf9ZyXsC3NyPguyoyFKaVP8wyA7bTnukXlZea1afS3lV1TJWHACLRWfyhANh\nhZCmSjWXiITgsrdUMVqewI6aYoXoSvHzWwrSV1SJpK7cQJx26ohRhJdp6FfYQjZI\nG1XuVBurLX2eOwf1R8UaWPNWYtFVnJhfA1HtNv6KOi+/IcNe5uHpxkRvu/zrFKyx\nZGwTbx40g5S2nzEJEYRlm76PqYOlcjjQbCkOb+qXRQUHZvAnIZ/H3RI5efmkZmbS\nT2HbuxVGmcquXAzx+nEckKGsjZAAaj11cauvPrHlyuksdwQPkj2IGVFr/RRoKfK0\nMQIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQChxhioCtjpyP/t\nV92lVULgeyip/1nJewLc3I+C7KjIUppU/zDIDttOe6ReVl5rVp9LeVXVMlYcAItF\nZ/KEA2GFkKZKNZeIhOCyt1QxWp7AjppihehK8fNbCtJXVImkrtxAnHbqiFGEl2no\nV9hCNkgbVe5UG6stfZ47B/VHxRpY81Zi0VWcmF8DUe02/oo6L78hw17m4enGRG+7\n/OsUrLFkbBNvHjSDlLafMQkRhGWbvo+pg6VyONBsKQ5v6pdFBQdm8Cchn8fdEjl5\n+aRmZtJPYdu7FUaZyq5cDPH6cRyQoayNkABqPXVxq68+seXK6Sx3BA+SPYgZUWv9\nFGgp8rQxAgMBAAECggEAHbxqgtT/mzWJqYhpov7hnJ620kywJeNZGtzl+kRjH/Nj\nD/Wac2Obtzjt9TM+Bs/01uw2NUqb3mjRMNBTGSX/8ousrV5dfMgj/2XIcYv9O1rb\nEPoZQVFpEJaUJF5TMLS9opjAGQs2pL8qRf2DsGQG7BNnDAnL9MAu6h3j3a3i0m+Z\nTUTFMan8yBfpSy6njEQQgnbQSR1dTJ99p1RMjIcN3JrWwfI+89NlZ0vkOKtn09pv\nRHsACrFD9CmyPvhF6mbKDei5fqIPQ4VFUgYJUoKZkZVbx+S0/bN8mKhLYYz5R79d\n28uJyOX5VG5P8ZLH5Dld/D9LJ2Vdkw8xQPEpXZFhmQKBgQDVxJtyiHfVsq83idBi\nCcRA9zAV9PylHBvmcg5QISEo2zmZ4TpAIZcTzBTT7q2of+re06tU+t+5tiKzLu79\nvZWDTKbyo5Smfj+tpsu95pKHpmBARpNaD2gRlk76wkxa8pFD4OyIClinj/0kQZoT\nnUTGJLzzGejiI6ZmACF4jUo+vQKBgQDBu91d6SSjlFkGNzpRe0NzO2jtKdXqjNYh\nNI34EPRIJF4bJASZKVFOki6hvOqZCk9/Fq0RboL+F+Hm/y3BJdYK1yB9fhW3LXHu\nlSaVK7rqkehy70vEr7EYufM4SFGUB4TcrhiwX03KNQko6Dr9/LIXbLf86IZa3vHx\nIJwj8sBMhQKBgHJ/p392ZzF4Tu+hipMohg0CGah5G2XYo30QdGgpBpjaq4Snpcq5\n8zDwa+uEeVG6inQlzixrX7AaRYXSSsJwbIfyY62tPq7bCoKZx6GEwdGUpRNoef6Q\nJ/7bkpwvvDQunu5LqIXJfOjrb/yegsekwjSbcvWHWDzgOX2C7mqiyzTFAoGAdf4g\nffDgQsy4R8PdPgEv/H/DkSZ4xejPBdxHVz2kOkgEFM2kC1CR16PKyPERhPI1pra9\n468GExGioZjrWgbcTS/m9ueS/ESublvi6tl+dx00kMPTxtAmsWOXkcDiBqFptypF\nmS4CZ9RTZtnCDC0ano+1o1BPfArrGiv9TRutKS0CgYBkq+CaUHI/qFsicrkvca88\nL1Tp8Tp/AY5fnIwy3iEx5SywjU+97rKGusAvfXxduCPUzUckbtVbI2t9pA46VLlE\nPR8TxlclzoYQ8DXoaSN6MYDHgefvwqSgDqG6EOsT7ZsbHl/LEqb45LJZRMcg9MMw\nK89H65NKXBjRNahwiwY1hA==\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "8ADE157E83EE76F8BA0EBC0DFCF3527C45F121C49BD840023471ACA1F2A3BB0E",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Hiwot Tadesse, OU=Storage & Distribution Directorate, TITLE=Director, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:48.994Z",
       "expiresAt": "2028-11-12T18:47:48.994Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "LR2uhXW3mZrK8vvo",
+      "keyWrappingTag": "3YH4J08jdZMh+kdExpBpdQ==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "Fh7NiGHaRKcVqqqIFiyIUrhQyvUdxEomOSPupHIxsIk+unxGvBsk1kWHcCWYHd+WZ5EGR6DQBVfFB72FJxhWD+6brCVC258XIZS2i6VePrTKr3ueWPuqJYoqqHH16h+UU+cPmrPcuPMd66ZADoPm0N1WfsDnvMp2bAG5O/fDsX7TnK+L9WOh29L/V0RzkB8eWCEZKu5VPkU8rKBy08vKGmm59i6Y+ELF/GFBMXUh8ejoYVQMfxLrTmwAJeMxiRtqEqakYU5t4uFoVTJoZfKxaTz5tvlfHmOEckY5BIa5O8Bg7Fg0+FAfBV1l1bC9avqDsFsJqzi5BbcNKR7KWlKglQ=="
     },
     {
       "id": "cert-1794595669031-92yz",
@@ -6046,13 +6947,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkuRn1ZKwG+QBxKzxQb7q\nvE7gEwL+j6rKj+8xAZZbtlPqVR4CShQNnDnWJpWRP6HOXJYk6ZJFavEHj4cOR5O5\nHyA/ypsk6+rcXsUXaL6AbAs5hmxJTz1NNQviEmuk7AbCZSm63sEL4lsyoaSrUN0V\n7OHzncWdCpycoLMpR76HxHtGVX00rYmECCQZVwjLLsVAwOwec633V/eUMdUWwrpn\nNjgIvwUXAGJN5jZIK3e/ydQhanf8CXjy2KbQwmG4vSP7j4mJTXCqHNGvuGsENLNg\naK/2A65ExIv7M6YdPaAkcUW0ekNddQKElrIc0xLUCqmfsTfGrCiDDPY4oo6/vHnC\n3wIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCS5GfVkrAb5AHE\nrPFBvuq8TuATAv6PqsqP7zEBllu2U+pVHgJKFA2cOdYmlZE/oc5cliTpkkVq8QeP\nhw5Hk7kfID/KmyTr6txexRdovoBsCzmGbElPPU01C+ISa6TsBsJlKbrewQviWzKh\npKtQ3RXs4fOdxZ0KnJygsylHvofEe0ZVfTStiYQIJBlXCMsuxUDA7B5zrfdX95Qx\n1RbCumc2OAi/BRcAYk3mNkgrd7/J1CFqd/wJePLYptDCYbi9I/uPiYlNcKoc0a+4\nawQ0s2Bor/YDrkTEi/szph09oCRxRbR6Q111AoSWshzTEtQKqZ+xN8asKIMM9jii\njr+8ecLfAgMBAAECggEAQl4tZes9Y5SckeqbpJtofoVaq2xWbL37gJXPPArdzB7V\nCPkiiqrNzXC6R7ubITdvwBhcfCXI9H0Lb/dS5dciNKSC/f0j7O2z/KOrJHmyF17o\n8km5w7IMULPaRH1bSgLx0PhORLfPMUoIMc1vU/1YGyupwPaYskM5Z0gblh1JRWXI\nBW5xBJ4Sm2W65VrxADB03qqKW+R8BcHJXwXzoSrywWlny1p7iTPAuFYIuAxNcEWi\nUPDfDbodlC8DR2HuPN1c3HNqWcpeJ16U8QMnHVzHPGpg5TfUJNZNC7Pnmdb/nDHQ\naCrC1iab8LaUjp0f0JnbUH5a/XIlHGwfprs8bfy/BQKBgQDGctm1zxbClPhBacLG\nkjn5vvt+d52rIED8IbJGZez4Vp49/d9G0KoTCon8Fp4yy8jSrYGExpn1Uq1MDT7G\nIBr3LBwZwESeo4+Kd/Cu5kJ42bCwKFOyhe7S6sZmWHYLXspIBKrkpLjrjE+I1lD0\n7cneHmjevywDEnx4uoyeMFDeAwKBgQC9fewaA23QEeATS5o/s/Kw5K4DzGbkgelK\nY3Eoqt35Btd2pwBGat7G48sZ1kFvqV1IwlJHFTZXtz2g7F8PNMTFcz3/yK6ZEIue\nB6L87CizOaa8MCbsez3T7xtz6VJ11Deg4uZ1mSV9Hwa2TMrOryoZqQe84qqqJ8JV\nPh+lSpBu9QKBgQC7sWrqg0iylzVKoR4gs7Lz3Md/MOFGNkZgcfpsjQCZTUtztIcW\nMkt5oPErJbVQs99oK8ShcTmyhxTzJl/mAf2fI/AcBvaf2HDt9U0GDzB1nud3ZVzs\nL7LXeEhYCnjzfh7yCMAdaxKfbmDXOmTtk23nkHl9m/Cjozto8IAJKgeCQwKBgDmB\nqpJmcgAQPLF+Yyxr/v4CGHFcqek1J8iEj0XpPP4jPmZq3iGAs2Umom+P30H04zN+\njZu260wJdzGMKnkh6YmGpM0oaRxYshZeeO9K+DsUBu7bqiRgbm4QBYPSzkyl/8/a\nrFgKBx+Gt/HBMlcxP5SUAJ4pJ+QFtutJtC7khxq1AoGAOokKCxwSohlEIzzrvwyL\nCJZO7s1CpSJmDVJpxpMvs0b5uc1YWlbqFTUi3GlCWOwPbVGcSe9INvZF2fZ2uF91\n1hbTjVIEPvss685wroK/YQXOBmS//EtVYSx697z7Tx+4R1a986SHCs0Q0AeS2QCv\n15bwWI/G3LywA6anxplmUOQ=\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "04C68D9E0F4E53F9F5DA609EB4A6F911B1A42232FF358CBB34D07ACED2520EC2",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Yonas Alemu, OU=Regional Branch Management, TITLE=BranchManager, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:49.031Z",
       "expiresAt": "2028-11-12T18:47:49.031Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "nsUljnWgdaLJH1rj",
+      "keyWrappingTag": "eNhoEGQVbCQfLxwnGR6Jxw==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "bx08f/3vEMlkm+7D2iT1IshyLU72WNM2bipwqJFkfhWBMfHZo1MbAkjWpayxhuWdEuj5ivEREPLT/URmh4OQnHin1fq1ZWMSziIZonEIrSJ+VqUKIIdKFIro3VHqve/RB8fCKMhgUzzd43zOrCWz+kvt/M33UuW4xF0BjpVJ/1YIc3fkXpBAX5QgY0Km2Xmy+dBeOetcHIpjGTd/NwV20CXjDxSbo2OdA5+eiPX8Ol+SGa3HDDbpTcLsVPHGa8lg0WbrlOuK74ivBfs2bIfbYp0Yn6WqV2Chf2T/PYdFrVspvG/3jfR3nLjE3UshaaUQ+VorHp1zOTPTVzBPooGhlg=="
     },
     {
       "id": "cert-1794595669097-ax5l",
@@ -6064,13 +6973,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvVqDH/eHjQTRGzDlZxEA\nMzvlZ5Q3B40NlO6yycALCekxRggXF7n1fh5J0GOfnKin6hblOSuQckj7ky8fJETy\nDOivimYx6Ywyl4jWpZoNCIo+oM0m53BcipMtc6vkAO80HaPR6tNxRRYdFLUXkeCo\nyxNHZ6gd+VhWBdJkrDgb9nYTfb8x0Th71QGLvdJFEcKpIgtSLM5m0iDZuxs+rxaD\nduHnFqjb4RCcDVgnLgTUZj8fPJI6FjjXKi16CPEAXyrMgbiUfYXnUjFouj47EWzE\nIZhA8Ztt54/gavH35Wn/3ZKJ6HLLnf7eekpNLd7XfXXpLSI6AWYWQMIikLjI8ASf\nZwIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC9WoMf94eNBNEb\nMOVnEQAzO+VnlDcHjQ2U7rLJwAsJ6TFGCBcXufV+HknQY5+cqKfqFuU5K5BySPuT\nLx8kRPIM6K+KZjHpjDKXiNalmg0Iij6gzSbncFyKky1zq+QA7zQdo9Hq03FFFh0U\ntReR4KjLE0dnqB35WFYF0mSsOBv2dhN9vzHROHvVAYu90kURwqkiC1IszmbSINm7\nGz6vFoN24ecWqNvhEJwNWCcuBNRmPx88kjoWONcqLXoI8QBfKsyBuJR9hedSMWi6\nPjsRbMQhmEDxm23nj+Bq8fflaf/dkonocsud/t56Sk0t3td9dektIjoBZhZAwiKQ\nuMjwBJ9nAgMBAAECggEARDQ0AvGv+5V+lGK6XrN69PlgGj0CzU97UuffslfgIgPC\n4czMNJmg2Xqjb9JSjaUaRnFUw5DziJbNNyjD+NZ0sT2m7Rz+YXdESdzaI/AnPao+\nAMGkf7yzOJ7mwkFp8QQ4K2z0kbbzl8TtWKYaBUt8wRkCoU2m7kdpRNORu47CU7V5\nl8jqc8xaOFNbaffC0L7mDz7C9ybtcSNkzIMJ/jUI2zwXMdNJWkIj1K8vR3da+6lC\n3TiqXbcZv+Fagl0ylpN46N32D7Mu42COU6vkrvFx88ldZBsdMij9YEbSb5lUH49r\nYVXX0UIDj5F17OhV5xytrEsmQR7x9fS6p82R1CYvQQKBgQDcU4hpRsg3H78wNsG1\nkc/3OV1pYWfkEYtKxv1BhuC+jRfvVohTbvZms1ItV96Hk/JF0vbhIjRxZOC/gv/8\n5cL4vazL1c4gwrPjhBG5jnyU1wEEhJYDpf2AcK/DquFB7VmmiBujQ7ZD3MKRRuGu\nbs2expczVWLJfQUauHsPsm2mNwKBgQDcAyrlHqIs7dn4IeSAOZc41kysaYRviOYB\nTRa9OZJ1Sdzaxjz/lyzRIz8gvYDp3Qim76F35lvPxyGgppvfUgnlX7kdjRdrZNVS\nf9Qjshx8iSDzcl96HnRiLRiuyneydH04pp9e7tYNqRRfobA9sJsYTycpgI5WwO7Y\nNYDKjUE4UQKBgQCuLZNvtrddbMmWchNdWTKRfVYtkwWwtXXq3bkk7l4KBjzfxwbq\n/pPoyOa0VfzkLb+gF5F4lbPj2R4cCJIa+gDS6BAM7K+SEppnyObCTLSMbhSt36tA\nox7vRSaOhy6hEeSH1J4UydjzeTiP5PtRDOOdG944hM4d/6njX+hZlnM8rQKBgQCv\nio91FAYNlxFs2433iPvRS5sNjXsviqkJrLpR7Feg4XgnzjfpLnOBwn+h3dG3xrYa\ni+PnSJNEqvt3tLd1bX2b185Zd7OR6ngSRQ+8E2aLLtZtp3nqc9YkZxrki4MJjcxD\noR5TnniHmbo5u0ZlUj3NHYp/oKTxLyris325Hw9EoQKBgATlwRdOk8H/jd954CFC\npFMcJYSFC9fT9QwKLtcEF642eMxtcNaE3o3nxQN23i8G3OT7wVm3VIo2HatH3s8x\nFomjwXFEZ8wWG5AdDDv0oOJQM9TCCimugXyZeEo8+vQdruDLG4KK6+uiTXj2OiCy\nilHZXGX+mEr47VxAf4ECJALl\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "E02FB475E389E218DE6A9E65099389776994916413E176361D20DA43405A8386",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Tigist Haile, OU=Internal Audit & Inspection, TITLE=Auditor, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:49.097Z",
       "expiresAt": "2028-11-12T18:47:49.097Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "JTH/dkVrn204MAaKv13awVCC68xGr9vKROe+XpcEEwmGYmF3U3UDJqD6uahrdNr2KA8mGT5OwMqOs/ZLR4Ynn4G+n2VszWkcF0yRAhOMaVk7hL9VjP9M+mil37hE0wt1Wyhj6Rc5ANP2detACqx+VFWlUTliPiiXY3z3c9iCXHpumyM/BHznc/mt83vkh2k0QFFUdHwYtFvrBf6wesgD3kgS2vB7KDiJ2NO+oeGQwO8pz9GeV+0ycwO5uhmbD87xzbaG7zpBVzpqCx8dd6qcXu8WlcpBw1naVl5MMWWjAduYn5sU0sDqetpD3bfXAWqrtEpUIQIE5QCwojZIphdWaE5+f86KVngSZsI60JT9HiAJUgx9VcrxVZuPzmb6IunL7VR1TXfLC9ix09Ipe9cBJEazdAsoWQ6AUPf7qcvAOyo0/gwKPZhIjzyw0KOa1H0u+1Q9zyIBJa0kwuGSCMDc4JYmEX4WdTS1wLwVjOelctSzxoTpolhqXt+Q+UCkfiw4vAg6DTjCKlpew0YyWwXdXrHnEK4w+RgS2vGtJ6fczX0wdUKIiVTs4aIM8uzTXjM2IlHUz+Yhbycxme1FB3oVNZYzZCB0ZvT2XZ9MdADvRaAIbpr+qpyREqp5+1F8KgUW1+2Pb32bt9YG78kFFJ7sS2COBSh94m0+qEvkh5+AkzH6O7eI7rdx0cYSW25Wjoz44hd5AuQXQjyiCdnhPlnUxaHMj/U5usE+IOEzRjqsBeKLle7+m8E0cDzIOmK6wczALgDpuEn9y5yT8yJGuqzTPd43rMUcyaVWr7MFcxEXgPBn/xoV90OS3pihhv86Rj3e2mDLI7BaOsAvvcLq8A1mqJHHedApdRlauKOaiTyDC4IKz4bXI3JK27Nk+lQ4CQbyqjwqpDNkuscygSLDSfIZVivQCtgcQTYZqHjH8ytwZtXj7BuDd+XF1LWRVHFyml8vscKO6FruZSA141/lclmqlcOU6vpjRE6FhvOJ/ONeal3fUydFuA+c9vVKufFuNedpS+OtktvsgAWQ9b7wKH2JwJgRG9yEwEUpo2Mas86+y3eMlHtJ8NmrbAExQ0fbM2dYOd/Uw06r16R+3KP825d1vRuTYCzIYwTk3YCoCA+JiCp7Nmk02j9RHVQFCZMD2APuXb61gMWhDvIjK2NnPLzddG9ksbgKsWE/AOrL2WtQ0w7pY4uSz/JLNog15iUyYQCHTwO9nk0MvNQRHOGSW/962r87a7g7EIlXyoZOtI0+saYdRHZwgGOtX4+BiqiuZrMIE4a7mBTI7ysRIY4usHQUusC1SWtrpu1Irh/kl7OikIzdeTy0Oi4fUPC2ZKuQTAYdCOzU1H/lKH0WEbJ6V+zyfurlpUM99ju3CXvLa1h6nv9iTg8Z085ObUwb13Tt6bAN00ecKbqh5I8NqLsF5T/9HVvQDLc5+SV2NDrgMjlzNbd32dmWRTGxcZ6TpnW5AryNBiH8wwidX2pgmjN+ra9zChc165++oxZvj3o60VBCpQaCCvvvNI87Nrb1hctFODSZZiNmcIexbjo+bXAqGVv8jar7mDch9kvKruc8hNv+/wtb133WY9K15tu2jLeS8o8G8w4KA+VhycgLyGr/6vYBdr6eQF/Mq8LXmNAVDncjEA3gDYWQ9EXjq8jN+ZkEEDploRnQMHF2i5zXJm6CKiv1M6aMUMo2XNB7dpnXkWK8x3kuArpDXyTi7xIJSSjWUCeSlIOqVXzTjcuqzrQedSdnejptRe9uY3EzWufoomtjuOypdWnjyzOB18rFbDJqhzoiApjw5gpDX4WffVosUjHiFyiChu4HF9KLfXhgglYnz38XAXjvaokvmmCPC2fHIBRGe0FLmZuNxfrgT57mSGC/UHEHKcjfi9PCQnmTcuUQozs6pcKbN2qbIIP83v07zAocojuucwdlOkUo8T7aiRNVzxs5xI7mdTIPIBnhI3mIJT/9RA2b3z0Ivbh9unP2D8rodWIKV6akeoxL7+lddWnm+7NJoHh5bDZS66eX02TwIA9YABq0jJ5P5Xx7SKAyaSMTwQq3tapvMsPouen7R+I2xkYIYyd0idYiI6b6nRhsg7ys/SXsGeLxA5GYHrEZNvz0m4sqCVfRlQjbKYxvMVK5JpQ6aT64Gga1JZasAU29u0lJWCKfSlOUs9TJxL7Z9jMPYnYmaM7Y+1jJrGW93NJYQ3WNAMO1TR4L2ED+aL5jqycEZSgJTtm9btDTkyaqXWHdTVgcqsa1UDWLxCLP5yRopT4hIOk/Nio+",
+      "keyWrappingIv": "k5rWQW/RlECPFi+e",
+      "keyWrappingTag": "5Qf02/6dQv9+/rev6/mDzg==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "WhmfDe01a3KAhMfMr/kwBw6+kldK6nSC8E9UBzRgfLJmknrD+H3REcqIJgNw2Vzi/E9y8S8/fSd2F+3gDRNsuFGxhWK6nVuyS2l44dFh9b+fG3XJaab9dcyLmP64HguL01LA1eyJpscxo48doVB7HVbPrCBZc1+bteoq3lDzSd4FcxWdwUjPKGLXBnt/FP5HbY9qHJ65v8uPXs2Y16izPbzrHC4Te8nUX7X3qMwAMAVfTSCq2OeqkZogCfU3GAIt+/HRfiGRILYp6vWeHNYrUs0jYpyPIr8lmxhHgPlA6XHaDLl2C/bGwDrvHxqDMhtTPHF3txuMhnHLbu/Jy6qa0A=="
     },
     {
       "id": "cert-1794782103314-yw33",
@@ -6082,13 +6999,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8AJK0ZJJMcvmI7MGBAQ\nh00j+9cRHhqQ7TvpJiRpCs64IHe/GXnRbmMCkWyLn+QE02kC9fz7CPTRJ3bO2Z7D\n++qVqSTkvGHVuUPi1UYqVd3MP6kwadfTfDphkZ9t/FaMYd3XRJAi+QrSyK7ADNMU\nARHCUS6RScSzjwM+jmV3/Lve+86S4g3QCxaCDQYtGOM7xF4sSDR+QW12xD+wZZwW\nEiAhNz+jvegZDCJo9aeS5BhfH6R982qP19N06fwDZ9A7ioRs9Wt0zOEycidtxidX\nS1BxMVz4uBY5WUfIvriQ0Z5t2miYDf//IRvCUoMsp/HOwDaZR0V2EB5iSmotNZea\nQQIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDPwAkrRkkkxy+Y\njswYEBCHTSP71xEeGpDtO+kmJGkKzrggd78ZedFuYwKRbIuf5ATTaQL1/PsI9NEn\nds7ZnsP76pWpJOS8YdW5Q+LVRipV3cw/qTBp19N8OmGRn238Voxh3ddEkCL5CtLI\nrsAM0xQBEcJRLpFJxLOPAz6OZXf8u977zpLiDdALFoINBi0Y4zvEXixINH5BbXbE\nP7BlnBYSICE3P6O96BkMImj1p5LkGF8fpH3zao/X03Tp/ANn0DuKhGz1a3TM4TJy\nJ23GJ1dLUHExXPi4FjlZR8i+uJDRnm3aaJgN//8hG8JSgyyn8c7ANplHRXYQHmJK\nai01l5pBAgMBAAECggEAEwYEMOzA4jfFHCSoprlt3LM2d3yu9ME9AnmTyhTXyOVm\nBz8VMNmD+9DgLtMwM+Yhf6m5hi9HXioWLurFBTjHEdMzfNIZNJuG18NSIEfKX6OC\n7P9qpKkz6fJp9cznZDhupsA1fUdE6eYmUrnBx0ra0EBBOXAuCKxqPs8ZaYOmyZh7\nenwSdMP1shxjG7/McX/+13MSK6JP3SueWEtih/LyQy7N7vYwpRX/hingClStgBNz\nLmv31ZskT8DLiIQyltHXbRY40HUMXTzL7AjQM5MxzOYIo6KuD1QV2YEIoS9AqUUU\nfS9C8xPj+LUH9I9s0Bdz/zDKVhHDwMwhgdtXYXRM2wKBgQD3pvvIU+bz1i8xPOZR\n0R55Yk68JjKkflD621AVTiRsRu+F2bq7hTx1Ehdmroi7/zkAfb08g1KFJfeZGxq3\ntRRVlcdD3wBC6W6xInbPX2ZehsHVppLrcyU6Gr9jP3Mdn3DMMN/0n581aYqbDdNL\nXKYG1eVFJdZQAR0ObF939m6rzwKBgQDWwLuSyVDAmopswWlI5Hvc55lVTJEaydof\nBJU/pXTwNcaskQ1lJ+2V72sS7ynwFICzIxSrMvOFyjvI+4TxY8FFFINZMQPVis+A\nLIA9v9fXikHbQJe9/tcjc0caJWNU5ocNwR7IdVhnSvyz0uEtXhUyHULH7se43WCK\n1UvUgLCM7wKBgEw2DvWvHDudhhhY7WfwOriQEDrGZn9IgBMyuopT6dGIYt2GC3j5\nn4lHb/whaeKwwBHun/WnVBW1gWSUerxd9UwBM7knPyVYQMAyIu3eJdqhDbV59WyP\nmr0uzgb017AeCNBNmh3loVEGkaj1sDhY4p7n5A5LfpBQR2jQ4PBB3fzxAoGAY0fy\n76d2V7SabjD0VaibwsKnVpHxO2s6FcDupt/9MdgKo1jj0nIlGn33CGfdAYrY/Pgo\n5ATIJIAcJ4xwJ5CwlxkmqCNK3Hwx9dWc6+83AASA8bXo8QNRvqfapTHHvEZfBXLU\nomPtnMNEFHZXd7vZHLP+XaP8XXCq40Q8rF9aP60CgYAG2OTB2ghz9XuFA9o64FT5\nVLEF2GGbLHiGqe9IFgZnOt/hfRzMzA40L0YuJXplmvjt1YWZmnmjKsEo8X+h4e4H\nZ2QyhpOpAHS4PktKc9ACn850OlV/UCmJjLnICqN6BGkTfTFanRkjMrdH74SqG6/q\nmYmtbjHfXBiuglbjGCTIFQ==\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "22A9014C6E288EA7A973D9F9A033971FF9CDCFC55CE17EC666AF6ED53D776FBA",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Mekdes Solomon, OU=ICT & Systems Directorate, TITLE=SecurityOfficer, O=EPSS, C=ET",
       "issuedAt": "2026-11-15T22:35:03.314Z",
       "expiresAt": "2028-11-14T22:35:03.314Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "pp+FQ3YK2LSP+1ly",
+      "keyWrappingTag": "X55yiTNkm331L7Ft+sPndg==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "SNd5nyADKr/khjxO5RN4Q17+bdEO8QOOVj5y+bEnYQaMSsvoe0ToVtURPjcIJ/j7P6GXJtc4jXKHVaqP34DSXtjM/AFx+yLK/LyUHmJnXF3blL+Hs03wy/2dham+eUSJIoNe7Dn5f8dkciyWrpzMALdu6F3HiRnPdHYCc/DEWaRw8SJU5EjnA34la7zCUgiq9S7eIhBOKELcQ/g25rahoxOxGxB+yODBC0tLnTGwdEektcQ2TA35rQetiutRakctgDE0iMsmC9xRS0SI69VqYLq22e0qNO57h7DZVFPQWLg0xBrIVmqRXd5MFHdJlRup/O/ShfeSbKBvGPryyfF8RQ=="
     },
     {
       "id": "cert-1794782103332-hbhz",
@@ -6100,13 +7025,21 @@
       "algorithm": "RSA-SHA256",
       "keySizeBits": 2048,
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnQNVo7H/RaEOKdZtdCpd\n/C2V9XG7DBAQPnv2VWNp/Bo3til8fjimBk6IZnZ8lCvykC/ljP4OQwF0JZcYsRpW\nftu40ReEIm6WMCHxrOn0oLQz9wWLlQpxFYRbCtZSO7UtK1pJhTCt6HuDPXnzhANM\nfDiXzaRnOFjiMiFUa10iHWmoywXOqJ+k4d4qaUlyEonzj1NP/sbWF2goYPrZtxuA\nna55vtDCoUKL3npxcWciuSZmSha1IFQOR8q77SCqmaOSDhaUKMQ0zFXonMdaPwVe\n1tXorIBVVr3XNeoM//M6HA2l0AkDx6eVqQaTuN59a8ivJxloZH9J4fetOJyE3dCF\nvQIDAQAB\n-----END PUBLIC KEY-----\n",
-      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCdA1Wjsf9FoQ4p\n1m10Kl38LZX1cbsMEBA+e/ZVY2n8Gje2KXx+OKYGTohmdnyUK/KQL+WM/g5DAXQl\nlxixGlZ+27jRF4QibpYwIfGs6fSgtDP3BYuVCnEVhFsK1lI7tS0rWkmFMK3oe4M9\nefOEA0x8OJfNpGc4WOIyIVRrXSIdaajLBc6on6Th3ippSXISifOPU0/+xtYXaChg\n+tm3G4Cdrnm+0MKhQoveenFxZyK5JmZKFrUgVA5HyrvtIKqZo5IOFpQoxDTMVeic\nx1o/BV7W1eisgFVWvdc16gz/8zocDaXQCQPHp5WpBpO43n1ryK8nGWhkf0nh9604\nnITd0IW9AgMBAAECggEAJEagcyUNQuOOd6kUebnOJBTOKDqCCivt7NnMFHdXBcly\n5LHaEvl4lk1voyit6Lfsn1aJlRUfa2i7EnJB4K0incWbAigKPcBKD83P3fDhtX1c\n4i4UTTdv4BZHyI2yyxu1V2ZRRSX1kBh1Pm9eDTqL4clbfUYGGRUkEYv0yqdmWd/y\nRNkXjMEDWVYhZ/WBj37kHjckugy0KKGrDlFwoPqExB34Hw/uQMZRLWHmtksROF14\nP/IoiN9xJoTuWK+iV2VGJ7xc3T3KpTw761BKEi6WOn0ojgBT3BGmqow68c+fjrA1\n2UG8C5l8Pu5YcCvkaDDZSpNKxLT8m+ihveDmfVUzewKBgQDRsu/1tGqe+inj7Ugj\nwdIB7Qm9yOw9BaNXhzgT9ozwq1Gsr6CFb1exOtBliP8mfqnP6NsnpDc5pGkqEh83\nBmMlGzVtP/PvhtKMI78uqx6WFqvg5RLbDPhOhi4dUEz+qg5y6CniBuQc4dm8FMXu\nMWQZvszuQNz0VZ5ZAXroP/TgFwKBgQC/rl370bLRtOyBJpmY00BOiX0Ub0NtZqVQ\niKpm1AXjlZBBBEP5DBHKxuoUsj9u5OHm161qFKZJGpvxrMgiu6hpjNx+DBigc5Qq\nElnicjyUxtYCaq9xgbNLqkQzJSLbcxU2HDb+SwErLxf0q5sH5Kkmpli+85ANWzrC\nHKB8Rxh5SwKBgQDNlLl/jqLAvMx4sdV5iLjUPojAUMyZfn+GfgBSQfImuC5YN84N\nQv0buWc5Q7exC5h7RfQkxu+FSVP4dM+5aD+mzyfvtTT27JxZ22nA3O4dgph64Nk9\ne1er1Aw9nM3/FMUZjdYRy2OzlQ+bPlpVjIJwYwgRw/FacN3OsI7IRntRfQKBgA31\nwAiIBDL7r0HUstkLgaJ2pvJnDA0ara2I1og4ptklWmUxz1WDCISxKfkp5i7IYp9y\nU8HnERk/492dDNJiwmg1hxVzAhQldsP9pCg206yuMoXoiTCGFq3LD7591OUQo5nW\nQjcQ9VvUyTTbjqXrhFo5QTte973RSB09An8qmmCzAoGADsTk492eWTgvzI1lj0yF\njCvN14v8qMc7kOcsGRxIeVREG7HoQLElEtepZntb/vHG2CHaMUAJ18WnR+87i2fz\nUlNtUUpkU3PstgUN+geubyaAQdquNvkVcYzuP+77b3PMQModHNKzaNVKeP+snXl0\nA0H+VM4Ogb9SYh1n/FE/ZUk=\n-----END PRIVATE KEY-----\n",
       "fingerprintSha256": "9E3C08F2D4BE93AD5230D589C0BD6A9B0D53C156D37BD0329D87A56DC29A3127",
-      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
       "subjectDn": "CN=Bereket Tadesse, OU=Internal Audit & Compliance Directorate, TITLE=SystemAuditor, O=EPSS, C=ET",
       "issuedAt": "2026-11-15T22:35:03.331Z",
       "expiresAt": "2028-11-14T22:35:03.331Z",
-      "status": "Active"
+      "status": "Active",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "b6DrDoEp8nnqfV7P",
+      "keyWrappingTag": "6mcr59Yj5eVer06cbKrcEQ==",
+      "keyProtectionMode": "HSM_AES256_WRAPPED",
+      "hsmSlotId": "hsm-slot-primary",
+      "hsmSlotLabel": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "issuerCaSerial": "ET-EPSS-ISSUING-CA-2026",
+      "issuerCaFingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "caEndorsementBase64": "cN9G4BjjYpnJvewLymJacfzgr0As2K+dtVFE9NiRG7ItdGQdSvu1wn9wfG6i0yZFdB3BTcDduqQocAGUk4Yi9+J3UZnFhEBY/Dv3p/kxDELKyzwwHQQeGmbcm/4DStEgSbBuG7KRIRyLYPPwfKuk0izLw7QrqpHz6t5FxRynWDuHJpkzFxpIS3Mj5IafMtKXUADsbOTpenhKJdwDPrVSSyQRvTI7lh9zj3QBRIr7NVCPDWyySUqOAb7dzxAqKNxg+gBDAlAqho22+3x4HAvzrclqF5481iQSfVVL1ihxnUokB8lfBXOtL+4++mWZkQclNOEyUg/yBhFdbaisoExYhA=="
     }
   ],
   "savedReportTemplates": [
@@ -8491,5 +9424,97 @@
       "createdAt": "2026-01-15T08:00:00Z"
     }
   ],
-  "breakGlassElevations": []
+  "breakGlassElevations": [],
+  "hsmMasterKeyHex": "1555962e15208de3db47d4adee4f7584520bd82bf09c8d2b98c78cbcb08f9ad4",
+  "hsmSlots": [
+    {
+      "id": "hsm-slot-primary",
+      "slotCode": "SLOT-00-EPSS-INT",
+      "label": "EPSS Internal FIPS 140-3 AES-256-GCM HSM Vault",
+      "provider": "SoftwarePKCS11HSM",
+      "endpointUri": "pkcs11://localhost:5657/partition/epss-gov-root",
+      "keyWrapAlgorithm": "AES-256-GCM",
+      "fipsLevel": "FIPS 140-3 Level 3",
+      "status": "Active",
+      "isDefault": true,
+      "lastAttestedAt": "2026-11-18T21:35:36.825Z",
+      "attestationDigestSha256": "B0567EF7BA1C882E90701DC66D3C78104797EEB893558E50A332183618F8933A",
+      "operationsCount": 0
+    },
+    {
+      "id": "hsm-slot-standby",
+      "slotCode": "SLOT-01-THALES-HSM",
+      "label": "Ethiopian GovNet Hardware PKCS#11 Partition (Standby)",
+      "provider": "ExternalPKCS11",
+      "endpointUri": "pkcs11://hsm-gw.epss.gov.et:1792/partition/outgoing-seal",
+      "keyWrapAlgorithm": "PKCS11-CKM-AES-KEY-WRAP",
+      "fipsLevel": "FIPS 140-3 Level 3",
+      "status": "Standby",
+      "isDefault": false,
+      "lastAttestedAt": "2026-11-18T21:35:36.825Z",
+      "attestationDigestSha256": "91974BB6D547237275D611E331F6C95DFA2C1221C4DFB5791AB1AFCD53D948D7",
+      "operationsCount": 0
+    }
+  ],
+  "pkiPolicy": {
+    "requireSignedOutgoingDispatch": true,
+    "requireTsaTimestamp": true,
+    "requireStepUpMfaForHsmSign": false,
+    "defaultAlgorithm": "RSA-SHA256",
+    "activeHsmSlotId": "hsm-slot-primary",
+    "crlDistributionUri": "/api/v1/pki/crl",
+    "updatedAt": "2026-11-18T21:35:36.825Z",
+    "updatedBy": "System Initialization"
+  },
+  "pkiCaHierarchy": [
+    {
+      "caSerial": "ET-EPSS-ROOT-CA-2026",
+      "role": "RootCA",
+      "subjectDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "algorithm": "RSA-SHA256",
+      "fingerprintSha256": "4E4010CC132A4FFF7AE3D4DF2D1B2128A0C384D36BA6248A999620115FFDA14F",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6fI1PwwzSriI0luOC2pp\nY7VjDpQRHutIlnUI/F2mR9Qd+bgRVDWt7vxIS8/Z/tmU5umKOI/LQuuScV3OBohv\nb7z4LBb4cxs76EJvwkrxU2OZlzn5rBATpF/0DGYmuwsC4L012Ki1iAZs6HvvMKC4\nXXb+Saw4krXgUl/U1dbsj7nhLO7xAb4DBYoaZhY5Ml/nbilyVJWrTnbNWovLDNHj\nMrIhPqf5mN5s8/7wq+QNlhgryayzrN9LboyA5bptkk54kCTkRTfMnLzMtAHlxnMP\n62C9Ku17eWQaNzNB/QfkO22HmftlgJpF5gTwDR2RzoAmuiKXSXBz1kwm/JS56yee\nZQIDAQAB\n-----END PUBLIC KEY-----\n",
+      "issuedAt": "2026-11-18T21:35:36.825Z",
+      "expiresAt": "2036-11-15T21:35:36.826Z",
+      "status": "Active",
+      "hsmSlotId": "hsm-slot-primary",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "m2+YviFzyH6dd77Q",
+      "keyWrappingTag": "SVmS4w+zvg2oWQb/+sp4Hg=="
+    },
+    {
+      "caSerial": "ET-EPSS-ISSUING-CA-2026",
+      "role": "IssuingCA",
+      "subjectDn": "CN=EPSS Outgoing Correspondence Issuing CA, OU=Information Security Directorate, O=EPSS, C=ET",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "algorithm": "RSA-SHA256",
+      "fingerprintSha256": "598452425BE1AF7AF4CE6AC8C50BB338A7B2504FCA26ADC4C4857ABE8D090F11",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAo78bcdljvpXXAqYbFN8k\nE/vtEGHoH2k/PVYpBd+LNJv6az0X0tBWjZ/t3G23BhxQgdFa9B4t+1sD7bHUYSme\nO6M5UW06in6fkpnWSWLPzctC7IOlF4VMelrUv4mRi6acubQDirGcVv5G3aKApv02\ndI/UBIBhTMj9plHSxokEv7whN+2cr6qhXHoiCN6K99QXVfBHKxUpDBjgads5Zi9T\n9AymEy4R6nala9dOw2NGb8NNx6SoF4WZUfAWhjTmmBwkUHPkom7D3FqGatgOk0TG\nz8CtwR6kDGgfpvbyRD3JytuuA9QUxiInJai3bDoHj+QoovKg69WwXiLsFWnT6duN\nhwIDAQAB\n-----END PUBLIC KEY-----\n",
+      "issuedAt": "2026-11-18T21:35:36.825Z",
+      "expiresAt": "2031-11-17T21:35:36.826Z",
+      "status": "Active",
+      "hsmSlotId": "hsm-slot-primary",
+      "encryptedPrivateKeyPem": "ULvU2yTT2mc22/dU3nLh6BnSgMtDbbSbvm90SqNSBV6ZiEpvyvClf0EE8P6o6134gocZ7QONos0R+/iFiiFX2efMYHgCN19Ss9zZR4vOJ1mqf5ouGHAabpzb4xo5QuYfc/77kTQxZQA4UF8riemESpMnpSMTgv6iJPvIxDRjXoqRU3ygUVSe0a275HTCnbitlNRUs95VVhT7GvuiXnxISeVqF5o64d96f56E8icsyGJ2LYC+u77aH98x/zh/l/xt/irbCcxlDkeLBmUXqly0v9QAKxtzISaOonU8d9YWUOgrUBe2NmJhsRJlGxrpsSONljfuF9BnUfX9Ea+seXwjTwl/8lCdPDJE6yNvLMUqzx4UxkzWS8Y18GxXZdh97xLj8uaZZ7NFiTPECjIhI8Hm3U+RdhVYAbLFmvoBJgGkJ2dU2Ak8kP0ukHK6bbiKEhe1fZi1/hWEiqnIM1IAxbTFQKfQb3BprEVPzcyuz+qf3VvMph365nU/OLdGrwrlijtC9rCY8gHYsr6NWNq6Oo8o5bc09QhHlJKWa0rzTHNbbg/64HfhF6DK/gQ00yS1MVp2LIH84rLeceW7ZHICXVFcTN8O8EnndHPuUXLQlEoyEPBw+qq2Lm1W4b1uk7rSDzEQmd0BGvGZhIyZyFGaGuKcfqZ9MpzIHQmpWE4FUNAmH1mO6N5PGF9VL1EpvnsCxuHbTWKkyBtNfZje5MxZJsoDBVDWkLyyyyXT8/HZxHldUg5x6m3aef0lVToTCHpkOz5qsJzObY5pUseV5z6eppoHm1/77IxLMaj9w8NObQkcTSb8dsEIN2rcRn4e0LxmW6M/qkE5fGsRO4CEsVr4JW5CpBwq8JSClE+TdWOGTnDWsvieR5N16f+Uy0qAH4PFnJv5ECTCmhE4R9i5K8mKmRgvkzBFz54V6SzuzgL9eY4/gjTTDVaXSV5+Lso1Vkad1qMw21tzjENQifg9GYBVIShlZ+tcsE1/6lQ/xdI1OLM4rX+tpQQ03w5qFGde7Cecx4zPIgdfF5FvDjqh4IjSle1nT+LKgvrQG2VQxewNvT96CCKOrOew9f03leeRto1J7n8DKxkQSRThZH6ES0Ub6TIBhxRkgwycfDgWJcrTZqcrVnQmoHkC2n120f0Pu3ByyZuCzt2uzXYIuGo7NebC+Qk20zgv8QCYTy6WorwBneRAwv2KG/oXO9af3UxLi87NixPl9iuNuVTvK2wrCQamvGyWnbr0re0ynfEkTeUUyjYVQfDIURXIgUYxwh3tYG9AJ4ZNfEda8bHGuJmaBg7slbIZha5IzHf2Ke3pBIELK4yLBiweeHbz+wioPBg+yle6y+GOA0Nacnci/J0jolM/drgrO8HJE365YUpJtAhnZl8Wq83VlBoNIrmaBY9KBI05uHVgfc0jJ6DkfEvhWXqzGL1zEVYbKAY59JmEjjQKxUOK3duBLpA9FbUf8VXVxEHSHRteFXvKHEule+WYANQY0tn6bzmnBTLY5/ewmBvStC0oAb2aixeUYf9vmAr5Lh/RVP13aEniJ2hb5K+fl2vz30ErTe3buvUpxv4jLqMX4apz1d+gZcNQa60U7fAtRlfGDEVObEDSuhoPZqwzIdF3gNA6neUWiWWsZBl68TU2LA7ukzNmigcljIxthVefyzewL8/QobAymRcp/ozbRkKUTOzHqhTeIWCDaQtiu4nnkEUmUUPzmLQxlSoBKf+E71anAHJuUtYzvz+67KFUWPxGg6MMtqTfpYjyv52cUxrLoIqfHPojxCNsuKGuPCDR8sYXRD/o6Bd5r+B+Vo0xCEAebI50X7UQUHgq7NTv98NwuT8+kptOb9M0E9/OVDHme3sB8TFRddAt8dxBCUUDkbLpAYHn2pSnERToMN4TZsbgCXQ4KUdoLJNgm7Pz4+HasVb641Pzlmemp9zmnZXa4uXMx3u0nfa5l+bZg3pifDQmN5BmQIm/6kR8EAh6g+9uUed4sCwtbzEoVSjfB8GH+fQpCgbhTQvR8kaNOo7b+fVSrFZ9HFvzyCECDdJ99ytMwmtEOREyWYHwpPy6OfF32CFGW3Hzl3aanDCOQLGfxf+dSG5LbJjSCvODRqnGwV8vydTNi1etCmysU5AkOivwjzI+7e7b81z9RFhXClY2oocaVKx+OrYe1Ylpga8vpSzOh6CY+cjOfDuCoRCzNq4e+DOLR5CU1z3AQ7f26CDoIlV0hNRYk+V9AR6g1yUF93FiyXEwqFO4hINhpamMIkPmPgMMfEnsO0vWzqhAuGI3",
+      "keyWrappingIv": "rDg/UGMk5zBUmBQa",
+      "keyWrappingTag": "abSUBlMLUWBx6gUnpp9G6A=="
+    },
+    {
+      "caSerial": "ET-EPSS-TSA-2026",
+      "role": "TSA",
+      "subjectDn": "CN=EPSS RFC 3161 Trusted Timestamping Authority, OU=PKI Vault Operations, O=EPSS, C=ET",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "algorithm": "RSA-SHA256",
+      "fingerprintSha256": "6B8519D0F6CA9A4C3D9DB15E065CD6F803725BC3457A3365C68139C1DF50C292",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAre1dLDWdXsQ+bQQqE2uU\nvhdcGvCZfrNQhez9kTWMNROyq9dN8K+Xzo/bsUyGx/cFqN/TFQUpcL6yuKCO2FLL\npniUmYdsl/ZS7cM7drPGY1ozJmif03sc5QOqIm8fo/g/69qwmB/f/XcHn0N/Rehp\nc/5HkUU35gRHHQkyNkjLRSO0/id5pT22f5atkr6hdxchXWDKY/hePx53k2C4zkuS\nyaqknztzcofTyP5cLMfBifZZ20fpteYefkUdFAwHzpdQ6Iyrgzdjk5ixa41Ic4k5\n1QPUPtWQquaGEKQM1SQwEylKa/cf4ZtYyaWmtJVGMetv87Hht3+OKvBdzZhuAIY6\n+wIDAQAB\n-----END PUBLIC KEY-----\n",
+      "issuedAt": "2026-11-18T21:35:36.825Z",
+      "expiresAt": "2031-11-17T21:35:36.826Z",
+      "status": "Active",
+      "hsmSlotId": "hsm-slot-primary",
+      "encryptedPrivateKeyPem": "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",
+      "keyWrappingIv": "r9X5gcMVwWYQhUn/",
+      "keyWrappingTag": "QoPKAroUesDsd62pSRwpyg=="
+    }
+  ],
+  "lastRetentionScanAt": "2026-11-18T21:45:23.358Z"
 }

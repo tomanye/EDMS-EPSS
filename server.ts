@@ -1390,6 +1390,267 @@ apiRouter.get('/correspondence/:id/workflow', (req: AuthedRequest, res: Response
   res.json(state);
 });
 
+// Inline Document Viewer, Dynamic DLP Watermarking, Collaborative Annotations (@Mentions) & Redaction
+apiRouter.get('/correspondence/:id/viewer', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const context = store.getDocumentViewerContext(req.params.id, actor, clientIp);
+  if (!context) {
+    return res.status(404).json({ error: 'Document viewer context not found' });
+  }
+  res.json(context);
+});
+
+apiRouter.get('/correspondence/:id/attachments/:attachmentId/download', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+
+  const isInline = req.query.inline === '1' || req.query.inline === 'true';
+  if (!isInline && !store.hasPermission(actor, 'document.download')) {
+    return res.status(403).json({ error: 'Forbidden: document.download permission required to download attachments.' });
+  }
+
+  const att = (doc.attachments || []).find(a => a.id === req.params.attachmentId);
+  if (!att) {
+    return res.status(404).json({ error: 'Attachment not found on document.' });
+  }
+
+  // If attachment points to an uploaded Central Workspace file, stream the stored binary if Clean
+  if (att.fileUrl?.startsWith('/api/v1/workspace/items/')) {
+    const match = att.fileUrl.match(/\/api\/v1\/workspace\/items\/([^/?]+)/);
+    const wsId = match?.[1];
+    const wsItem = wsId ? store.getWorkspaceItemById(wsId) : undefined;
+    if (wsItem && wsItem.itemType === 'file') {
+      if (wsItem.virusScanStatus !== 'Clean') {
+        return res.status(403).json({ error: 'File is quarantined or pending malware scan and cannot be accessed.' });
+      }
+      const versionObj =
+        (wsItem.versions || []).find(v => v.versionNumber === wsItem.currentVersion) || wsItem.versions?.[0];
+      const storageKey = versionObj?.storageKey || wsItem.storageKey;
+      const diskPath = storageKey ? store.getWorkspaceFileDiskPath(storageKey) : null;
+      if (diskPath) {
+        if (!isInline) {
+          store.recordWorkspaceDownload(wsItem.id, actor);
+        }
+        const mimeType = versionObj?.mimeType || wsItem.mimeType || att.mimeType || 'application/octet-stream';
+        const fileName = att.fileName || versionObj?.fileName || wsItem.name;
+        const safeFileName = encodeURIComponent(fileName).replace(/['()]/g, escape);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader(
+          'Content-Disposition',
+          isInline
+            ? `inline; filename*=UTF-8''${safeFileName}`
+            : `attachment; filename*=UTF-8''${safeFileName}`
+        );
+        return res.sendFile(path.resolve(diskPath));
+      }
+    }
+  }
+
+  // Otherwise synthesize a clean stamped official PDF copy with DLP watermark summary
+  const clientIp = req.ip || '127.0.0.1';
+  const watermark = store.buildDlpWatermark(doc, actor, clientIp);
+  const pdfBuffer = store.synthesizeAttachmentPdfBuffer(doc, att, watermark);
+  const outName = att.fileName.toLowerCase().endsWith('.pdf') ? att.fileName : `${att.fileName}.pdf`;
+  const safeFileName = encodeURIComponent(outName).replace(/['()]/g, escape);
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    isInline ? `inline; filename*=UTF-8''${safeFileName}` : `attachment; filename*=UTF-8''${safeFileName}`
+  );
+  res.send(pdfBuffer);
+});
+
+apiRouter.post('/correspondence/:id/viewer/print-log', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const copyToken = sanitize(req.body?.copyToken || '');
+  store.recordPrintWatermarkedCopy(req.params.id, copyToken, actor, clientIp);
+  res.json({ success: true });
+});
+
+apiRouter.post('/correspondence/:id/annotations', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.addDocumentAnnotation(
+    req.params.id,
+    {
+      pageNumber: Number(req.body?.pageNumber || 1),
+      xPercent: Number(req.body?.xPercent ?? 50),
+      yPercent: Number(req.body?.yPercent ?? 50),
+      comment: sanitize(req.body?.comment || ''),
+      mentionedUserIds: Array.isArray(req.body?.mentionedUserIds) ? req.body.mentionedUserIds : [],
+      attachmentId: req.body?.attachmentId ? sanitize(req.body.attachmentId) : undefined
+    },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.annotation);
+});
+
+apiRouter.post('/correspondence/:id/annotations/:annotationId/reply', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.replyDocumentAnnotation(
+    req.params.id,
+    req.params.annotationId,
+    {
+      message: sanitize(req.body?.message || ''),
+      mentionedUserIds: Array.isArray(req.body?.mentionedUserIds) ? req.body.mentionedUserIds : []
+    },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.annotation);
+});
+
+apiRouter.patch('/correspondence/:id/annotations/:annotationId/resolve', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const resolved = req.body?.resolved !== false;
+  const result = store.resolveDocumentAnnotation(
+    req.params.id,
+    req.params.annotationId,
+    resolved,
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.annotation);
+});
+
+apiRouter.delete('/correspondence/:id/annotations/:annotationId', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.deleteDocumentAnnotation(req.params.id, req.params.annotationId, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
+apiRouter.post('/correspondence/:id/redactions', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.applyDocumentRedaction(
+    req.params.id,
+    {
+      pageNumber: Number(req.body?.pageNumber || 1),
+      xPercent: Number(req.body?.xPercent ?? 0),
+      yPercent: Number(req.body?.yPercent ?? 0),
+      widthPercent: Number(req.body?.widthPercent ?? 0),
+      heightPercent: Number(req.body?.heightPercent ?? 0),
+      category: req.body?.category,
+      reason: sanitize(req.body?.reason || ''),
+      redactTextSnippet: req.body?.redactTextSnippet ? sanitize(req.body.redactTextSnippet) : undefined,
+      attachmentId: req.body?.attachmentId ? sanitize(req.body.attachmentId) : undefined
+    },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json({ redaction: result.redaction, document: result.document });
+});
+
+apiRouter.delete('/correspondence/:id/redactions/:redactionId', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const reason = sanitize((req.body?.reason as string) || (req.query?.reason as string) || '');
+  const result = store.removeDocumentRedaction(
+    req.params.id,
+    req.params.redactionId,
+    reason,
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ success: true });
+});
+
 // 4. Workflow Engine (Definitions, Tasks Inbox, Stage Actions, Escalation)
 apiRouter.get('/workflows/definitions', (_req: AuthedRequest, res: Response) => {
   res.json(store.getWorkflowDefinitions());
@@ -1733,6 +1994,48 @@ apiRouter.post('/records/documents/:id/assign-schedule', (req: AuthedRequest, re
     return res.status(result.statusCode || 400).json({ error: result.error });
   }
   res.json(result.document);
+});
+
+apiRouter.post('/records/retention/simulate', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  const result = store.simulateRetentionCalculation(req.body || {});
+  res.json(result);
+});
+
+apiRouter.post('/records/retention/recalculate', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.recalculateAllDocumentRetentions(actor, clientIp, Boolean(req.body?.overwriteManual));
+  if (!result.success) {
+    return res.status(result.statusCode || 403).json({ error: result.error });
+  }
+  res.json(result);
+});
+
+apiRouter.get('/records/retention/alerts', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  if (!store.hasPermission(actor, 'read:documents')) {
+    return res.status(403).json({ error: 'Forbidden: read:documents permission required.' });
+  }
+  const horizonDays = req.query.horizonDays ? Math.max(1, Math.min(730, Number(req.query.horizonDays) || 90)) : 90;
+  res.json(store.getPendingDisposalAlerts(horizonDays));
+});
+
+apiRouter.post('/records/retention/scan-alerts', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  if (
+    !store.hasPermission(actor, 'manage:archives') &&
+    !store.hasPermission(actor, 'manage:organizations') &&
+    !['SuperAdmin', 'RegistryOfficer', 'Auditor'].includes(actor.role)
+  ) {
+    return res.status(403).json({ error: 'Forbidden: records management or audit authority required.' });
+  }
+  const result = store.scanAndNotifyPendingDisposals(actor, clientIp, true);
+  res.json(result);
 });
 
 apiRouter.post('/records/legal-hold/:id', (req: AuthedRequest, res: Response) => {
@@ -2849,8 +3152,8 @@ apiRouter.get('/pki/certificates', (req: AuthedRequest, res: Response) => {
 apiRouter.post('/pki/certificates/issue', (req: AuthedRequest, res: Response) => {
   const actor = getCurrentUser(req);
   const clientIp = req.ip || '127.0.0.1';
-  const { targetUserId, reason } = req.body || {};
-  const result = store.issueSigningCertificate(targetUserId, actor, clientIp, reason);
+  const { targetUserId, reason, algorithm, hsmSlotId } = req.body || {};
+  const result = store.issueSigningCertificate(targetUserId, actor, clientIp, reason, algorithm, hsmSlotId);
   if (!result.success) {
     return res.status(result.statusCode || 400).json({ error: result.error });
   }
@@ -2866,6 +3169,83 @@ apiRouter.post('/pki/certificates/:id/revoke', (req: AuthedRequest, res: Respons
     return res.status(result.statusCode || 400).json({ error: result.error });
   }
   res.json(result.certificate);
+});
+
+apiRouter.get('/pki/hsm/status', (_req: AuthedRequest, res: Response) => {
+  res.json(store.getPkiHsmStatus());
+});
+
+apiRouter.put('/pki/hsm/policy', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.updatePkiHsmPolicy(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json(result.policy);
+});
+
+apiRouter.post('/pki/hsm/slots', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.configureHsmSlot(req.body || {}, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json(result.slot);
+});
+
+apiRouter.post('/pki/hsm/slots/:id/attest', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.attestHsmSlot(req.params.id, actor, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.json({ slot: result.slot, roundTripVerified: result.roundTripVerified });
+});
+
+apiRouter.get('/pki/crl', (_req: AuthedRequest, res: Response) => {
+  res.json(store.getCertificateRevocationList());
+});
+
+apiRouter.post('/pki/batch-sign-outgoing', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const { documentIds, signingMeaning, comments, stepUpPin } = req.body || {};
+  const result = store.batchSignOutgoingDocuments(
+    documentIds,
+    { signingMeaning, comments, stepUpPin },
+    actor,
+    req.authSession,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({
+      error: result.error,
+      failed: result.failed,
+      signedCount: result.signedCount,
+      documents: result.documents
+    });
+  }
+  res.json({
+    signedCount: result.signedCount,
+    failed: result.failed,
+    documents: result.documents
+  });
+});
+
+apiRouter.post('/pki/verify-bundle', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const bundle = req.body;
+  if (!bundle || typeof bundle !== 'object' || !bundle.document || !Array.isArray(bundle.signatures)) {
+    return res.status(400).json({
+      error: 'Invalid detached PKI signature bundle JSON. Expected EPSS-PKI-DETACHED-BUNDLE-V1 schema with document and signatures.'
+    });
+  }
+  const report = store.verifyDetachedSignatureBundle(bundle, actor, clientIp);
+  res.json(report);
 });
 
 apiRouter.get('/correspondence/:id/signatures/verify', (req: AuthedRequest, res: Response) => {
@@ -2885,6 +3265,27 @@ apiRouter.get('/correspondence/:id/signatures/verify', (req: AuthedRequest, res:
     return res.status(404).json({ error: 'Document not found' });
   }
   res.json(verification);
+});
+
+apiRouter.get('/correspondence/:id/signatures/bundle', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const bundle = store.exportDetachedSignatureBundle(doc.id, actor, clientIp);
+  if (!bundle) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const safeReg = doc.registrationNumber.replace(/[^A-Za-z0-9_-]/g, '_');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${safeReg}.sig.json"`);
+  res.send(JSON.stringify(bundle, null, 2));
 });
 
 apiRouter.post('/correspondence/:id/sign', (req: AuthedRequest, res: Response) => {

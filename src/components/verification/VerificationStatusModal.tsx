@@ -83,6 +83,24 @@ export const VerificationStatusModal: React.FC<VerificationStatusModalProps> = (
     }
   };
 
+  const handleDownloadBundle = async () => {
+    try {
+      const res = await apiFetch(`/api/v1/correspondence/${doc.id}/signatures/bundle`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.registrationNumber.replace(/[^A-Za-z0-9_-]/g, '_')}.sig.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // handled silently if offline
+    }
+  };
+
   const handlePrint = () => {
     if (typeof window !== 'undefined' && typeof window.print === 'function') {
       window.print();
@@ -280,7 +298,22 @@ export const VerificationStatusModal: React.FC<VerificationStatusModalProps> = (
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] text-slate-500 dark:text-slate-400 tabular-nums">
                         <span>Cert: {sig.certificateSerial} ({sig.certificateStatus})</span>
-                        <span>Signed: {new Date(sig.signedAt).toLocaleString()}</span>
+                        <span>Signed: {formatEthiopianDate(sig.signedAt, language, true)}</span>
+                        {sig.hsmSlotLabel && (
+                          <span className="text-slate-700 dark:text-slate-300">
+                            HSM: {sig.hsmSlotLabel} ({sig.keyProtectionMode === 'HSM_AES256_WRAPPED' ? 'AES-256 Wrapped' : 'Legacy'})
+                          </span>
+                        )}
+                        {sig.caChainTrusted !== undefined && (
+                          <span className={sig.caChainTrusted ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}>
+                            CA Trust: {sig.caChainTrusted ? 'Verified' : 'Untrusted'}
+                          </span>
+                        )}
+                        {sig.tsaVerified && sig.tsaTimestampUtc && (
+                          <span className="text-teal-700 dark:text-teal-400">
+                            TSA RFC-3161: {sig.tsaTimestampUtc.slice(0, 19)}Z
+                          </span>
+                        )}
                         {sig.biometricVerified && (
                           <span className="inline-flex items-center gap-1 text-teal-700 dark:text-teal-400 font-semibold">
                             <Fingerprint className="w-3 h-3" />
@@ -332,7 +365,18 @@ export const VerificationStatusModal: React.FC<VerificationStatusModalProps> = (
             Close
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {(verification?.signatures.length ?? 0) > 0 && (
+              <button
+                type="button"
+                onClick={handleDownloadBundle}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 rounded-lg hover:bg-teal-100 transition-colors"
+              >
+                <FileKey2 className="w-3.5 h-3.5" />
+                <span>{language === 'am' ? 'የ.sig.json ማረጋገጫ' : 'Export .sig.json Proof'}</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleDownloadQr}

@@ -1,7 +1,7 @@
 import { Language } from '../types/index.js';
 
 const INTERNAL_ID_PATTERNS: RegExp[] = [
-  /\b(?:usr|doc|wfi|wf-def|tpl|lnk|trn|sess|cert|wh|att|mfa|del|inc|phy)-[a-z0-9-]{2,}\b/gi,
+  /\b(?:usr|doc|wfi|wf-def|tpl|lnk|trn|sess|cert|wh|att|mfa|del|inc|phy|ann|red|rep)-[a-z0-9-]{2,}\b/gi,
   /\/app\/applet\/[^\s)]+/gi,
   /\bat\s+[A-Za-z0-9_$.]+\s+\([^)]+\)/g
 ];
@@ -47,6 +47,16 @@ export function localizeErrorMessage(
       ? 'ይህን ሚስጥራዊ ሰነድ ለመክፈት የሁለት ደረጃ (MFA / ባዮሜትሪክ) ማረጋገጫ ያስፈልጋል።'
       : 'Step-up MFA or biometric verification is required for this sensitive record.';
   }
+  if (lower.includes('redaction justification') || lower.includes('un-redaction justification')) {
+    return language === 'am'
+      ? 'የመደበቂያ (Redaction) ምክንያት ቢያንስ 10 ፊደላት መሆን አለበት።'
+      : 'Redaction justification must be at least 10 characters.';
+  }
+  if (lower.includes('annotation comment')) {
+    return language === 'am'
+      ? 'የማብራሪያ ጽሑፍ በ2 እና 1000 ፊደላት መካከል መሆን አለበት።'
+      : 'Annotation comment must be between 2 and 1000 characters.';
+  }
   if (lower.includes('duplicate')) {
     return language === 'am'
       ? 'ተመሳሳይ ሰነድ ቀደም ሲል ተመዝግቦ ተገኝቷል። እባክዎ ተዛማጅ መዝገቦችን ይገምግሙ።'
@@ -91,6 +101,36 @@ export function localizeErrorMessage(
     return language === 'am'
       ? 'የተጠየቀው መረጃ አልተገኘም።'
       : 'The requested record could not be found.';
+  }
+  if (lower.includes('signing_required_for_dispatch') || lower.includes('without an active, valid pki/hsm')) {
+    return language === 'am'
+      ? 'የወጪ ደብዳቤዎችን ከመላክ በፊት ትክክለኛ የPKI/HSM ዲጂታል ፊርማ ማድረግ ግዴታ ነው።'
+      : 'Outgoing correspondence requires an active, valid PKI/HSM cryptographic signature matching its current digest before dispatch.';
+  }
+  if (lower.includes('invalid officer security pin')) {
+    return language === 'am'
+      ? 'ለHSM ፊርማ ማረጋገጫ የገባው የባለሥልጣን ሚስጥር ቁጥር (PIN) ትክክል አይደለም።'
+      : 'Invalid Officer Security PIN provided for HSM digital signature confirmation.';
+  }
+  if (lower.includes('active epss pki signing certificate required')) {
+    return language === 'am'
+      ? 'ንቁ የEPSS PKI ፊርማ ሰርተፊኬት ያስፈልጋል። ሰርተፊኬትዎ ተሰርዟል፣ ጊዜው አልፏል ወይም አልተሰጠም።'
+      : 'An active EPSS PKI signing certificate is required. Issue or renew your HSM-wrapped certificate first.';
+  }
+  if (lower.includes('0-year permanent retention')) {
+    return language === 'am'
+      ? 'ቋሚ የ0 ዓመት ማቆያ መመሪያ ያላቸው ሰነዶች ለማስወገድ ሊቀርቡ አይችሉም።'
+      : 'Documents governed by 0-year Permanent Retention cannot be scheduled for disposal.';
+  }
+  if (lower.includes('only allowed after retention expiry')) {
+    return language === 'am'
+      ? 'ሰነዱን ማስወገድ የሚቻለው የማቆያ ጊዜው ካበቃ በኋላ ብቻ ነው።'
+      : 'Disposal authorization is only permitted after the calculated retention maturity date.';
+  }
+  if (lower.includes('active documents are assigned to it')) {
+    return language === 'am'
+      ? 'ንቁ ሰነዶች የተመደቡበትን የማቆያ መመሪያ መሰረዝ አይቻልም።'
+      : 'Cannot delete a retention schedule while active documents are still linked to it.';
   }
   if (lower.includes('unexpected server error') || lower.includes('internal server')) {
     return language === 'am'

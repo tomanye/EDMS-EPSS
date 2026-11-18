@@ -1,37 +1,53 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Archive,
   Award,
+  BellRing,
+  Calculator,
   CheckCircle2,
   Clock,
   Edit3,
-  FileText,
   FolderArchive,
   FolderUp,
   Gavel,
   Lock,
   Plus,
+  RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Trash2,
   Unlock,
   X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
+import { apiFetch } from '../../lib/apiFetch.js';
+import { localizeErrorMessage } from '../../lib/localizedErrors.js';
 import { formatEthiopianDate } from '../../lib/translations.js';
 import {
   ArchiveRetrievalRequest,
+  ConfidentialityLevel,
+  DisposalAlertUrgency,
   DisposalCertificate,
   DisposalRequest,
   DocumentType,
   PhysicalLocationNode,
-  RetentionSchedule
+  RecordsAlertSummary,
+  RegulatoryCategory,
+  RetentionCalculationResult,
+  RetentionSchedule,
+  RetentionTriggerEvent
 } from '../../types/index.js';
 import { DisposalCertificateModal } from './DisposalCertificateModal.js';
 
-type RecordsSubTab = 'retention' | 'legalHold' | 'archiveVault' | 'disposal' | 'certificates';
+type RecordsSubTab =
+  | 'alerts'
+  | 'retention'
+  | 'legalHold'
+  | 'archiveVault'
+  | 'disposal'
+  | 'certificates';
 
 const ALL_DOC_TYPES: DocumentType[] = [
   'IncomingLetter',
@@ -41,6 +57,25 @@ const ALL_DOC_TYPES: DocumentType[] = [
   'TenderDocument',
   'InspectionReport',
   'Circular'
+];
+
+const ALL_CONF_LEVELS: ConfidentialityLevel[] = ['Public', 'Internal', 'Confidential', 'Secret'];
+
+const REGULATORY_CATEGORIES: Array<{ value: RegulatoryCategory; labelEn: string; labelAm: string }> = [
+  { value: 'PharmaceuticalQuality', labelEn: 'Pharmaceutical Quality & EFDA', labelAm: 'የመድኃኒት ጥራት እና EFDA' },
+  { value: 'ProcurementTender', labelEn: 'Procurement & Tenders', labelAm: 'ግዥ እና ጨረታዎች' },
+  { value: 'FinancialAudit', labelEn: 'Financial & Audit Vouchers', labelAm: 'ፋይናንስ እና ኦዲት' },
+  { value: 'LegalCompliance', labelEn: 'Legal & Litigation Files', labelAm: 'ሕግ እና ክርክሮች' },
+  { value: 'ExecutiveGovernance', labelEn: 'Executive & Sovereign Charters', labelAm: 'ከፍተኛ አመራር እና መመሪያዎች' },
+  { value: 'HumanResources', labelEn: 'Human Resources Records', labelAm: 'የሰው ኃይል መዝገቦች' },
+  { value: 'GeneralAdministrative', labelEn: 'General Administrative', labelAm: 'አጠቃላይ አስተዳደራዊ' }
+];
+
+const TRIGGER_EVENTS: Array<{ value: RetentionTriggerEvent; labelEn: string; labelAm: string }> = [
+  { value: 'RegistrationDate', labelEn: 'Registration Date', labelAm: 'የተመዘገበበት ቀን' },
+  { value: 'CompletionDate', labelEn: 'Closure / Approval Date', labelAm: 'የተጠናቀቀበት / የጸደቀበት ቀን' },
+  { value: 'ArchiveDate', labelEn: 'Archive Transfer Date', labelAm: 'ወደ ማህደር የገባበት ቀን' },
+  { value: 'FiscalYearEnd', labelEn: 'Ethiopian Fiscal Year End (Hamle 1)', labelAm: 'የበጀት ዓመት መጨረሻ (ሐምሌ 1)' }
 ];
 
 export const RecordsArchivalView: React.FC = () => {
@@ -54,14 +89,31 @@ export const RecordsArchivalView: React.FC = () => {
     t
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<RecordsSubTab>('retention');
+  const [activeTab, setActiveTab] = useState<RecordsSubTab>('alerts');
   const [schedules, setSchedules] = useState<RetentionSchedule[]>([]);
+  const [alertSummary, setAlertSummary] = useState<RecordsAlertSummary | null>(null);
   const [retrievals, setRetrievals] = useState<ArchiveRetrievalRequest[]>([]);
   const [disposals, setDisposals] = useState<DisposalRequest[]>([]);
   const [certificates, setCertificates] = useState<DisposalCertificate[]>([]);
   const [locations, setLocations] = useState<PhysicalLocationNode[]>([]);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pending Disposal Alerts filters
+  const [alertUrgencyFilter, setAlertUrgencyFilter] = useState<'All' | DisposalAlertUrgency>('All');
+  const [alertCategoryFilter, setAlertCategoryFilter] = useState<string>('All');
+  const [alertSearch, setAlertSearch] = useState('');
+
+  // Policy Simulator state
+  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [simType, setSimType] = useState<DocumentType>('IncomingLetter');
+  const [simRegCat, setSimRegCat] = useState<RegulatoryCategory | ''>('');
+  const [simConf, setSimConf] = useState<ConfidentialityLevel>('Internal');
+  const [simSubject, setSimSubject] = useState('EFDA Batch Clearance & Cold-Chain Vaccine Inspection');
+  const [simRegDate, setSimRegDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [simCompDate, setSimCompDate] = useState('');
+  const [simResult, setSimResult] = useState<RetentionCalculationResult | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   // Archive Explorer filters
   const [archiveSearch, setArchiveSearch] = useState('');
@@ -73,11 +125,17 @@ export const RecordsArchivalView: React.FC = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<RetentionSchedule | null>(null);
   const [scCategory, setScCategory] = useState('');
+  const [scRegCategory, setScRegCategory] = useState<RegulatoryCategory>('GeneralAdministrative');
+  const [scTriggerEvent, setScTriggerEvent] = useState<RetentionTriggerEvent>('RegistrationDate');
   const [scYears, setScYears] = useState<string>('5');
+  const [scPriority, setScPriority] = useState<string>('75');
+  const [scAlertLeadDays, setScAlertLeadDays] = useState<string>('90');
   const [scAction, setScAction] = useState<RetentionSchedule['disposalAction']>('ReviewAtMaturity');
   const [scLegislation, setScLegislation] = useState('');
   const [scNotes, setScNotes] = useState('');
   const [scDocTypes, setScDocTypes] = useState<DocumentType[]>([]);
+  const [scConfLevels, setScConfLevels] = useState<ConfidentialityLevel[]>([]);
+  const [scKeywordsInput, setScKeywordsInput] = useState('');
   const [scError, setScError] = useState('');
 
   // Assign Schedule to Document modal
@@ -140,14 +198,18 @@ export const RecordsArchivalView: React.FC = () => {
 
   const fetchRecordsData = useCallback(async () => {
     try {
-      const [scRes, retvRes, dispRes, certRes, locRes] = await Promise.all([
-        fetch('/api/v1/records/schedules').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/v1/records/retrievals').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/v1/records/disposals').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/v1/records/certificates').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/v1/tracking/locations').then((r) => (r.ok ? r.json() : []))
+      const [scRes, alertsRes, retvRes, dispRes, certRes, locRes] = await Promise.all([
+        apiFetch('/api/v1/records/schedules').then((r) => (r.ok ? r.json() : [])),
+        apiFetch('/api/v1/records/retention/alerts?horizonDays=90').then((r) => (r.ok ? r.json() : null)),
+        apiFetch('/api/v1/records/retrievals').then((r) => (r.ok ? r.json() : [])),
+        apiFetch('/api/v1/records/disposals').then((r) => (r.ok ? r.json() : [])),
+        apiFetch('/api/v1/records/certificates').then((r) => (r.ok ? r.json() : [])),
+        apiFetch('/api/v1/tracking/locations').then((r) => (r.ok ? r.json() : []))
       ]);
       setSchedules(Array.isArray(scRes) ? scRes : []);
+      if (alertsRes && Array.isArray(alertsRes.alerts)) {
+        setAlertSummary(alertsRes);
+      }
       setRetrievals(Array.isArray(retvRes) ? retvRes : []);
       setDisposals(Array.isArray(dispRes) ? dispRes : []);
       setCertificates(Array.isArray(certRes) ? certRes : []);
@@ -167,6 +229,8 @@ export const RecordsArchivalView: React.FC = () => {
     perms.includes('manage:organizations') ||
     currentUser?.role === 'SuperAdmin';
   const canLegalHold = perms.includes('apply:legal_hold') || currentUser?.role === 'SuperAdmin';
+  const canScanAlerts =
+    canManageArchives || ['RegistryOfficer', 'Auditor'].includes(currentUser?.role || '');
   const canDecideDisposal =
     perms.includes('approve:workflows') ||
     perms.includes('apply:legal_hold') ||
@@ -191,7 +255,6 @@ export const RecordsArchivalView: React.FC = () => {
     [documents]
   );
 
-  // Mature & eligible for disposal
   const disposalEligibleDocs = useMemo(() => {
     const now = Date.now();
     return documents.filter((d) => {
@@ -201,6 +264,22 @@ export const RecordsArchivalView: React.FC = () => {
       return new Date(d.retentionExpiryDate).getTime() <= now;
     });
   }, [documents]);
+
+  const filteredAlerts = useMemo(() => {
+    const list = alertSummary?.alerts || [];
+    const q = alertSearch.trim().toLowerCase();
+    return list.filter((item) => {
+      if (alertUrgencyFilter !== 'All' && item.urgency !== alertUrgencyFilter) return false;
+      if (alertCategoryFilter !== 'All' && item.regulatoryCategory !== alertCategoryFilter) return false;
+      if (!q) return true;
+      return (
+        item.registrationNumber.toLowerCase().includes(q) ||
+        item.subjectEn.toLowerCase().includes(q) ||
+        (item.subjectAm || '').toLowerCase().includes(q) ||
+        item.retentionCategory.toLowerCase().includes(q)
+      );
+    });
+  }, [alertSummary, alertUrgencyFilter, alertCategoryFilter, alertSearch]);
 
   const archiveYears = useMemo(() => {
     const yrs = new Set<string>();
@@ -265,14 +344,103 @@ export const RecordsArchivalView: React.FC = () => {
       .map((l) => ({ id: l.id, label: buildPath(l), level: l.level }));
   }, [locations]);
 
+  const handleRunSimulation = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    try {
+      setIsSimulating(true);
+      const res = await apiFetch('/api/v1/records/retention/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: simType,
+          regulatoryCategory: simRegCat || undefined,
+          confidentiality: simConf,
+          subjectEn: simSubject.trim(),
+          registrationDate: simRegDate ? new Date(simRegDate).toISOString() : new Date().toISOString(),
+          completedAt: simCompDate ? new Date(simCompDate).toISOString() : undefined
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notify('error', localizeErrorMessage(data.error, language));
+        return;
+      }
+      setSimResult(data);
+    } catch {
+      notify('error', localizeErrorMessage('Network error running retention simulation.', language));
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const handleScanAndNotify = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await apiFetch('/api/v1/records/retention/scan-alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data: RecordsAlertSummary & { error?: string } = await res.json();
+      if (!res.ok) {
+        notify('error', localizeErrorMessage(data.error, language));
+        return;
+      }
+      setAlertSummary(data);
+      await refreshData();
+      notify(
+        'success',
+        language === 'am'
+          ? `ፍተሻ ተጠናቋል፦ ${data.counts.overdue} ጊዜው ያለፈበት፣ ${data.counts.critical30} በ30 ቀን ውስጥ፣ ${data.notificationsDispatchedCount} ማሳወቂያ ተልኳል።`
+          : `Alert scan completed: ${data.counts.overdue} mature, ${data.counts.critical30} due ≤30d, ${data.notificationsDispatchedCount} new manager notification(s) dispatched.`
+      );
+    } catch {
+      notify('error', localizeErrorMessage('Network error scanning disposal alerts.', language));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRecalculatePortfolio = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await apiFetch('/api/v1/records/retention/recalculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overwriteManual: false })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notify('error', localizeErrorMessage(data.error, language));
+        return;
+      }
+      await Promise.all([fetchRecordsData(), refreshData()]);
+      notify(
+        'success',
+        language === 'am'
+          ? `${data.evaluatedCount} ሰነዶች ተገምግመዋል፤ ${data.updatedCount} መመሪያዎች ተዘምነዋል (${data.skippedHeldCount} በሕግ እግድ የተጠበቁ)።`
+          : `Evaluated ${data.evaluatedCount} active records; updated ${data.updatedCount} schedule classification(s) (${data.skippedHeldCount} Legal Hold protected).`
+      );
+    } catch {
+      notify('error', localizeErrorMessage('Network error recalculating retention.', language));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const openNewScheduleModal = () => {
     setEditingSchedule(null);
     setScCategory('');
+    setScRegCategory('GeneralAdministrative');
+    setScTriggerEvent('RegistrationDate');
     setScYears('5');
+    setScPriority('75');
+    setScAlertLeadDays('90');
     setScAction('ReviewAtMaturity');
     setScLegislation('');
     setScNotes('');
     setScDocTypes([]);
+    setScConfLevels([]);
+    setScKeywordsInput('');
     setScError('');
     setIsScheduleModalOpen(true);
   };
@@ -280,11 +448,17 @@ export const RecordsArchivalView: React.FC = () => {
   const openEditScheduleModal = (sc: RetentionSchedule) => {
     setEditingSchedule(sc);
     setScCategory(sc.documentCategory);
+    setScRegCategory(sc.regulatoryCategory || 'GeneralAdministrative');
+    setScTriggerEvent(sc.retentionTriggerEvent || 'RegistrationDate');
     setScYears(String(sc.retentionPeriodYears));
+    setScPriority(String(sc.priority ?? 75));
+    setScAlertLeadDays(String(sc.alertLeadDays ?? 90));
     setScAction(sc.disposalAction);
     setScLegislation(sc.governingLegislation);
     setScNotes(sc.notes || '');
     setScDocTypes(sc.documentTypes || []);
+    setScConfLevels(sc.confidentialityLevels || []);
+    setScKeywordsInput((sc.keywordPatterns || []).join(', '));
     setScError('');
     setIsScheduleModalOpen(true);
   };
@@ -306,36 +480,44 @@ export const RecordsArchivalView: React.FC = () => {
       return;
     }
 
+    const keywordPatterns = scKeywordsInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     try {
       setIsSubmitting(true);
       const endpoint = editingSchedule
         ? `/api/v1/records/schedules/${editingSchedule.id}`
         : '/api/v1/records/schedules';
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: editingSchedule ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documentCategory: scCategory.trim(),
+          regulatoryCategory: scRegCategory,
+          retentionTriggerEvent: scTriggerEvent,
+          priority: Math.max(1, Math.min(100, Number(scPriority) || 75)),
+          alertLeadDays: Math.max(0, Math.min(365, Number(scAlertLeadDays) || 90)),
           retentionPeriodYears: yearsNum,
           disposalAction: yearsNum === 0 ? 'PermanentArchive' : scAction,
           governingLegislation: scLegislation.trim(),
           notes: scNotes.trim(),
-          documentTypes: scDocTypes
+          documentTypes: scDocTypes,
+          confidentialityLevels: scConfLevels,
+          keywordPatterns
         })
       });
       const data = await res.json();
       if (!res.ok) {
-        setScError(data.error || 'Failed to save retention schedule.');
+        setScError(localizeErrorMessage(data.error || 'Failed to save retention schedule.', language));
         return;
       }
       setIsScheduleModalOpen(false);
       await Promise.all([fetchRecordsData(), refreshData()]);
-      notify('success', editingSchedule ? 'Retention schedule updated.' : 'Retention schedule created.');
+      notify('success', editingSchedule ? 'Retention policy updated and linked records recalculated.' : 'Intelligent retention policy created.');
     } catch {
-      setScError('Network error saving retention schedule.');
+      setScError(localizeErrorMessage('Network error saving retention schedule.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -345,13 +527,12 @@ export const RecordsArchivalView: React.FC = () => {
     if (!deleteScheduleTarget) return;
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/schedules/${deleteScheduleTarget.id}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': currentUser?.id || '' }
+      const res = await apiFetch(`/api/v1/records/schedules/${deleteScheduleTarget.id}`, {
+        method: 'DELETE'
       });
       const data = await res.json();
       if (!res.ok) {
-        notify('error', data.error || 'Could not delete schedule.');
+        notify('error', localizeErrorMessage(data.error || 'Could not delete schedule.', language));
         setDeleteScheduleTarget(null);
         return;
       }
@@ -359,7 +540,7 @@ export const RecordsArchivalView: React.FC = () => {
       await fetchRecordsData();
       notify('success', 'Retention schedule deleted.');
     } catch {
-      notify('error', 'Failed to delete schedule.');
+      notify('error', localizeErrorMessage('Failed to delete schedule.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -374,24 +555,21 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/documents/${assignDocId}/assign-schedule`, {
+      const res = await apiFetch(`/api/v1/records/documents/${assignDocId}/assign-schedule`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduleId: assignScheduleId })
       });
       const data = await res.json();
       if (!res.ok) {
-        setAssignError(data.error || 'Failed to assign schedule.');
+        setAssignError(localizeErrorMessage(data.error || 'Failed to assign schedule.', language));
         return;
       }
       setIsAssignScheduleOpen(false);
       await Promise.all([fetchRecordsData(), refreshData()]);
       notify('success', `Retention schedule assigned to ${data.registrationNumber}.`);
     } catch {
-      setAssignError('Network error assigning schedule.');
+      setAssignError(localizeErrorMessage('Network error assigning schedule.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -418,12 +596,9 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/legal-hold/${holdDocId}`, {
+      const res = await apiFetch(`/api/v1/records/legal-hold/${holdDocId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           active: holdTargetActive,
           reason: holdReason.trim()
@@ -431,17 +606,17 @@ export const RecordsArchivalView: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setHoldError(data.error || 'Failed to update Legal Hold.');
+        setHoldError(localizeErrorMessage(data.error || 'Failed to update Legal Hold.', language));
         return;
       }
       setIsLegalHoldModalOpen(false);
-      await refreshData();
+      await Promise.all([fetchRecordsData(), refreshData()]);
       notify(
         'success',
         holdTargetActive ? 'Legal Hold applied and record locked.' : 'Legal Hold released.'
       );
     } catch {
-      setHoldError('Network error updating Legal Hold.');
+      setHoldError(localizeErrorMessage('Network error updating Legal Hold.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -456,12 +631,9 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/archive/${transferDocId}`, {
+      const res = await apiFetch(`/api/v1/records/archive/${transferDocId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locationId: transferLocationId || undefined,
           scheduleId: transferScheduleId || undefined,
@@ -470,14 +642,14 @@ export const RecordsArchivalView: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setTransferError(data.error || 'Failed to transfer document to Archive.');
+        setTransferError(localizeErrorMessage(data.error || 'Failed to transfer document to Archive.', language));
         return;
       }
       setIsArchiveTransferOpen(false);
       await Promise.all([fetchRecordsData(), refreshData()]);
       notify('success', `${data.registrationNumber} transferred to Archive Vault.`);
     } catch {
-      setTransferError('Network error transferring record.');
+      setTransferError(localizeErrorMessage('Network error transferring record.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -509,12 +681,9 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/v1/records/retrievals', {
+      const res = await apiFetch('/api/v1/records/retrievals', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documentId: retrievalDocId,
           neededUntilDate: retrievalNeededDate,
@@ -523,14 +692,14 @@ export const RecordsArchivalView: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setRetrievalError(data.error || 'Failed to submit retrieval request.');
+        setRetrievalError(localizeErrorMessage(data.error || 'Failed to submit retrieval request.', language));
         return;
       }
       setIsRetrievalModalOpen(false);
       await fetchRecordsData();
       notify('success', `Archive retrieval requested for ${data.registrationNumber}.`);
     } catch {
-      setRetrievalError('Network error submitting retrieval request.');
+      setRetrievalError(localizeErrorMessage('Network error submitting retrieval request.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -542,26 +711,34 @@ export const RecordsArchivalView: React.FC = () => {
   ) => {
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/retrievals/${id}/status`, {
+      const res = await apiFetch(`/api/v1/records/retrievals/${id}/status`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
       const data = await res.json();
       if (!res.ok) {
-        notify('error', data.error || 'Could not update retrieval request.');
+        notify('error', localizeErrorMessage(data.error || 'Could not update retrieval request.', language));
         return;
       }
       await fetchRecordsData();
       notify('success', `Retrieval marked as ${status}.`);
     } catch {
-      notify('error', 'Failed to update retrieval status.');
+      notify('error', localizeErrorMessage('Failed to update retrieval status.', language));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const openDisposalForDoc = (docId: string, presetReason?: string) => {
+    setDisposalDocId(docId);
+    setDisposalMethod('CertifiedShredding');
+    setDisposalReason(
+      presetReason ||
+        'Retention maturity period elapsed with zero active litigation or financial audit claims.'
+    );
+    setDisposalError('');
+    setIsDisposalModalOpen(true);
   };
 
   const handleCreateDisposal = async (e: React.FormEvent) => {
@@ -577,12 +754,9 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch('/api/v1/records/disposals', {
+      const res = await apiFetch('/api/v1/records/disposals', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documentId: disposalDocId,
           method: disposalMethod,
@@ -591,7 +765,7 @@ export const RecordsArchivalView: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setDisposalError(data.error || 'Failed to submit disposal request.');
+        setDisposalError(localizeErrorMessage(data.error || 'Failed to submit disposal request.', language));
         return;
       }
       setIsDisposalModalOpen(false);
@@ -601,7 +775,7 @@ export const RecordsArchivalView: React.FC = () => {
         `Disposal authorization request submitted for ${data.registrationNumber} (${data.requiredApprovals} approval(s) required).`
       );
     } catch {
-      setDisposalError('Network error submitting disposal request.');
+      setDisposalError(localizeErrorMessage('Network error submitting disposal request.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -617,12 +791,9 @@ export const RecordsArchivalView: React.FC = () => {
     }
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/disposals/${decisionTarget.id}/decide`, {
+      const res = await apiFetch(`/api/v1/records/disposals/${decisionTarget.id}/decide`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           decision: decisionChoice,
           comments: decisionComments.trim()
@@ -630,14 +801,14 @@ export const RecordsArchivalView: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        setDecisionError(data.error || 'Failed to record authorization decision.');
+        setDecisionError(localizeErrorMessage(data.error || 'Failed to record authorization decision.', language));
         return;
       }
       setDecisionTarget(null);
       await fetchRecordsData();
       notify('success', `Disposal ${decisionChoice.toLowerCase()} recorded.`);
     } catch {
-      setDecisionError('Network error recording decision.');
+      setDecisionError(localizeErrorMessage('Network error recording decision.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -648,16 +819,13 @@ export const RecordsArchivalView: React.FC = () => {
     setExecuteError('');
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/v1/records/disposals/${executeTarget.id}/execute`, {
+      const res = await apiFetch(`/api/v1/records/disposals/${executeTarget.id}/execute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': currentUser?.id || ''
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       if (!res.ok) {
-        setExecuteError(data.error || 'Failed to execute disposal.');
+        setExecuteError(localizeErrorMessage(data.error || 'Failed to execute disposal.', language));
         return;
       }
       setExecuteTarget(null);
@@ -670,7 +838,7 @@ export const RecordsArchivalView: React.FC = () => {
         setSelectedCertificate(data.certificate);
       }
     } catch {
-      setExecuteError('Network error executing disposal.');
+      setExecuteError(localizeErrorMessage('Network error executing disposal.', language));
     } finally {
       setIsSubmitting(false);
     }
@@ -682,40 +850,50 @@ export const RecordsArchivalView: React.FC = () => {
   const openRetrievalsCount = retrievals.filter(
     (r) => r.status === 'Requested' || r.status === 'Fulfilled'
   ).length;
+  const alertCounts = alertSummary?.counts || {
+    overdue: disposalEligibleDocs.length,
+    critical30: 0,
+    upcoming90: 0,
+    totalActionable: disposalEligibleDocs.length,
+    permanent: activeDocs.filter((d) => d.retentionYears === 0).length,
+    held: heldDocs.length,
+    activeDisposalWorkflows: pendingDisposalCount
+  };
 
   return (
     <div className="space-y-6">
       {/* Header & Tabs */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t('navArchives')}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {language === 'am'
-              ? 'የሰነድ ማቆያ መመሪያዎች፣ የህግ ከለላ (Legal Hold)፣ ማህደር እና የማስወገጃ ሰርተፊኬት አስተዳደር'
-              : 'Retention lifecycle schedules, litigation holds, archival vault explorer, and authorized disposal governance.'}
+              ? 'ብልህ የሰነድ ማቆያ ጊዜ ስሌት፣ የማስወገጃ ማንቂያዎች፣ የሕግ ከለላ (Legal Hold) እና የማህደር አስተዳደር'
+              : 'Intelligent disposition calculation by regulatory category & trigger event, proactive disposal alerts, legal holds, and vault custody.'}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 self-start">
+        <div className="flex flex-wrap items-center gap-1 border-b xl:border-b-0 border-slate-200 dark:border-slate-800 self-start">
           {(
             [
-              { id: 'retention', label: `Retention Schedules (${schedules.length})` },
-              { id: 'legalHold', label: `Legal Holds (${heldDocs.length})` },
-              { id: 'archiveVault', label: `Archive Explorer (${archivedDocs.length})` },
-              { id: 'disposal', label: `Disposal Workflow (${disposals.length})` },
-              { id: 'certificates', label: `Certificates (${certificates.length})` }
+              { id: 'alerts', label: `${t('retentionAlertsTab')} (${alertSummary?.alerts.length ?? disposalEligibleDocs.length})` },
+              { id: 'retention', label: `${t('retentionSchedulesTab')} (${schedules.length})` },
+              { id: 'legalHold', label: `${t('legalHoldsTab')} (${heldDocs.length})` },
+              { id: 'archiveVault', label: `${t('archiveVaultTab')} (${archivedDocs.length})` },
+              { id: 'disposal', label: `${t('disposalWorkflowTab')} (${disposals.length})` },
+              { id: 'certificates', label: `${t('certificatesTab')} (${certificates.length})` }
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
+              className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-white dark:bg-slate-700 text-teal-800 dark:text-teal-200 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'border-teal-600 text-teal-700 dark:text-teal-300'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               {tab.label}
@@ -748,14 +926,34 @@ export const RecordsArchivalView: React.FC = () => {
       )}
 
       {/* Summary KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+          <div className="text-[11px] font-medium text-slate-500">{t('urgencyOverdueLabel')}</div>
+          <div className="text-xl font-bold text-rose-700 dark:text-rose-400 mt-1 tabular-nums">
+            {alertCounts.overdue}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+            {alertCounts.totalActionable} {language === 'am' ? 'እርምጃ የሚፈልጉ' : 'Actionable'}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+          <div className="text-[11px] font-medium text-slate-500">{t('urgencyCritical30Label')}</div>
+          <div className="text-xl font-bold text-amber-700 dark:text-amber-400 mt-1 tabular-nums">
+            {alertCounts.critical30}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+            {alertCounts.upcoming90} {language === 'am' ? 'በ90 ቀን ውስጥ' : 'Due <= 90d'}
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
           <div className="text-[11px] font-medium text-slate-500">Retention Policies</div>
           <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
             {schedules.length}
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
-            {schedules.filter((s) => s.retentionPeriodYears === 0).length} Permanent (0 yr)
+            {alertCounts.permanent} {language === 'am' ? 'ቋሚ ሰነዶች' : 'Permanent Docs'}
           </div>
         </div>
 
@@ -778,61 +976,111 @@ export const RecordsArchivalView: React.FC = () => {
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-          <div className="text-[11px] font-medium text-slate-500">Pending Disposals</div>
-          <div className="text-xl font-bold text-amber-700 dark:text-amber-400 mt-1 tabular-nums">
-            {pendingDisposalCount}
-          </div>
-          <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
-            {disposalEligibleDocs.length} Mature Eligible
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-          <div className="text-[11px] font-medium text-slate-500">Destruction Certificates</div>
+          <div className="text-[11px] font-medium text-slate-500">Disposal & Certs</div>
           <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1 tabular-nums">
-            {certificates.length}
+            {pendingDisposalCount} / {certificates.length}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">SHA-256 Audited</div>
+          <div className="text-[11px] text-slate-500 mt-0.5">Active / SHA-256 Issued</div>
         </div>
       </div>
 
-      {/* TAB 1: Retention Schedules */}
-      {activeTab === 'retention' && (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      {/* TAB 0: Proactive Pending Disposal Alerts */}
+      {activeTab === 'alerts' && (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                EPSS Records Retention Schedules
-              </h2>
+              <div className="flex items-center gap-2">
+                <BellRing className="w-4 h-4 text-amber-600" />
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {t('pendingAlertsTitle')}
+                </h2>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Retention expiry is auto-calculated on registration; 0 years indicates Permanent Archival Preservation.
+                {t('pendingAlertsSubtitle')}
+                {alertSummary?.lastScanAt && (
+                  <span className="font-mono tabular-nums ml-2 text-slate-400">
+                    · Last scan: {formatEthiopianDate(alertSummary.lastScanAt, language, true)}
+                  </span>
+                )}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-wrap items-center gap-2">
               {canManageArchives && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAssignDocId(activeDocs[0]?.id || '');
-                      setAssignScheduleId(schedules[0]?.id || '');
-                      setAssignError('');
-                      setIsAssignScheduleOpen(true);
-                    }}
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    Assign Schedule to Record
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openNewScheduleModal}
-                    className="px-3 py-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>New Policy</span>
-                  </button>
-                </>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleRecalculatePortfolio}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{t('recalculatePortfolioBtn')}</span>
+                </button>
               )}
+              {canScanAlerts && (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleScanAndNotify}
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <BellRing className="w-3.5 h-3.5" />
+                  <span>{t('scanNotifyManagersBtn')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/20">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              {(
+                [
+                  { id: 'All', label: `${language === 'am' ? 'ሁሉም' : 'All'} (${alertSummary?.alerts.length || 0})` },
+                  { id: 'Overdue', label: `${t('urgencyOverdueLabel')} (${alertCounts.overdue})` },
+                  { id: 'Critical30', label: `${t('urgencyCritical30Label')} (${alertCounts.critical30})` },
+                  { id: 'Upcoming90', label: `${t('urgencyUpcoming90Label')} (${alertCounts.upcoming90})` }
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setAlertUrgencyFilter(f.id)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors ${
+                    alertUrgencyFilter === f.id
+                      ? 'bg-teal-700 text-white border-teal-700'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:text-slate-900'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={alertCategoryFilter}
+                onChange={(e) => setAlertCategoryFilter(e.target.value)}
+                className="px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+              >
+                <option value="All">All Regulatory Categories</option>
+                {REGULATORY_CATEGORIES.map((rc) => (
+                  <option key={rc.value} value={rc.value}>
+                    {language === 'am' ? rc.labelAm : rc.labelEn}
+                  </option>
+                ))}
+              </select>
+
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={alertSearch}
+                  onChange={(e) => setAlertSearch(e.target.value)}
+                  placeholder={language === 'am' ? 'ቁጥር ወይም ርዕስ ፈልግ...' : 'Search reg #, subject...'}
+                  className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg w-48"
+                />
+              </div>
             </div>
           </div>
 
@@ -840,83 +1088,451 @@ export const RecordsArchivalView: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-4 py-3">Record Category</th>
-                  <th className="px-4 py-3">Retention Period</th>
-                  <th className="px-4 py-3">Maturity Action</th>
-                  <th className="px-4 py-3">Governing Legislation</th>
-                  <th className="px-4 py-3 text-right">Linked Docs</th>
-                  {canManageArchives && <th className="px-4 py-3 text-right">Actions</th>}
+                  <th className="px-4 py-3">Record & Subject</th>
+                  <th className="px-4 py-3">Regulatory Classification</th>
+                  <th className="px-4 py-3">Clock Trigger & Anchor</th>
+                  <th className="px-4 py-3">Calculated Disposition</th>
+                  <th className="px-4 py-3">Window / Urgency</th>
+                  <th className="px-4 py-3 text-right">Governance Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {schedules.map((sc) => {
-                  const linkedCount = documents.filter((d) => d.retentionScheduleId === sc.id).length;
-                  return (
-                    <tr key={sc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">
-                          {sc.documentCategory}
-                        </div>
-                        {sc.notes && (
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-md">
-                            {sc.notes}
+                {filteredAlerts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
+                      {language === 'am'
+                        ? 'በተመረጠው መስፈርት የማስወገጃ ጊዜያቸው የቀረበ ሰነዶች የሉም።'
+                        : 'No records within the selected pending disposal or maturity window.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAlerts.map((item) => {
+                    const matchedDoc = documents.find((d) => d.id === item.documentId);
+                    const urgencyTextClass =
+                      item.urgency === 'Overdue'
+                        ? 'text-rose-700 dark:text-rose-400 font-bold'
+                        : item.urgency === 'Critical30'
+                          ? 'text-amber-700 dark:text-amber-400 font-bold'
+                          : 'text-teal-700 dark:text-teal-400 font-semibold';
+
+                    return (
+                      <tr key={item.documentId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 max-w-xs">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => matchedDoc && setSelectedDocument(matchedDoc)}
+                              className="font-mono font-bold text-teal-800 dark:text-teal-300 hover:underline"
+                            >
+                              {item.registrationNumber}
+                            </button>
+                            <span className="text-[11px] text-slate-400">
+                              · {item.type} · {item.confidentiality}
+                            </span>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-mono font-bold tabular-nums">
-                        {sc.retentionPeriodYears === 0 ? (
-                          <span className="text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded">
-                            Permanent (0 yrs)
-                          </span>
-                        ) : (
-                          <span className="text-slate-800 dark:text-slate-200">
-                            {sc.retentionPeriodYears} Years
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
-                        {sc.disposalAction}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 max-w-xs">
-                        {sc.governingLegislation}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                        {linkedCount}
-                      </td>
-                      {canManageArchives && (
-                        <td className="px-4 py-3 text-right">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => openEditScheduleModal(sc)}
-                              className="p-1.5 text-slate-500 hover:text-teal-700 dark:hover:text-teal-300 rounded"
-                              title="Edit retention schedule"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteScheduleTarget(sc)}
-                              className="p-1.5 text-slate-500 hover:text-rose-600 rounded"
-                              title="Delete retention schedule"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                          <div className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                            {language === 'am' ? item.subjectAm || item.subjectEn : item.subjectEn}
                           </div>
                         </td>
-                      )}
-                    </tr>
-                  );
-                })}
+
+                        <td className="px-4 py-3 max-w-xs">
+                          <div className="font-semibold text-slate-800 dark:text-slate-200">
+                            {item.regulatoryCategory}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate">
+                            {item.retentionCategory} · {item.retentionYears} yrs
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-slate-700 dark:text-slate-300">
+                            {item.retentionTriggerEvent}
+                          </div>
+                          <div className="font-mono text-[11px] text-slate-500 tabular-nums">
+                            {item.retentionTriggerDate.slice(0, 10)}
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+                            {formatEthiopianDate(item.retentionExpiryDate, language)}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {item.disposalAction}
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3 font-mono tabular-nums">
+                          <div className={urgencyTextClass}>
+                            {item.daysRemaining <= 0
+                              ? `${Math.abs(item.daysRemaining)}d overdue · MATURE`
+                              : `Due in ${item.daysRemaining}d`}
+                          </div>
+                          {item.hasActiveDisposalRequest && (
+                            <div className="text-[11px] font-sans text-slate-500">
+                              Disposal: {item.activeDisposalStatus}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3 text-right">
+                          <div className="inline-flex items-center gap-1.5">
+                            {item.daysRemaining <= 0 && !item.hasActiveDisposalRequest && canManageArchives && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openDisposalForDoc(
+                                    item.documentId,
+                                    `Mature per ${item.retentionCategory} (${item.governingLegislation}); disposition date ${item.retentionExpiryDate.slice(0, 10)} elapsed.`
+                                  )
+                                }
+                                className="px-2.5 py-1 text-[11px] font-semibold text-white bg-amber-700 hover:bg-amber-800 rounded-md"
+                              >
+                                {t('initiateDisposalAction')}
+                              </button>
+                            )}
+                            {canLegalHold && (
+                              <button
+                                type="button"
+                                onClick={() => openLegalHoldDialog(item.documentId, true)}
+                                className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-md"
+                              >
+                                {t('applyHoldAction')}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
+      {/* TAB 1: Intelligent Retention Schedules & Simulator */}
+      {activeTab === 'retention' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  EPSS Intelligent Records Retention Rules
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Disposition dates auto-calculate using regulatory category, metadata keywords, trigger event clock, and rule priority.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !isSimulatorOpen;
+                    setIsSimulatorOpen(next);
+                    if (next && !simResult) {
+                      handleRunSimulation();
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800 bg-teal-50/70 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>{isSimulatorOpen ? 'Hide Disposition Simulator' : 'Disposition Calculator'}</span>
+                </button>
+                {canManageArchives && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAssignDocId(activeDocs[0]?.id || '');
+                        setAssignScheduleId(schedules[0]?.id || '');
+                        setAssignError('');
+                        setIsAssignScheduleOpen(true);
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                      Assign Schedule to Record
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openNewScheduleModal}
+                      className="px-3 py-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New Policy</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Interactive Disposition Calculator & Rule Simulator */}
+            {isSimulatorOpen && (
+              <form
+                onSubmit={handleRunSimulation}
+                className="p-5 bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800 space-y-4 text-xs"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100">
+                      <Sparkles className="w-4 h-4 text-teal-600" />
+                      <span>{t('policySimulatorTitle')}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      {t('policySimulatorSubtitle')}
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSimulating}
+                    className="px-3.5 py-1.5 font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg disabled:opacity-50"
+                  >
+                    {isSimulating ? 'Calculating...' : t('runSimulationBtn')}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Document Type
+                    </label>
+                    <select
+                      value={simType}
+                      onChange={(e) => setSimType(e.target.value as DocumentType)}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+                    >
+                      {ALL_DOC_TYPES.map((dt) => (
+                        <option key={dt} value={dt}>
+                          {dt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      {t('regulatoryCategoryLabel')}
+                    </label>
+                    <select
+                      value={simRegCat}
+                      onChange={(e) => setSimRegCat(e.target.value as RegulatoryCategory | '')}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+                    >
+                      <option value="">Auto-Detect from Subject Keywords</option>
+                      {REGULATORY_CATEGORIES.map((rc) => (
+                        <option key={rc.value} value={rc.value}>
+                          {rc.labelEn}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Confidentiality
+                    </label>
+                    <select
+                      value={simConf}
+                      onChange={(e) => setSimConf(e.target.value as ConfidentialityLevel)}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+                    >
+                      {ALL_CONF_LEVELS.map((cl) => (
+                        <option key={cl} value={cl}>
+                          {cl}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Registration Date
+                    </label>
+                    <input
+                      type="date"
+                      value={simRegDate}
+                      onChange={(e) => setSimRegDate(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Completion Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={simCompDate}
+                      onChange={(e) => setSimCompDate(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                    Sample Subject / Metadata Text
+                  </label>
+                  <input
+                    type="text"
+                    value={simSubject}
+                    onChange={(e) => setSimSubject(e.target.value)}
+                    placeholder="e.g. Tender award framework agreement OR EFDA batch pharmacovigilance recall..."
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
+                  />
+                </div>
+
+                {simResult && (
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="md:col-span-2 space-y-1">
+                      <div className="text-[11px] text-slate-500">Matched Policy & Governing Statute</div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100">
+                        {simResult.retentionCategory}
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                        {simResult.regulatoryCategory} · {simResult.governingLegislation}
+                      </div>
+                      <div className="text-[11px] text-teal-700 dark:text-teal-300">
+                        {simResult.retentionClassificationReason} ({Math.round(simResult.retentionConfidence * 100)}%)
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[11px] text-slate-500">{t('retentionTriggerLabel')}</div>
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">
+                        {simResult.retentionTriggerEvent}
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 tabular-nums">
+                        Anchor: {simResult.retentionTriggerDate.slice(0, 10)}
+                      </div>
+                      <div className="text-[11px] text-slate-500 tabular-nums">
+                        Lead Alert: {simResult.alertLeadDays} days before maturity
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[11px] text-slate-500">{t('calculatedDispositionDateLabel')}</div>
+                      <div className="font-mono font-bold text-teal-700 dark:text-teal-300 tabular-nums">
+                        {simResult.isPermanent
+                          ? t('permanentRetentionLabel')
+                          : formatEthiopianDate(simResult.retentionExpiryDate, language)}
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-mono tabular-nums">
+                        {simResult.isPermanent
+                          ? 'Exempt from destruction'
+                          : `${simResult.retentionYears} yrs · Action: ${simResult.disposalAction}`}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </form>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-4 py-3">Record Category & Signals</th>
+                    <th className="px-4 py-3">Regulatory & Trigger</th>
+                    <th className="px-4 py-3">Retention / Lead Alert</th>
+                    <th className="px-4 py-3">Governing Legislation</th>
+                    <th className="px-4 py-3 text-right">Linked Docs</th>
+                    {canManageArchives && <th className="px-4 py-3 text-right">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {schedules.map((sc) => {
+                    const linkedCount = documents.filter((d) => d.retentionScheduleId === sc.id).length;
+                    return (
+                      <tr key={sc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                            {sc.documentCategory}
+                          </div>
+                          {sc.notes && (
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-md">
+                              {sc.notes}
+                            </div>
+                          )}
+                          {(sc.keywordPatterns?.length || sc.documentTypes?.length) ? (
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                              {sc.documentTypes && sc.documentTypes.length > 0 && (
+                                <span>Types: {sc.documentTypes.join(', ')}</span>
+                              )}
+                              {sc.keywordPatterns && sc.keywordPatterns.length > 0 && (
+                                <span>
+                                  {sc.documentTypes?.length ? ' · ' : ''}
+                                  Keywords: {sc.keywordPatterns.slice(0, 5).join(', ')}
+                                  {sc.keywordPatterns.length > 5 ? ` (+${sc.keywordPatterns.length - 5})` : ''}
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-slate-800 dark:text-slate-200">
+                            {sc.regulatoryCategory || 'GeneralAdministrative'}
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-mono tabular-nums">
+                            {sc.retentionTriggerEvent || 'RegistrationDate'} · Prio {sc.priority ?? 75}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-mono tabular-nums">
+                          {sc.retentionPeriodYears === 0 ? (
+                            <span className="font-bold text-teal-700 dark:text-teal-300">
+                              Permanent (0 yrs)
+                            </span>
+                          ) : (
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              {sc.retentionPeriodYears} Years
+                            </span>
+                          )}
+                          <div className="text-[11px] font-sans text-slate-500">
+                            {sc.disposalAction} · Alert {sc.alertLeadDays ?? 90}d prior
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300 max-w-xs">
+                          {sc.governingLegislation}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                          {linkedCount}
+                        </td>
+                        {canManageArchives && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEditScheduleModal(sc)}
+                                className="p-1.5 text-slate-500 hover:text-teal-700 dark:hover:text-teal-300 rounded"
+                                title="Edit retention schedule"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteScheduleTarget(sc)}
+                                className="p-1.5 text-slate-500 hover:text-rose-600 rounded"
+                                title="Delete retention schedule"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TAB 2: Legal Holds */}
       {activeTab === 'legalHold' && (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -964,11 +1580,11 @@ export const RecordsArchivalView: React.FC = () => {
                       >
                         {doc.registrationNumber}
                       </button>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded">
-                        IMMUTABLE LEGAL HOLD
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                        · IMMUTABLE LEGAL HOLD
                       </span>
                       <span className="text-[11px] font-mono text-slate-500 tabular-nums">
-                        Retention Expiry:{' '}
+                        · Retention Expiry:{' '}
                         {doc.retentionYears === 0
                           ? 'Permanent'
                           : formatEthiopianDate(doc.retentionExpiryDate, language)}
@@ -1019,7 +1635,7 @@ export const RecordsArchivalView: React.FC = () => {
       {/* TAB 3: Archive Explorer & Retrieval Requests */}
       {activeTab === 'archiveVault' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -1125,12 +1741,17 @@ export const RecordsArchivalView: React.FC = () => {
                         >
                           {doc.registrationNumber}
                         </button>
-                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                          {doc.retentionCategory || 'General Record'}
+                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                          · {doc.retentionCategory || 'General Record'}
                         </span>
+                        {doc.regulatoryCategory && (
+                          <span className="text-[11px] font-medium text-teal-700 dark:text-teal-400">
+                            · {doc.regulatoryCategory}
+                          </span>
+                        )}
                         {doc.legalHold && (
-                          <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded">
-                            LEGAL HOLD
+                          <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
+                            · LEGAL HOLD
                           </span>
                         )}
                       </div>
@@ -1171,7 +1792,7 @@ export const RecordsArchivalView: React.FC = () => {
           </div>
 
           {/* Archive Retrieval Requests Queue */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-600" />
@@ -1224,14 +1845,14 @@ export const RecordsArchivalView: React.FC = () => {
                         </td>
                         <td className="px-3 py-2.5">
                           <span
-                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                            className={`text-[11px] font-bold uppercase ${
                               retv.status === 'Returned'
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                ? 'text-emerald-700 dark:text-emerald-400'
                                 : retv.status === 'Fulfilled'
-                                  ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300'
+                                  ? 'text-teal-700 dark:text-teal-400'
                                   : retv.status === 'Denied'
-                                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-                                    : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                                    ? 'text-rose-700 dark:text-rose-400'
+                                    : 'text-amber-700 dark:text-amber-400'
                             }`}
                           >
                             {retv.status}
@@ -1253,7 +1874,7 @@ export const RecordsArchivalView: React.FC = () => {
                                   type="button"
                                   disabled={isSubmitting}
                                   onClick={() => handleUpdateRetrievalStatus(retv.id, 'Denied')}
-                                  className="px-2 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded"
+                                  className="px-2 py-1 text-[11px] font-semibold text-rose-700 border border-rose-200 hover:bg-rose-50 rounded"
                                 >
                                   Deny
                                 </button>
@@ -1283,7 +1904,7 @@ export const RecordsArchivalView: React.FC = () => {
 
       {/* TAB 4: Disposal Authorization Workflow */}
       {activeTab === 'disposal' && (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -1299,13 +1920,7 @@ export const RecordsArchivalView: React.FC = () => {
             {canManageArchives && (
               <button
                 type="button"
-                onClick={() => {
-                  setDisposalDocId(disposalEligibleDocs[0]?.id || '');
-                  setDisposalMethod('CertifiedShredding');
-                  setDisposalReason('');
-                  setDisposalError('');
-                  setIsDisposalModalOpen(true);
-                }}
+                onClick={() => openDisposalForDoc(disposalEligibleDocs[0]?.id || '', '')}
                 className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1336,21 +1951,21 @@ export const RecordsArchivalView: React.FC = () => {
                         <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {req.registrationNumber}
                         </span>
-                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                          {req.confidentiality}
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                          · {req.confidentiality}
                         </span>
                         <span
-                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                          className={`text-[11px] font-bold uppercase ${
                             req.status === 'Executed'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              ? 'text-emerald-700 dark:text-emerald-400'
                               : req.status === 'ApprovedReady'
-                                ? 'bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300'
+                                ? 'text-teal-700 dark:text-teal-400'
                                 : req.status === 'Rejected'
-                                  ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-                                  : 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                  ? 'text-rose-700 dark:text-rose-400'
+                                  : 'text-amber-700 dark:text-amber-400'
                           }`}
                         >
-                          {req.status}
+                          · {req.status}
                         </span>
                       </div>
 
@@ -1371,7 +1986,6 @@ export const RecordsArchivalView: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Multi-level Approver Log */}
                     {req.approvals.length > 0 && (
                       <div className="border-t border-slate-200 dark:border-slate-700 pt-2.5 space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -1393,7 +2007,6 @@ export const RecordsArchivalView: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Action Bar */}
                     <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                       {req.status === 'PendingApproval' && canDecideDisposal && (
                         <>
@@ -1459,7 +2072,7 @@ export const RecordsArchivalView: React.FC = () => {
 
       {/* TAB 5: Disposal Certificates */}
       {activeTab === 'certificates' && (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-teal-600" />
@@ -1533,16 +2146,16 @@ export const RecordsArchivalView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Create / Edit Retention Schedule */}
+      {/* MODAL: Create / Edit Intelligent Retention Schedule */}
       {isScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <form
             onSubmit={handleSaveSchedule}
-            className="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden"
+            className="bg-white dark:bg-slate-900 rounded-xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden my-4"
           >
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {editingSchedule ? 'Edit Retention Schedule' : 'Create Retention Schedule'}
+                {editingSchedule ? 'Edit Intelligent Retention Rule' : 'Create Intelligent Retention Rule'}
               </h3>
               <button
                 type="button"
@@ -1552,7 +2165,7 @@ export const RecordsArchivalView: React.FC = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 space-y-3.5 text-xs">
+            <div className="p-5 space-y-3.5 text-xs max-h-[75vh] overflow-y-auto">
               {scError && (
                 <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800">
                   {scError}
@@ -1572,10 +2185,46 @@ export const RecordsArchivalView: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Retention Years (0 = Permanent) *
+                    {t('regulatoryCategoryLabel')} *
+                  </label>
+                  <select
+                    value={scRegCategory}
+                    onChange={(e) => setScRegCategory(e.target.value as RegulatoryCategory)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                  >
+                    {REGULATORY_CATEGORIES.map((rc) => (
+                      <option key={rc.value} value={rc.value}>
+                        {rc.labelEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {t('retentionTriggerLabel')} *
+                  </label>
+                  <select
+                    value={scTriggerEvent}
+                    onChange={(e) => setScTriggerEvent(e.target.value as RetentionTriggerEvent)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                  >
+                    {TRIGGER_EVENTS.map((te) => (
+                      <option key={te.value} value={te.value}>
+                        {te.labelEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Retention Yrs (0 = Perm) *
                   </label>
                   <input
                     type="number"
@@ -1588,7 +2237,33 @@ export const RecordsArchivalView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Maturity Disposal Action *
+                    {t('alertLeadDaysLabel')}
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={365}
+                    value={scAlertLeadDays}
+                    onChange={(e) => setScAlertLeadDays(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {t('rulePriorityLabel')}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={scPriority}
+                    onChange={(e) => setScPriority(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Maturity Action *
                   </label>
                   <select
                     value={Number(scYears) === 0 ? 'PermanentArchive' : scAction}
@@ -1621,6 +2296,19 @@ export const RecordsArchivalView: React.FC = () => {
 
               <div>
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {t('keywordsFieldLabel')}
+                </label>
+                <input
+                  type="text"
+                  value={scKeywordsInput}
+                  onChange={(e) => setScKeywordsInput(e.target.value)}
+                  placeholder="e.g. narcotic, controlled substance, efda, cold chain, batch recall"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Auto-Assign to Document Types
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -1642,6 +2330,35 @@ export const RecordsArchivalView: React.FC = () => {
                         }`}
                       >
                         {dt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Match Confidentiality Levels
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_CONF_LEVELS.map((cl) => {
+                    const checked = scConfLevels.includes(cl);
+                    return (
+                      <button
+                        key={cl}
+                        type="button"
+                        onClick={() =>
+                          setScConfLevels((prev) =>
+                            checked ? prev.filter((x) => x !== cl) : [...prev, cl]
+                          )
+                        }
+                        className={`px-2 py-1 text-[11px] rounded border transition-colors ${
+                          checked
+                            ? 'bg-teal-700 text-white border-teal-700'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {cl}
                       </button>
                     );
                   })}
@@ -1763,7 +2480,7 @@ export const RecordsArchivalView: React.FC = () => {
                 >
                   {schedules.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.documentCategory} ({s.retentionPeriodYears === 0 ? 'Permanent' : `${s.retentionPeriodYears} yrs`})
+                      {s.documentCategory} ({s.retentionPeriodYears === 0 ? 'Permanent' : `${s.retentionPeriodYears} yrs · ${s.retentionTriggerEvent || 'RegistrationDate'}`})
                     </option>
                   ))}
                 </select>

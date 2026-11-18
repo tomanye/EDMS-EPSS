@@ -185,12 +185,18 @@ export interface WorkflowActionRecord {
     signedByRole?: string;
     certificateSerial: string;
     certificateFingerprint?: string;
-    algorithm?: 'RSA-SHA256';
+    algorithm?: SigningAlgorithm;
     documentDigestSha256?: string;
     signatureBase64?: string;
     signingMeaning?: string;
     biometricVerified?: boolean;
     mfaMethod?: 'webauthn' | 'pin' | 'session_mfa' | 'standard';
+    hsmSlotId?: string;
+    hsmSlotLabel?: string;
+    hsmProvider?: HsmProviderType;
+    keyProtectionMode?: KeyProtectionMode;
+    caIssuerSerial?: string;
+    tsaToken?: TrustedTimestampToken;
     timestamp: string;
     verified: boolean;
     invalidated?: boolean;
@@ -247,8 +253,14 @@ export interface DocumentItem {
   archiveLocationPath?: string;
   retentionScheduleId?: string;
   retentionCategory?: string;
+  regulatoryCategory?: RegulatoryCategory | string;
+  retentionTriggerEvent?: RetentionTriggerEvent;
+  retentionTriggerDate?: string;
   retentionYears: number;
   retentionExpiryDate: string;
+  retentionClassificationReason?: string;
+  retentionConfidence?: number;
+  retentionManualOverride?: boolean;
   legalHold: boolean;
   legalHoldReason?: string;
   legalHoldAppliedBy?: string;
@@ -287,6 +299,8 @@ export interface DocumentItem {
   };
   currentVersion?: number;
   revisions?: DocumentRevision[];
+  annotations?: DocumentAnnotation[];
+  redactions?: DocumentRedactionMark[];
 }
 
 export type DocumentRevisionActionType =
@@ -425,17 +439,117 @@ export interface MissingPhysicalIncident {
   resolutionNotes?: string;
 }
 
+export type RegulatoryCategory =
+  | 'PharmaceuticalQuality'
+  | 'ProcurementTender'
+  | 'FinancialAudit'
+  | 'LegalCompliance'
+  | 'ExecutiveGovernance'
+  | 'HumanResources'
+  | 'GeneralAdministrative';
+
+export type RetentionTriggerEvent =
+  | 'RegistrationDate'
+  | 'CompletionDate'
+  | 'ArchiveDate'
+  | 'FiscalYearEnd';
+
 export interface RetentionSchedule {
   id: string;
   documentCategory: string;
+  regulatoryCategory?: RegulatoryCategory;
   retentionPeriodYears: number; // 0 = Permanent Archive
   disposalAction: 'PermanentArchive' | 'AuthorizedDestruction' | 'ReviewAtMaturity';
   governingLegislation: string;
   notes: string;
   documentTypes?: DocumentType[];
+  confidentialityLevels?: ConfidentialityLevel[];
+  keywordPatterns?: string[];
+  retentionTriggerEvent?: RetentionTriggerEvent;
+  priority?: number;
+  alertLeadDays?: number;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface RetentionSimulationInput {
+  type: DocumentType;
+  subjectEn?: string;
+  subjectAm?: string;
+  descriptionEn?: string;
+  ocrTextEn?: string;
+  senderOrganization?: string;
+  confidentiality?: ConfidentialityLevel;
+  regulatoryCategory?: RegulatoryCategory | string;
+  tags?: string[];
+  registrationDate?: string;
+  completedAt?: string;
+  archivedAt?: string;
+  scheduleId?: string;
+}
+
+export interface RetentionCalculationResult {
+  retentionScheduleId?: string;
+  retentionCategory: string;
+  regulatoryCategory: RegulatoryCategory | string;
+  governingLegislation: string;
+  disposalAction: RetentionSchedule['disposalAction'];
+  retentionTriggerEvent: RetentionTriggerEvent;
+  retentionTriggerDate: string;
+  retentionYears: number;
+  retentionExpiryDate: string;
+  retentionConfidence: number;
+  retentionClassificationReason: string;
+  alertLeadDays: number;
+  daysUntilDisposition: number | null;
+  isPermanent: boolean;
+  matchedSignals: string[];
+}
+
+export type DisposalAlertUrgency = 'Overdue' | 'Critical30' | 'Upcoming90';
+
+export interface PendingDisposalAlertItem {
+  documentId: string;
+  registrationNumber: string;
+  subjectEn: string;
+  subjectAm: string;
+  type: DocumentType;
+  confidentiality: ConfidentialityLevel;
+  branchId: string;
+  departmentId: string;
+  assignedDepartmentName?: string;
+  retentionScheduleId?: string;
+  retentionCategory: string;
+  regulatoryCategory: string;
+  governingLegislation: string;
+  retentionTriggerEvent: RetentionTriggerEvent;
+  retentionTriggerDate: string;
+  retentionYears: number;
+  retentionExpiryDate: string;
+  disposalAction: RetentionSchedule['disposalAction'];
+  alertLeadDays: number;
+  daysRemaining: number;
+  urgency: DisposalAlertUrgency;
+  hasActiveDisposalRequest: boolean;
+  activeDisposalRequestId?: string;
+  activeDisposalStatus?: DisposalRequest['status'];
+  classificationReason?: string;
+}
+
+export interface RecordsAlertSummary {
+  alerts: PendingDisposalAlertItem[];
+  counts: {
+    overdue: number;
+    critical30: number;
+    upcoming90: number;
+    totalActionable: number;
+    permanent: number;
+    held: number;
+    activeDisposalWorkflows: number;
+  };
+  lastScanAt: string;
+  notificationsDispatchedCount: number;
 }
 
 export interface DisposalApprovalEntry {
@@ -1305,6 +1419,91 @@ export interface DuplicateMatch {
   isRestricted: boolean;
 }
 
+export type SigningAlgorithm = 'RSA-SHA256' | 'RSA-PSS-SHA256' | 'ECDSA-P384-SHA384';
+
+export type HsmProviderType =
+  | 'SoftwarePKCS11HSM'
+  | 'ExternalPKCS11'
+  | 'AzureKeyVaultHSM'
+  | 'AwsCloudHSM';
+
+export type KeyProtectionMode = 'HSM_AES256_WRAPPED' | 'SOFTWARE_LEGACY';
+
+export interface TrustedTimestampToken {
+  tsaTokenId: string;
+  tsaAuthorityDn: string;
+  tsaSerialNumber: string;
+  timestampUtc: string;
+  imprintHashSha256: string;
+  nonceHex: string;
+  tsaSignatureBase64: string;
+  verified?: boolean;
+}
+
+export interface HsmSlotConfig {
+  id: string;
+  slotCode: string;
+  label: string;
+  provider: HsmProviderType;
+  endpointUri?: string;
+  keyWrapAlgorithm: 'AES-256-GCM' | 'PKCS11-CKM-AES-KEY-WRAP';
+  fipsLevel: 'FIPS 140-3 Level 3' | 'FIPS 140-2 Level 3' | 'FIPS 140-3 Level 2';
+  status: 'Active' | 'Standby' | 'Maintenance';
+  isDefault: boolean;
+  lastAttestedAt: string;
+  attestationDigestSha256: string;
+  operationsCount: number;
+}
+
+export interface PkiCaNodeSummary {
+  caSerial: string;
+  role: 'RootCA' | 'IssuingCA' | 'TSA';
+  subjectDn: string;
+  issuerDn: string;
+  algorithm: SigningAlgorithm;
+  fingerprintSha256: string;
+  publicKeyPem: string;
+  issuedAt: string;
+  expiresAt: string;
+  status: 'Active';
+}
+
+export interface PkiPolicyConfig {
+  requireSignedOutgoingDispatch: boolean;
+  requireTsaTimestamp: boolean;
+  requireStepUpMfaForHsmSign: boolean;
+  defaultAlgorithm: SigningAlgorithm;
+  activeHsmSlotId: string;
+  crlDistributionUri: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface PkiHsmGovernanceStatus {
+  policy: PkiPolicyConfig;
+  caChain: PkiCaNodeSummary[];
+  hsmSlots: HsmSlotConfig[];
+  metrics: {
+    totalCertificates: number;
+    activeCertificates: number;
+    revokedCertificates: number;
+    hsmWrappedCertificates: number;
+    outgoingTotal: number;
+    outgoingSealed: number;
+    outgoingUnsigned: number;
+    totalTsaTimestampsIssued: number;
+  };
+}
+
+export interface CrlRevocationEntry {
+  serialNumber: string;
+  holderName: string;
+  holderRole: UserRole;
+  revokedAt: string;
+  revokedBy: string;
+  reason: string;
+}
+
 export interface SigningCertificate {
   id: string;
   serialNumber: string;
@@ -1312,12 +1511,19 @@ export interface SigningCertificate {
   userName: string;
   userRole: UserRole;
   departmentNameEn: string;
-  algorithm: 'RSA-SHA256';
+  algorithm: SigningAlgorithm;
   keySizeBits: number;
   publicKeyPem: string;
   fingerprintSha256: string;
   issuerDn: string;
   subjectDn: string;
+  issuerCaSerial?: string;
+  issuerCaFingerprintSha256?: string;
+  caEndorsementBase64?: string;
+  caChainTrusted?: boolean;
+  keyProtectionMode?: KeyProtectionMode;
+  hsmSlotId?: string;
+  hsmSlotLabel?: string;
   issuedAt: string;
   expiresAt: string;
   status: 'Active' | 'Revoked' | 'Expired';
@@ -1343,6 +1549,12 @@ export interface SignatureCheckDetail {
   currentDocumentDigestSha256: string;
   cryptographicallyValid: boolean;
   digestMatchesCurrent: boolean;
+  caChainTrusted?: boolean;
+  tsaVerified?: boolean;
+  tsaTimestampUtc?: string;
+  tsaAuthorityDn?: string;
+  hsmSlotLabel?: string;
+  keyProtectionMode?: KeyProtectionMode;
   certificateStatus: 'Active' | 'Revoked' | 'Expired' | 'NotFound';
   biometricVerified: boolean;
   invalidated?: boolean;
@@ -1359,8 +1571,83 @@ export interface DocumentSignatureVerificationResult {
   totalSignatures: number;
   validSignatures: number;
   requiresDigitalSignature: boolean;
+  caHierarchyTrusted?: boolean;
   signatures: SignatureCheckDetail[];
   summaryMessage: string;
+}
+
+export interface DetachedSignatureBundle {
+  bundleFormat: 'EPSS-PKI-DETACHED-BUNDLE-V1';
+  exportedAt: string;
+  exportedBy: string;
+  document: {
+    id: string;
+    registrationNumber: string;
+    referenceNumber: string;
+    type: DocumentType;
+    subjectEn: string;
+    subjectAm: string;
+    descriptionEn: string;
+    senderOrganization: string;
+    recipientOrganization: string;
+    confidentiality: ConfidentialityLevel;
+    attachments: Array<{ fileName: string; fileSize: number; mimeType: string }>;
+  };
+  canonicalDigestSha256: string;
+  caHierarchy: {
+    issuingCaPublicKeyPem: string;
+    issuingCaSerial: string;
+    tsaPublicKeyPem: string;
+    tsaSerial: string;
+  };
+  signatures: Array<{
+    signatureId: string;
+    historyRecordId: string;
+    signedByUserId: string;
+    signedBy: string;
+    signedByRole: string;
+    action: string;
+    stageName: string;
+    signingMeaning: string;
+    algorithm: SigningAlgorithm;
+    certificateSerial: string;
+    certificatePublicKeyPem: string;
+    certificateIssuerCaSerial?: string;
+    certificateCaEndorsementBase64?: string;
+    hsmSlotLabel?: string;
+    keyProtectionMode?: KeyProtectionMode;
+    signedDigestSha256: string;
+    signatureBase64: string;
+    tsaToken?: TrustedTimestampToken;
+    signedAt: string;
+    invalidated?: boolean;
+  }>;
+}
+
+export interface BundleVerificationReport {
+  valid: boolean;
+  bundleFormat: string;
+  registrationNumber: string;
+  computedDigestSha256: string;
+  declaredDigestSha256: string;
+  digestIntegrityMatch: boolean;
+  totalSignatures: number;
+  validSignatures: number;
+  verifiedAt: string;
+  summaryMessage: string;
+  results: Array<{
+    signatureId: string;
+    signedBy: string;
+    certificateSerial: string;
+    algorithm: string;
+    cryptographicallyValid: boolean;
+    digestMatchesBundle: boolean;
+    caChainTrusted: boolean;
+    tsaVerified: boolean;
+    crlStatus: 'Good' | 'Revoked' | 'Unknown';
+    status: 'Valid' | 'Tampered' | 'InvalidSignature' | 'CertificateRevoked' | 'UntrustedCA';
+    reason: string;
+  }>;
 }
 
 export interface PublicVerificationSignerSummary {
@@ -1780,4 +2067,92 @@ export interface EffectivePermissionPreview {
   sodWarnings: SodViolationItem[];
   activeBreakGlass?: BreakGlassElevation | null;
 }
+
+export type RedactionCategory =
+  | 'PII'
+  | 'FinancialBid'
+  | 'MedicalBatch'
+  | 'LegalClause'
+  | 'NationalSecurity';
+
+export interface DocumentAnnotationReply {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: UserRole;
+  message: string;
+  createdAt: string;
+}
+
+export interface DocumentAnnotation {
+  id: string;
+  documentId: string;
+  attachmentId?: string;
+  pageNumber: number;
+  xPercent: number;
+  yPercent: number;
+  comment: string;
+  mentionedUserIds: string[];
+  mentionedUserNames: string[];
+  authorId: string;
+  authorName: string;
+  authorRole: UserRole;
+  status: 'Open' | 'Resolved';
+  resolvedByName?: string;
+  resolvedAt?: string;
+  replies: DocumentAnnotationReply[];
+  createdAt: string;
+}
+
+export interface DocumentRedactionMark {
+  id: string;
+  documentId: string;
+  attachmentId?: string;
+  pageNumber: number;
+  xPercent: number;
+  yPercent: number;
+  widthPercent: number;
+  heightPercent: number;
+  category: RedactionCategory;
+  reason: string;
+  redactTextSnippet?: string;
+  appliedById: string;
+  appliedByName: string;
+  appliedByRole: UserRole;
+  appliedAt: string;
+  isPermanent: boolean;
+}
+
+export interface DlpWatermarkContext {
+  watermarkText: string;
+  viewerName: string;
+  viewerRole: string;
+  viewerBranch: string;
+  viewedAt: string;
+  copyToken: string;
+  enforceDlp: boolean;
+}
+
+export interface DocumentViewerPage {
+  pageNumber: number;
+  titleEn: string;
+  titleAm: string;
+  kind: 'dossier' | 'attachment-preview' | 'minutes';
+  attachmentId?: string;
+  inlinePreviewUrl?: string;
+  mimeType?: string;
+  lines: Array<{ label: string; value: string; isSensitive?: boolean }>;
+  bodyText?: string;
+}
+
+export interface DocumentViewerContext {
+  documentId: string;
+  registrationNumber: string;
+  totalPages: number;
+  pages: DocumentViewerPage[];
+  annotations: DocumentAnnotation[];
+  redactions: DocumentRedactionMark[];
+  watermark: DlpWatermarkContext;
+}
+
 
