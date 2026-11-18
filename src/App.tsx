@@ -30,6 +30,7 @@ import { RegisterDocumentModal } from './components/correspondence/RegisterDocum
 import { LoginView } from './components/auth/LoginView.js';
 import { PublicVerificationPortal } from './components/verification/PublicVerificationPortal.js';
 import { TransmittalManifestsView } from './components/correspondence/TransmittalManifestsView.js';
+import { RoleGovernanceView } from './components/roles/RoleGovernanceView.js';
 import { LoadingSkeleton } from './components/common/LoadingSkeleton.js';
 
 function MainLayout() {
@@ -135,6 +136,7 @@ function MainLayout() {
               {activeTab === 'notifications' && <NotificationsEscalationView />}
               {activeTab === 'reports' && <ReportsView />}
               {activeTab === 'organization' && <OrganizationAdminView />}
+              {activeTab === 'roles' && <RoleGovernanceView />}
               {activeTab === 'integrations' && <EnterpriseIntegrationsView />}
               {activeTab === 'verify' && (
                 <PublicVerificationPortal

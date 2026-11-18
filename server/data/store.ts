@@ -16,12 +16,16 @@ import {
   DisposalApprovalEntry,
   DisposalCertificate,
   DisposalRequest,
+  CorrespondenceTemplate,
+  CorrespondenceWorkflowState,
   DocumentAttachment,
   DocumentItem,
   DocumentLink,
   DocumentLinkType,
+  DocumentRevision,
+  DocumentRevisionActionType,
+  DocumentRevisionSnapshot,
   EnrichedDocumentLink,
-  CorrespondenceTemplate,
   PriorityLevel,
   EnterpriseConnector,
   ExecutiveKpiSummary, 
@@ -998,6 +1002,7 @@ class EdrmsStore {
       aiExtracted: docData.aiExtracted
     };
 
+    this.ensureDocumentRevisions(newDoc, actor, 'Initial correspondence registration');
     this.data.documents.unshift(newDoc);
     this.launchWorkflowForDocument(newDoc, actor, clientIp);
     this.addAuditLog({
@@ -1119,15 +1124,32 @@ class EdrmsStore {
     }
 
     // Registration number is immutable by specification rule
+    this.ensureDocumentRevisions(doc);
+    const beforeSnapshotSummary = {
+      subjectEn: doc.subjectEn,
+      priority: doc.priority,
+      confidentiality: doc.confidentiality,
+      departmentId: doc.departmentId,
+      version: doc.currentVersion || doc.revisions?.length || 1
+    };
+
     const safeUpdates: any = { ...updates };
     delete safeUpdates.id;
     delete safeUpdates.registrationNumber;
     delete safeUpdates.legalHold;
     delete safeUpdates.overrideSignedLock;
     delete safeUpdates.editReason;
+    delete safeUpdates.revisions;
+    delete safeUpdates.currentVersion;
 
     Object.assign(doc, safeUpdates);
     doc.contentHash = this.computeDocumentContentHash(doc);
+    const revision = this.appendDocumentRevision(
+      doc,
+      actor,
+      'MetadataEdit',
+      (updates.editReason || '').trim() || `Updated correspondence metadata (${doc.subjectEn.slice(0, 60)})`
+    );
 
     this.addAuditLog({
       userId: actor.id,
@@ -1138,7 +1160,15 @@ class EdrmsStore {
       resourceType: 'Document',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Updated document metadata for: ${doc.registrationNumber} (${doc.subjectEn})`
+      details: `Updated document metadata for: ${doc.registrationNumber} (${doc.subjectEn}) [v${revision.versionNumber}]`,
+      beforeValue: JSON.stringify(beforeSnapshotSummary),
+      afterValue: JSON.stringify({
+        subjectEn: doc.subjectEn,
+        priority: doc.priority,
+        confidentiality: doc.confidentiality,
+        departmentId: doc.departmentId,
+        version: revision.versionNumber
+      })
     });
 
     this.save();
@@ -1230,16 +1260,36 @@ class EdrmsStore {
     if (doc.legalHold) {
       throw new Error('Document is under an active Legal Hold and attachments cannot be modified.');
     }
+    if (doc.status === 'Disposed') {
+      throw new Error('Disposed documents are permanently immutable.');
+    }
+
+    this.ensureDocumentRevisions(doc);
+
+    const existingSameName = doc.attachments.filter(
+      a => a.fileName.toLowerCase() === attachment.fileName.toLowerCase()
+    );
+    const nextAttachmentVersion =
+      existingSameName.length > 0
+        ? Math.max(...existingSameName.map(a => a.version || 1)) + 1
+        : attachment.version || 1;
 
     const newAtt: DocumentAttachment = {
       ...attachment,
       id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       uploadDate: new Date().toISOString(),
       uploadedBy: actor.fullNameEn,
-      version: attachment.version || 1
+      version: nextAttachmentVersion
     };
 
     doc.attachments.push(newAtt);
+    doc.contentHash = this.computeDocumentContentHash(doc);
+    const rev = this.appendDocumentRevision(
+      doc,
+      actor,
+      'AttachmentUpdate',
+      `Attached file: ${newAtt.fileName} (v${newAtt.version})`
+    );
 
     this.addAuditLog({
       userId: actor.id,
@@ -1250,7 +1300,7 @@ class EdrmsStore {
       resourceType: 'DocumentAttachment',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Attached file: ${newAtt.fileName} (${(newAtt.fileSize / 1024).toFixed(1)} KB) to ${doc.registrationNumber}`
+      details: `Attached file: ${newAtt.fileName} (${(newAtt.fileSize / 1024).toFixed(1)} KB) to ${doc.registrationNumber} [Doc v${rev.versionNumber}]`
     });
 
     this.save();
@@ -1269,11 +1319,21 @@ class EdrmsStore {
     if (doc.legalHold) {
       throw new Error('Document is under an active Legal Hold and attachments cannot be modified.');
     }
+    if (doc.status === 'Disposed') {
+      throw new Error('Disposed documents are permanently immutable.');
+    }
 
     const att = doc.attachments.find(a => a.id === attachmentId);
     if (!att) return null;
 
+    this.ensureDocumentRevisions(doc);
     Object.assign(att, updates);
+    const rev = this.appendDocumentRevision(
+      doc,
+      actor,
+      'AttachmentUpdate',
+      `Updated attachment notes/metadata: ${att.fileName}`
+    );
 
     this.addAuditLog({
       userId: actor.id,
@@ -1284,7 +1344,7 @@ class EdrmsStore {
       resourceType: 'DocumentAttachment',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Updated metadata for attachment: ${att.fileName} on ${doc.registrationNumber}`
+      details: `Updated metadata for attachment: ${att.fileName} on ${doc.registrationNumber} [Doc v${rev.versionNumber}]`
     });
 
     this.save();
@@ -1302,12 +1362,23 @@ class EdrmsStore {
     if (doc.legalHold) {
       throw new Error('Document is under an active Legal Hold and attachments cannot be deleted.');
     }
+    if (doc.status === 'Disposed') {
+      throw new Error('Disposed documents are permanently immutable.');
+    }
 
     const attIndex = doc.attachments.findIndex(a => a.id === attachmentId);
     if (attIndex === -1) return null;
 
+    this.ensureDocumentRevisions(doc);
     const removedFileName = doc.attachments[attIndex].fileName;
     doc.attachments.splice(attIndex, 1);
+    doc.contentHash = this.computeDocumentContentHash(doc);
+    const rev = this.appendDocumentRevision(
+      doc,
+      actor,
+      'AttachmentUpdate',
+      `Removed attachment: ${removedFileName}`
+    );
 
     this.addAuditLog({
       userId: actor.id,
@@ -1318,11 +1389,373 @@ class EdrmsStore {
       resourceType: 'DocumentAttachment',
       resourceId: doc.registrationNumber,
       ipAddress: clientIp,
-      details: `Removed attachment: ${removedFileName} from ${doc.registrationNumber}`
+      details: `Removed attachment: ${removedFileName} from ${doc.registrationNumber} [Doc v${rev.versionNumber}]`
     });
 
     this.save();
     return doc;
+  }
+
+  private buildDocumentRevisionSnapshot(doc: DocumentItem): DocumentRevisionSnapshot {
+    return {
+      subjectEn: doc.subjectEn,
+      subjectAm: doc.subjectAm,
+      descriptionEn: doc.descriptionEn || '',
+      descriptionAm: doc.descriptionAm || '',
+      senderOrganization: doc.senderOrganization,
+      senderPerson: doc.senderPerson || '',
+      recipientOrganization: doc.recipientOrganization,
+      recipientPerson: doc.recipientPerson || '',
+      priority: doc.priority,
+      confidentiality: doc.confidentiality,
+      status: doc.status,
+      departmentId: doc.departmentId,
+      assignedDepartmentName: doc.assignedDepartmentName || '',
+      dueDate: doc.dueDate,
+      attachments: (doc.attachments || []).map(att => ({ ...att }))
+    };
+  }
+
+  public ensureDocumentRevisions(
+    doc: DocumentItem,
+    initialActor?: User,
+    initialNote?: string
+  ): DocumentRevision[] {
+    if (!Array.isArray(doc.revisions) || doc.revisions.length === 0) {
+      const baselineRev: DocumentRevision = {
+        versionNumber: 1,
+        createdAt: doc.registrationDate || doc.receivedDate || new Date().toISOString(),
+        createdById: initialActor?.id || doc.assignedUserId || 'system',
+        createdByName: initialActor?.fullNameEn || doc.assignedUserName || 'Central Registry',
+        createdByRole: initialActor?.role || 'RegistryOfficer',
+        actionType: 'Initial',
+        changeNote: initialNote || 'Initial correspondence registration',
+        contentHash: doc.contentHash || this.computeDocumentContentHash(doc),
+        snapshot: this.buildDocumentRevisionSnapshot(doc)
+      };
+      doc.revisions = [baselineRev];
+      doc.currentVersion = 1;
+    } else if (!doc.currentVersion) {
+      doc.currentVersion = Math.max(...doc.revisions.map(r => r.versionNumber));
+    }
+    return doc.revisions;
+  }
+
+  private appendDocumentRevision(
+    doc: DocumentItem,
+    actor: User,
+    actionType: DocumentRevisionActionType,
+    changeNote: string,
+    restoredFromVersion?: number
+  ): DocumentRevision {
+    const revisions = this.ensureDocumentRevisions(doc, actor);
+    const maxVersion = revisions.reduce((max, r) => Math.max(max, r.versionNumber), 0);
+    const nextVersion = maxVersion + 1;
+    const rev: DocumentRevision = {
+      versionNumber: nextVersion,
+      createdAt: new Date().toISOString(),
+      createdById: actor.id,
+      createdByName: actor.fullNameEn,
+      createdByRole: actor.role,
+      actionType,
+      changeNote,
+      restoredFromVersion,
+      contentHash: doc.contentHash || this.computeDocumentContentHash(doc),
+      snapshot: this.buildDocumentRevisionSnapshot(doc)
+    };
+    revisions.push(rev);
+    doc.currentVersion = nextVersion;
+    return rev;
+  }
+
+  public getDocumentRevisions(
+    documentId: string
+  ): { currentVersion: number; revisions: DocumentRevision[] } | null {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return null;
+    const revisions = this.ensureDocumentRevisions(doc);
+    return {
+      currentVersion: doc.currentVersion || revisions[revisions.length - 1]?.versionNumber || 1,
+      revisions: [...revisions].sort((a, b) => b.versionNumber - a.versionNumber)
+    };
+  }
+
+  public createDocumentRevision(
+    documentId: string,
+    payload: {
+      changeNote: string;
+      fileName?: string;
+      fileSize?: number;
+      mimeType?: string;
+      fileUrl?: string;
+      notes?: string;
+    },
+    actor: User,
+    clientIp: string
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    document?: DocumentItem;
+    revision?: DocumentRevision;
+  } {
+    if (!this.hasPermission(actor, 'edit:documents') && !this.hasPermission(actor, 'create:documents')) {
+      return { success: false, statusCode: 403, error: 'Forbidden: document.update permission required.' };
+    }
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) {
+      return { success: false, statusCode: 404, error: 'Document not found.' };
+    }
+    if (doc.legalHold) {
+      return { success: false, statusCode: 423, error: 'Document under Legal Hold cannot create new revisions.' };
+    }
+    if (doc.status === 'Disposed' || doc.isDeleted) {
+      return { success: false, statusCode: 400, error: 'Disposed or cancelled documents cannot be revised.' };
+    }
+
+    const cleanNote = (payload.changeNote || '').trim();
+    if (cleanNote.length < 5) {
+      return { success: false, statusCode: 400, error: 'Revision change note must be at least 5 characters.' };
+    }
+
+    this.ensureDocumentRevisions(doc);
+
+    if (payload.fileName && payload.fileUrl) {
+      const cleanFileName = payload.fileName.trim();
+      const existingSameName = doc.attachments.filter(
+        a => a.fileName.toLowerCase() === cleanFileName.toLowerCase()
+      );
+      const nextAttVer =
+        existingSameName.length > 0
+          ? Math.max(...existingSameName.map(a => a.version || 1)) + 1
+          : 1;
+      doc.attachments.push({
+        id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        fileName: cleanFileName,
+        fileSize: Number(payload.fileSize) || 512000,
+        mimeType: payload.mimeType || 'application/pdf',
+        fileUrl: payload.fileUrl,
+        uploadDate: new Date().toISOString(),
+        uploadedBy: actor.fullNameEn,
+        notes: payload.notes ? payload.notes.trim() : cleanNote,
+        version: nextAttVer
+      });
+    }
+
+    doc.contentHash = this.computeDocumentContentHash(doc);
+    const revision = this.appendDocumentRevision(doc, actor, 'ManualRevision', cleanNote);
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'CREATED_DOCUMENT_REVISION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Created revision v${revision.versionNumber} for ${doc.registrationNumber}`,
+      reason: cleanNote,
+      afterValue: JSON.stringify({
+        versionNumber: revision.versionNumber,
+        attachmentsCount: doc.attachments.length,
+        contentHash: doc.contentHash
+      })
+    });
+
+    this.save();
+    return { success: true, document: doc, revision };
+  }
+
+  public restoreDocumentRevision(
+    documentId: string,
+    targetVersionNumber: number,
+    payload: { reason: string; overrideSignedLock?: boolean },
+    actor: User,
+    clientIp: string
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    signedLock?: boolean;
+    document?: DocumentItem;
+    revision?: DocumentRevision;
+  } {
+    if (!this.hasPermission(actor, 'edit:documents')) {
+      return { success: false, statusCode: 403, error: 'Forbidden: document.update (edit:documents) permission required.' };
+    }
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) {
+      return { success: false, statusCode: 404, error: 'Document not found.' };
+    }
+    if (doc.legalHold) {
+      return { success: false, statusCode: 423, error: 'Document under Legal Hold cannot be restored or modified.' };
+    }
+    if (doc.status === 'Disposed' || doc.isDeleted) {
+      return { success: false, statusCode: 400, error: 'Disposed or cancelled documents are immutable and cannot be restored.' };
+    }
+
+    const cleanReason = (payload.reason || '').trim();
+    if (cleanReason.length < 10) {
+      return { success: false, statusCode: 400, error: 'Restore justification must be at least 10 characters.' };
+    }
+
+    const revisions = this.ensureDocumentRevisions(doc);
+    const targetRev = revisions.find(r => r.versionNumber === targetVersionNumber);
+    if (!targetRev) {
+      return { success: false, statusCode: 404, error: `Revision v${targetVersionNumber} was not found.` };
+    }
+
+    const activeSignedEntries = (doc.workflowHistory || []).filter(
+      h => h.digitalSignature && !h.digitalSignature.invalidated
+    );
+    const governedFields: Array<keyof DocumentRevisionSnapshot> = [
+      'subjectEn',
+      'subjectAm',
+      'descriptionEn',
+      'senderOrganization',
+      'recipientOrganization',
+      'confidentiality'
+    ];
+    const modifiedGovernedFields = governedFields.filter(
+      f => (targetRev.snapshot[f] || '') !== ((doc as any)[f] || '')
+    );
+
+    if (activeSignedEntries.length > 0 && modifiedGovernedFields.length > 0) {
+      const canOverride = actor.role === 'SuperAdmin' || actor.role === 'DirectorGeneral';
+      if (!payload.overrideSignedLock || !canOverride) {
+        return {
+          success: false,
+          statusCode: 409,
+          signedLock: true,
+          error: `SIGNED_LOCK: Restoring v${targetVersionNumber} modifies governed fields (${modifiedGovernedFields.join(', ')}) on a cryptographically signed document. DirectorGeneral or SuperAdmin signed-lock override is required.`
+        };
+      }
+
+      const supReason = `Superseded by ${actor.fullNameEn} (${actor.role}) revision restore to v${targetVersionNumber}: ${cleanReason}`;
+      for (const h of doc.workflowHistory) {
+        if (h.digitalSignature && !h.digitalSignature.invalidated) {
+          h.digitalSignature.invalidated = true;
+          h.digitalSignature.invalidatedReason = supReason;
+          h.digitalSignature.verified = false;
+        }
+      }
+      const wfInst = this.getWorkflowInstanceByIdOrDocId(doc.id);
+      if (wfInst) {
+        for (const h of wfInst.history) {
+          if (h.digitalSignature && !h.digitalSignature.invalidated) {
+            h.digitalSignature.invalidated = true;
+            h.digitalSignature.invalidatedReason = supReason;
+            h.digitalSignature.verified = false;
+          }
+        }
+        wfInst.updatedAt = new Date().toISOString();
+      }
+    }
+
+    const previousVersionNumber = doc.currentVersion || revisions[revisions.length - 1]?.versionNumber || 1;
+    const beforeSummary = {
+      version: previousVersionNumber,
+      subjectEn: doc.subjectEn,
+      priority: doc.priority,
+      confidentiality: doc.confidentiality,
+      attachmentsCount: doc.attachments.length
+    };
+
+    const snap = targetRev.snapshot;
+    doc.subjectEn = snap.subjectEn;
+    doc.subjectAm = snap.subjectAm;
+    doc.descriptionEn = snap.descriptionEn;
+    doc.descriptionAm = snap.descriptionAm;
+    doc.senderOrganization = snap.senderOrganization;
+    doc.senderPerson = snap.senderPerson;
+    doc.recipientOrganization = snap.recipientOrganization;
+    doc.recipientPerson = snap.recipientPerson;
+    doc.priority = snap.priority;
+    doc.confidentiality = snap.confidentiality;
+    doc.departmentId = snap.departmentId;
+    doc.assignedDepartmentName = snap.assignedDepartmentName;
+    doc.dueDate = snap.dueDate;
+    doc.attachments = (snap.attachments || []).map(a => ({ ...a }));
+    doc.contentHash = this.computeDocumentContentHash(doc);
+
+    const restoredRevision = this.appendDocumentRevision(
+      doc,
+      actor,
+      'Restored',
+      `Restored draft from v${targetVersionNumber}: ${cleanReason}`,
+      targetVersionNumber
+    );
+
+    this.addAuditLog({
+      userId: actor.id,
+      userName: actor.fullNameEn,
+      userRole: actor.role,
+      branchName: actor.branchNameEn,
+      action: 'RESTORED_DOCUMENT_REVISION',
+      resourceType: 'Document',
+      resourceId: doc.registrationNumber,
+      ipAddress: clientIp,
+      details: `Restored ${doc.registrationNumber} from v${targetVersionNumber} as new revision v${restoredRevision.versionNumber}`,
+      reason: cleanReason,
+      beforeValue: JSON.stringify(beforeSummary),
+      afterValue: JSON.stringify({
+        version: restoredRevision.versionNumber,
+        restoredFromVersion: targetVersionNumber,
+        subjectEn: doc.subjectEn,
+        priority: doc.priority,
+        confidentiality: doc.confidentiality,
+        attachmentsCount: doc.attachments.length
+      })
+    });
+
+    this.save();
+    return { success: true, document: doc, revision: restoredRevision };
+  }
+
+  public getCorrespondenceWorkflowState(
+    documentId: string,
+    actor: User
+  ): CorrespondenceWorkflowState | null {
+    const doc = this.data.documents.find(d => d.id === documentId);
+    if (!doc) return null;
+
+    const inst = this.getWorkflowInstanceByIdOrDocId(doc.id);
+    if (!inst) {
+      return {
+        hasWorkflow: false,
+        instance: null,
+        definition: null,
+        currentStage: null,
+        assignees: [],
+        isOverdue: false,
+        isDueToday: false,
+        remainingHours: 0
+      };
+    }
+    const enriched = this.enrichWorkflowInstance(inst, actor);
+    if (!enriched) {
+      return {
+        hasWorkflow: false,
+        instance: null,
+        definition: null,
+        currentStage: null,
+        assignees: [],
+        isOverdue: false,
+        isDueToday: false,
+        remainingHours: 0
+      };
+    }
+    return {
+      hasWorkflow: true,
+      instance: enriched.instance,
+      definition: enriched.definition,
+      currentStage: enriched.currentStage,
+      assignees: enriched.assignees,
+      isOverdue: enriched.isOverdue,
+      isDueToday: enriched.isDueToday,
+      remainingHours: enriched.remainingHours
+    };
   }
 
   public async performWorkflowAction(
@@ -4263,6 +4696,9 @@ class EdrmsStore {
     }
     if (mode === 'download' && effective.explicitDenies.includes('document.download')) {
       return { allowed: false, reason: 'Explicit deny prevents downloading workspace files.' };
+    }
+    if (mode === 'download' && !this.hasPermission(actor, 'document.download') && item.ownerId !== actor.id) {
+      return { allowed: false, reason: 'Forbidden: document.download permission required to download files.' };
     }
 
     if (mode === 'share') {
@@ -14158,6 +14594,82 @@ class EdrmsStore {
     });
     this.save();
     return { success: true };
+  }
+
+  public bulkRevokeRoleAssignments(
+    payload: { assignmentIds: string[]; reason: string },
+    actor: User,
+    clientIp: string
+  ): {
+    success: boolean;
+    statusCode?: number;
+    error?: string;
+    succeededCount: number;
+    failedCount: number;
+    results: Array<{ assignmentId: string; success: boolean; error?: string }>;
+  } {
+    if (
+      !this.hasPermission(actor, 'admin.manage_roles') &&
+      !this.hasPermission(actor, 'admin.manage_users') &&
+      actor.role !== 'SuperAdmin'
+    ) {
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'Forbidden: admin.manage_roles permission required.',
+        succeededCount: 0,
+        failedCount: 0,
+        results: []
+      };
+    }
+
+    const cleanReason = (payload.reason || '').trim();
+    if (cleanReason.length < 10) {
+      return {
+        success: false,
+        statusCode: 400,
+        error: 'Bulk revocation reason must be at least 10 characters.',
+        succeededCount: 0,
+        failedCount: 0,
+        results: []
+      };
+    }
+
+    const ids = Array.isArray(payload.assignmentIds) ? payload.assignmentIds : [];
+    if (ids.length === 0) {
+      return {
+        success: false,
+        statusCode: 400,
+        error: 'Select at least one role assignment to revoke.',
+        succeededCount: 0,
+        failedCount: 0,
+        results: []
+      };
+    }
+
+    const results: Array<{ assignmentId: string; success: boolean; error?: string }> = [];
+    let succeededCount = 0;
+    let failedCount = 0;
+
+    for (const id of ids) {
+      const res = this.revokeRoleAssignment(id, cleanReason, actor, clientIp);
+      if (res.success) {
+        succeededCount++;
+        results.push({ assignmentId: id, success: true });
+      } else {
+        failedCount++;
+        results.push({ assignmentId: id, success: false, error: res.error });
+      }
+    }
+
+    return {
+      success: succeededCount > 0,
+      statusCode: succeededCount > 0 ? 200 : 400,
+      error: succeededCount === 0 ? results[0]?.error || 'Bulk revocation failed.' : undefined,
+      succeededCount,
+      failedCount,
+      results
+    };
   }
 
   public getSodRules(): SodRule[] {

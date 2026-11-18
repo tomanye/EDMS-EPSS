@@ -285,6 +285,66 @@ export interface DocumentItem {
     verifiedAt?: string;
     acceptedFields?: string[];
   };
+  currentVersion?: number;
+  revisions?: DocumentRevision[];
+}
+
+export type DocumentRevisionActionType =
+  | 'Initial'
+  | 'MetadataEdit'
+  | 'AttachmentUpdate'
+  | 'ManualRevision'
+  | 'Restored';
+
+export interface DocumentRevisionSnapshot {
+  subjectEn: string;
+  subjectAm: string;
+  descriptionEn?: string;
+  descriptionAm?: string;
+  senderOrganization: string;
+  senderPerson?: string;
+  recipientOrganization: string;
+  recipientPerson?: string;
+  priority: PriorityLevel;
+  confidentiality: ConfidentialityLevel;
+  status: DocumentStatus;
+  departmentId: string;
+  assignedDepartmentName?: string;
+  dueDate?: string;
+  attachments: DocumentAttachment[];
+}
+
+export interface DocumentRevision {
+  versionNumber: number;
+  createdAt: string;
+  createdById: string;
+  createdByName: string;
+  createdByRole: UserRole;
+  actionType: DocumentRevisionActionType;
+  changeNote: string;
+  restoredFromVersion?: number;
+  contentHash?: string;
+  snapshot: DocumentRevisionSnapshot;
+}
+
+export interface DocumentRevisionDiffField {
+  field: string;
+  labelEn: string;
+  labelAm: string;
+  beforeValue: string;
+  afterValue: string;
+  changed: boolean;
+}
+
+export interface CorrespondenceWorkflowState {
+  hasWorkflow: boolean;
+  instance: WorkflowInstance | null;
+  definition: WorkflowDefinition | null;
+  currentStage: WorkflowStageConfig | null;
+  assignees: { id: string; fullNameEn: string; role: UserRole; departmentNameEn: string }[];
+  isOverdue: boolean;
+  isDueToday: boolean;
+  remainingHours: number;
 }
 
 export type PhysicalLocationLevel = 'Building' | 'Room' | 'Cabinet' | 'Shelf' | 'Box';

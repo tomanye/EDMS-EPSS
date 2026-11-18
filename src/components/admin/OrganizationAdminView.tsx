@@ -62,7 +62,7 @@ const ALL_PERMISSIONS = [
 ];
 
 export const OrganizationAdminView: React.FC = () => {
-  const { branches, departments, currentUser, refreshData, language, t } = useApp();
+  const { branches, departments, currentUser, refreshData, setActiveTab, language, t } = useApp();
   const [users, setUsers] = useState<User[]>([]);
   const [roleMatrix, setRoleMatrix] = useState<RolePermissionMatrix[]>([]);
   const [adminSessions, setAdminSessions] = useState<AuthSession[]>([]);
@@ -936,6 +936,24 @@ export const OrganizationAdminView: React.FC = () => {
       {/* TAB 4: ROLE PERMISSION MATRIX */}
       {activeSubTab === 'roles' && (
         <div className="space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs">
+              <div className="font-bold text-slate-900 dark:text-slate-100">
+                Enterprise Role Designer, ABAC, SoD & Access Reviews
+              </div>
+              <div className="text-slate-500 mt-0.5">
+                Configure custom roles, inheritance, granular scope levels, explicit denies, Break-Glass elevation, and periodic certification campaigns.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('roles')}
+              className="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg whitespace-nowrap shrink-0"
+            >
+              Open Roles & Access Governance
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 gap-4">
             {roleMatrix.map((entry) => {
               const isSuper = entry.role === 'SuperAdmin';

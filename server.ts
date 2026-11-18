@@ -12,8 +12,27 @@ import { extractOcrAndSuggestFields } from './server/lib/geminiService.js';
 import { AuthSession, User, UserRole } from './src/types/index.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
+
+function resolveServerPort(): number {
+  const portFlagIdx = process.argv.indexOf('--port');
+  if (portFlagIdx !== -1 && process.argv[portFlagIdx + 1]) {
+    const parsed = Number(process.argv[portFlagIdx + 1]);
+    if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  }
+  if (!isProduction) {
+    const devPort = Number(process.env.DEFAULT_APP_PORT) || 3000;
+    const envPort = Number(process.env.PORT);
+    // In dev container, NGINX_PORT / PORT may be 8080 while app must serve on 3000
+    if (envPort && envPort !== 8080 && envPort !== Number(process.env.NGINX_PORT)) {
+      return envPort;
+    }
+    return devPort;
+  }
+  return Number(process.env.PORT) || 3000;
+}
+
+const port = resolveServerPort();
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -916,6 +935,7 @@ apiRouter.get('/correspondence/:id', (req: AuthedRequest, res: Response) => {
   if (!access.allowed) {
     return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
   }
+  store.ensureDocumentRevisions(doc);
   res.json(doc);
 });
 
@@ -1262,6 +1282,112 @@ apiRouter.delete('/correspondence/:id/links/:linkId', (req: AuthedRequest, res: 
     return res.status(outcome.statusCode || 400).json({ error: outcome.error, mfaNeeded: outcome.mfaNeeded });
   }
   res.json({ success: true });
+});
+
+// Document Versioning & Revision History Endpoints
+apiRouter.get('/correspondence/:id/versions', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const data = store.getDocumentRevisions(req.params.id);
+  if (!data) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  res.json(data);
+});
+
+apiRouter.post('/correspondence/:id/versions', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.createDocumentRevision(
+    req.params.id,
+    {
+      changeNote: sanitize(req.body?.changeNote || ''),
+      fileName: req.body?.fileName ? sanitize(req.body.fileName) : undefined,
+      fileSize: req.body?.fileSize ? Number(req.body.fileSize) : undefined,
+      mimeType: req.body?.mimeType,
+      fileUrl: req.body?.fileUrl,
+      notes: req.body?.notes ? sanitize(req.body.notes) : undefined
+    },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({ error: result.error });
+  }
+  res.status(201).json({
+    document: result.document,
+    revision: result.revision
+  });
+});
+
+apiRouter.post('/correspondence/:id/versions/:versionNumber/restore', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const versionNumber = Number(req.params.versionNumber);
+  if (!Number.isFinite(versionNumber) || versionNumber < 1) {
+    return res.status(400).json({ error: 'Invalid revision version number.' });
+  }
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.restoreDocumentRevision(
+    req.params.id,
+    versionNumber,
+    {
+      reason: sanitize(req.body?.reason || ''),
+      overrideSignedLock: !!req.body?.overrideSignedLock
+    },
+    actor,
+    clientIp
+  );
+  if (!result.success) {
+    return res.status(result.statusCode || 400).json({
+      error: result.error,
+      signedLock: result.signedLock
+    });
+  }
+  res.json({
+    document: result.document,
+    revision: result.revision
+  });
+});
+
+// Document Visual Workflow Progress Endpoint
+apiRouter.get('/correspondence/:id/workflow', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const doc = store.getDocumentById(req.params.id);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+  const access = store.canAccessDocument(actor, doc, req.authSession);
+  if (!access.allowed) {
+    return res.status(403).json({ error: access.reason, mfaNeeded: access.mfaNeeded });
+  }
+  const state = store.getCorrespondenceWorkflowState(req.params.id, actor);
+  if (!state) {
+    return res.status(404).json({ error: 'Document workflow state not found' });
+  }
+  res.json(state);
 });
 
 // 4. Workflow Engine (Definitions, Tasks Inbox, Stage Actions, Escalation)
@@ -2911,6 +3037,16 @@ apiRouter.post('/rbac/assignments/bulk', (req: AuthedRequest, res: Response) => 
   res.json(result);
 });
 
+apiRouter.post('/rbac/assignments/bulk-revoke', (req: AuthedRequest, res: Response) => {
+  const actor = getCurrentUser(req);
+  const clientIp = req.ip || '127.0.0.1';
+  const result = store.bulkRevokeRoleAssignments(req.body || {}, actor, clientIp);
+  if (!result.success && result.succeededCount === 0) {
+    return res.status(result.statusCode || 400).json({ error: result.error, results: result.results });
+  }
+  res.json(result);
+});
+
 apiRouter.post('/rbac/assignments/:id/decision', (req: AuthedRequest, res: Response) => {
   const actor = getCurrentUser(req);
   const clientIp = req.ip || '127.0.0.1';
@@ -3051,10 +3187,15 @@ app.use('/api/v1', (err: any, _req: Request, res: Response, _next: NextFunction)
 
 // Serve Frontend
 async function setupServer() {
+  const server = http.createServer(app);
+
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -3065,8 +3206,6 @@ async function setupServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
-
-  const server = http.createServer(app);
 
   // Real-time WebSocket Push Server on same port (/ws/notifications)
   const wss = new WebSocketServer({ server, path: '/ws/notifications' });
@@ -3119,7 +3258,12 @@ async function setupServer() {
     }
   });
 
-  server.listen(port, () => {
+  server.on('error', (err) => {
+    console.error('HTTP server error:', err);
+    process.exit(1);
+  });
+
+  server.listen(port, '0.0.0.0', () => {
     console.log(`EPSS EDRMS server running on port ${port} in ${isProduction ? 'production' : 'development'} mode.`);
   });
 }

@@ -42,6 +42,7 @@ export const Header: React.FC = () => {
     markAllNotificationsAsRead,
     documents,
     setSelectedDocument,
+    can,
     t
   } = useApp();
 
@@ -395,13 +396,16 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Primary CTA: Register Document */}
-        <button
-          onClick={() => openRegisterModal('IncomingLetter')}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 rounded-lg shadow-xs transition-colors whitespace-nowrap shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>{t('register')}</span>
-        </button>
+        {can('create:documents') && (
+          <button
+            type="button"
+            onClick={() => openRegisterModal('IncomingLetter')}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 rounded-lg shadow-xs transition-colors whitespace-nowrap shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>{t('register')}</span>
+          </button>
+        )}
       </div>
 
       {/* Header Biometric Sensor Test & Step-Up Elevation Modal */}

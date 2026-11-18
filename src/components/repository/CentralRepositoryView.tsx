@@ -113,7 +113,7 @@ function validateNameClient(raw: string): string | null {
 }
 
 export const CentralRepositoryView: React.FC = () => {
-  const { currentUser, language } = useApp();
+  const { currentUser, language, can } = useApp();
 
   // Navigation & listing state
   const [activeView, setActiveView] = useState<WorkspaceView>('drive');
@@ -835,25 +835,31 @@ export const CentralRepositoryView: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           {activeView !== 'trash' && (
             <>
-              <button
-                onClick={() => {
-                  setNewFolderName('');
-                  setFolderFormError(null);
-                  setFolderModalOpen(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap shrink-0 transition-colors"
-              >
-                <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
-                <span>{language === 'am' ? 'አዲስ አቃፊ' : 'New Folder'}</span>
-              </button>
+              {can('workspace.create_folder') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewFolderName('');
+                    setFolderFormError(null);
+                    setFolderModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap shrink-0 transition-colors"
+                >
+                  <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{language === 'am' ? 'አዲስ አቃፊ' : 'New Folder'}</span>
+                </button>
+              )}
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white whitespace-nowrap shrink-0 transition-colors shadow-xs"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>{language === 'am' ? 'ፋይል ጫን' : 'Upload Files'}</span>
-              </button>
+              {can('workspace.upload') && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white whitespace-nowrap shrink-0 transition-colors shadow-xs"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{language === 'am' ? 'ፋይል ጫን' : 'Upload Files'}</span>
+                </button>
+              )}
             </>
           )}
         </div>
@@ -1479,19 +1485,22 @@ export const CentralRepositoryView: React.FC = () => {
 
               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
-              <button
-                onClick={() => {
-                  const target = contextMenu.item;
-                  setContextMenu(null);
-                  setShareTarget(target);
-                  setShareError(null);
-                  setShareSelectedId('');
-                }}
-                className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                <span>Share & Permissions</span>
-              </button>
+              {can('workspace.share') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = contextMenu.item;
+                    setContextMenu(null);
+                    setShareTarget(target);
+                    setShareError(null);
+                    setShareSelectedId('');
+                  }}
+                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Share & Permissions</span>
+                </button>
+              )}
 
               <button
                 onClick={() => {

@@ -564,7 +564,63 @@
       "mfaRequired": true,
       "lockedUntil": null,
       "lastPasswordChangeAt": "2026-11-13T06:30:08.391Z",
-      "mustChangePassword": true
+      "mustChangePassword": true,
+      "nextAllowedLoginAt": null,
+      "lastLoginAt": "2026-11-18T19:30:09.014Z"
+    },
+    {
+      "id": "usr-sec-officer",
+      "username": "mekdes.s",
+      "fullNameEn": "Mekdes Solomon",
+      "fullNameAm": "መቅደስ ሰለሞን",
+      "email": "mekdes.solomon@epss.gov.et",
+      "role": "SecurityOfficer",
+      "branchId": "br-ho",
+      "branchNameEn": "EPSS Head Office (Addis Ababa)",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት (አዲስ አበባ)",
+      "departmentId": "dept-ict",
+      "departmentNameEn": "ICT & Systems Directorate",
+      "departmentNameAm": "የኢንፎርሜሽን ቴክኖሎጂ ዳይሬክቶሬት",
+      "position": "Information Security Officer",
+      "permissions": [
+        "admin.manage_users",
+        "admin.manage_roles",
+        "admin.view_audit",
+        "read:audit",
+        "manage:users"
+      ],
+      "status": "Active",
+      "mfaRequired": true,
+      "failedLoginAttempts": 0,
+      "passwordHash": "b003de8cf228e0d275c138221d286010:86b078104b1de48966b6aaf6e231cf8b37a5e6ced2c2b526f3b0e86812eb6682",
+      "mfaPinHash": "e39c937826e56d7dc7e43280d1ce3aff:8f98b550092db9df937b80bc12ba289498cd6d1a74affdced72a39ef046e1b9f"
+    },
+    {
+      "id": "usr-sys-audit",
+      "username": "bereket.t",
+      "fullNameEn": "Bereket Tadesse",
+      "fullNameAm": "በረከት ታደሰ",
+      "email": "bereket.tadesse@epss.gov.et",
+      "role": "SystemAuditor",
+      "branchId": "br-ho",
+      "branchNameEn": "EPSS Head Office (Addis Ababa)",
+      "branchNameAm": "የኢ.መ.አ.አ ዋና መሥሪያ ቤት (አዲስ አበባ)",
+      "departmentId": "dept-audit",
+      "departmentNameEn": "Internal Audit & Compliance Directorate",
+      "departmentNameAm": "የውስጥ ኦዲትና ተገዢነት ዳይሬክቶሬት",
+      "position": "Principal System Auditor",
+      "permissions": [
+        "document.read",
+        "admin.view_audit",
+        "reporting.view",
+        "read:documents",
+        "read:audit"
+      ],
+      "status": "Active",
+      "mfaRequired": true,
+      "failedLoginAttempts": 0,
+      "passwordHash": "b003de8cf228e0d275c138221d286010:86b078104b1de48966b6aaf6e231cf8b37a5e6ced2c2b526f3b0e86812eb6682",
+      "mfaPinHash": "e39c937826e56d7dc7e43280d1ce3aff:8f98b550092db9df937b80bc12ba289498cd6d1a74affdced72a39ef046e1b9f"
     }
   ],
   "documents": [
@@ -1252,6 +1308,19 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit-1795030209014-99n9dz",
+      "timestamp": "2026-11-18T19:30:09.014Z",
+      "userId": "usr-audit",
+      "userName": "Tigist Haile",
+      "userRole": "Auditor",
+      "branchName": "EPSS Head Office",
+      "action": "USER_LOGIN_MFA",
+      "resourceType": "AuthSession",
+      "resourceId": "sess-mwmin1me-4cam",
+      "ipAddress": "127.0.0.1",
+      "details": "Completed Multi-Factor Authentication via PIN"
+    },
     {
       "id": "audit-1794669078553-tom7mi",
       "timestamp": "2026-11-14T15:11:18.553Z",
@@ -2808,12 +2877,31 @@
   "authPolicy": {
     "maxFailedAttempts": 5,
     "lockoutDurationMinutes": 15,
+    "progressiveDelayBaseSeconds": 2,
     "idleTimeoutMinutes": 30,
     "absoluteTimeoutHours": 8,
+    "maxConcurrentSessions": 3,
     "minPasswordLength": 10,
-    "maxDelegationDays": 90
+    "maxDelegationDays": 90,
+    "maxTimeBoundRoleDays": 365,
+    "maxBreakGlassHours": 4
   },
   "sessions": [
+    {
+      "id": "sess-mwmin1me-4cam",
+      "token": "62a202275ad86df8166e88f766bf0c7c7d3ffece63788555d92b3a1fc606f6e2",
+      "userId": "usr-audit",
+      "userName": "Tigist Haile",
+      "userRole": "Auditor",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "createdAt": "2026-11-18T19:30:09.014Z",
+      "lastActiveAt": "2026-11-18T19:30:09.014Z",
+      "idleExpiresAt": "2026-11-18T20:00:09.014Z",
+      "expiresAt": "2026-11-19T03:30:09.014Z",
+      "mfaVerified": true,
+      "isRevoked": false
+    },
     {
       "id": "sess-mwgjmrkp-9l24",
       "token": "88fecb55c178f9c845219c17746e4d8398cc467159fcd043f219665de8883ab6",
@@ -3176,6 +3264,30 @@
     }
   ],
   "loginHistory": [
+    {
+      "id": "lhist-1795030209014-6hqr",
+      "timestamp": "2026-11-18T19:30:09.014Z",
+      "usernameAttempted": "tigist.h",
+      "userId": "usr-audit",
+      "userName": "Tigist Haile",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "mfa_pin",
+      "status": "Success",
+      "reason": "MFA verified (pin)"
+    },
+    {
+      "id": "lhist-1795030192509-wf8o",
+      "timestamp": "2026-11-18T19:29:52.509Z",
+      "usernameAttempted": "tigist.h",
+      "userId": "usr-audit",
+      "userName": "Tigist Haile",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "method": "password",
+      "status": "MfaChallenge",
+      "reason": "Primary factor passed; awaiting MFA verification"
+    },
     {
       "id": "lhist-1794669078553-f6ah",
       "timestamp": "2026-11-14T15:11:18.553Z",
@@ -5697,6 +5809,74 @@
         }
       },
       "updatedAt": "2026-11-13T18:12:08.684Z"
+    },
+    {
+      "userId": "usr-sec-officer",
+      "emailAddress": "mekdes.solomon@epss.gov.et",
+      "phoneNumber": "+251911220008",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-15T22:35:03.248Z"
+    },
+    {
+      "userId": "usr-sys-audit",
+      "emailAddress": "bereket.tadesse@epss.gov.et",
+      "phoneNumber": "+251911220009",
+      "preferredLanguage": "en",
+      "channels": {
+        "Assignment": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Approval": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "OverdueSLA": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        },
+        "Dispatch": {
+          "inApp": true,
+          "email": true,
+          "sms": false
+        },
+        "Security": {
+          "inApp": true,
+          "email": true,
+          "sms": true
+        }
+      },
+      "updatedAt": "2026-11-15T22:35:03.249Z"
     }
   ],
   "notificationDeliveryLogs": [
@@ -5890,6 +6070,42 @@
       "subjectDn": "CN=Tigist Haile, OU=Internal Audit & Inspection, TITLE=Auditor, O=EPSS, C=ET",
       "issuedAt": "2026-11-13T18:47:49.097Z",
       "expiresAt": "2028-11-12T18:47:49.097Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794782103314-yw33",
+      "serialNumber": "ET-PKI-EPSS-2026-SECURI-47706B",
+      "userId": "usr-sec-officer",
+      "userName": "Mekdes Solomon",
+      "userRole": "SecurityOfficer",
+      "departmentNameEn": "ICT & Systems Directorate",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8AJK0ZJJMcvmI7MGBAQ\nh00j+9cRHhqQ7TvpJiRpCs64IHe/GXnRbmMCkWyLn+QE02kC9fz7CPTRJ3bO2Z7D\n++qVqSTkvGHVuUPi1UYqVd3MP6kwadfTfDphkZ9t/FaMYd3XRJAi+QrSyK7ADNMU\nARHCUS6RScSzjwM+jmV3/Lve+86S4g3QCxaCDQYtGOM7xF4sSDR+QW12xD+wZZwW\nEiAhNz+jvegZDCJo9aeS5BhfH6R982qP19N06fwDZ9A7ioRs9Wt0zOEycidtxidX\nS1BxMVz4uBY5WUfIvriQ0Z5t2miYDf//IRvCUoMsp/HOwDaZR0V2EB5iSmotNZea\nQQIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDPwAkrRkkkxy+Y\njswYEBCHTSP71xEeGpDtO+kmJGkKzrggd78ZedFuYwKRbIuf5ATTaQL1/PsI9NEn\nds7ZnsP76pWpJOS8YdW5Q+LVRipV3cw/qTBp19N8OmGRn238Voxh3ddEkCL5CtLI\nrsAM0xQBEcJRLpFJxLOPAz6OZXf8u977zpLiDdALFoINBi0Y4zvEXixINH5BbXbE\nP7BlnBYSICE3P6O96BkMImj1p5LkGF8fpH3zao/X03Tp/ANn0DuKhGz1a3TM4TJy\nJ23GJ1dLUHExXPi4FjlZR8i+uJDRnm3aaJgN//8hG8JSgyyn8c7ANplHRXYQHmJK\nai01l5pBAgMBAAECggEAEwYEMOzA4jfFHCSoprlt3LM2d3yu9ME9AnmTyhTXyOVm\nBz8VMNmD+9DgLtMwM+Yhf6m5hi9HXioWLurFBTjHEdMzfNIZNJuG18NSIEfKX6OC\n7P9qpKkz6fJp9cznZDhupsA1fUdE6eYmUrnBx0ra0EBBOXAuCKxqPs8ZaYOmyZh7\nenwSdMP1shxjG7/McX/+13MSK6JP3SueWEtih/LyQy7N7vYwpRX/hingClStgBNz\nLmv31ZskT8DLiIQyltHXbRY40HUMXTzL7AjQM5MxzOYIo6KuD1QV2YEIoS9AqUUU\nfS9C8xPj+LUH9I9s0Bdz/zDKVhHDwMwhgdtXYXRM2wKBgQD3pvvIU+bz1i8xPOZR\n0R55Yk68JjKkflD621AVTiRsRu+F2bq7hTx1Ehdmroi7/zkAfb08g1KFJfeZGxq3\ntRRVlcdD3wBC6W6xInbPX2ZehsHVppLrcyU6Gr9jP3Mdn3DMMN/0n581aYqbDdNL\nXKYG1eVFJdZQAR0ObF939m6rzwKBgQDWwLuSyVDAmopswWlI5Hvc55lVTJEaydof\nBJU/pXTwNcaskQ1lJ+2V72sS7ynwFICzIxSrMvOFyjvI+4TxY8FFFINZMQPVis+A\nLIA9v9fXikHbQJe9/tcjc0caJWNU5ocNwR7IdVhnSvyz0uEtXhUyHULH7se43WCK\n1UvUgLCM7wKBgEw2DvWvHDudhhhY7WfwOriQEDrGZn9IgBMyuopT6dGIYt2GC3j5\nn4lHb/whaeKwwBHun/WnVBW1gWSUerxd9UwBM7knPyVYQMAyIu3eJdqhDbV59WyP\nmr0uzgb017AeCNBNmh3loVEGkaj1sDhY4p7n5A5LfpBQR2jQ4PBB3fzxAoGAY0fy\n76d2V7SabjD0VaibwsKnVpHxO2s6FcDupt/9MdgKo1jj0nIlGn33CGfdAYrY/Pgo\n5ATIJIAcJ4xwJ5CwlxkmqCNK3Hwx9dWc6+83AASA8bXo8QNRvqfapTHHvEZfBXLU\nomPtnMNEFHZXd7vZHLP+XaP8XXCq40Q8rF9aP60CgYAG2OTB2ghz9XuFA9o64FT5\nVLEF2GGbLHiGqe9IFgZnOt/hfRzMzA40L0YuJXplmvjt1YWZmnmjKsEo8X+h4e4H\nZ2QyhpOpAHS4PktKc9ACn850OlV/UCmJjLnICqN6BGkTfTFanRkjMrdH74SqG6/q\nmYmtbjHfXBiuglbjGCTIFQ==\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "22A9014C6E288EA7A973D9F9A033971FF9CDCFC55CE17EC666AF6ED53D776FBA",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Mekdes Solomon, OU=ICT & Systems Directorate, TITLE=SecurityOfficer, O=EPSS, C=ET",
+      "issuedAt": "2026-11-15T22:35:03.314Z",
+      "expiresAt": "2028-11-14T22:35:03.314Z",
+      "status": "Active"
+    },
+    {
+      "id": "cert-1794782103332-hbhz",
+      "serialNumber": "ET-PKI-EPSS-2026-SYSTEM-12B396",
+      "userId": "usr-sys-audit",
+      "userName": "Bereket Tadesse",
+      "userRole": "SystemAuditor",
+      "departmentNameEn": "Internal Audit & Compliance Directorate",
+      "algorithm": "RSA-SHA256",
+      "keySizeBits": 2048,
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnQNVo7H/RaEOKdZtdCpd\n/C2V9XG7DBAQPnv2VWNp/Bo3til8fjimBk6IZnZ8lCvykC/ljP4OQwF0JZcYsRpW\nftu40ReEIm6WMCHxrOn0oLQz9wWLlQpxFYRbCtZSO7UtK1pJhTCt6HuDPXnzhANM\nfDiXzaRnOFjiMiFUa10iHWmoywXOqJ+k4d4qaUlyEonzj1NP/sbWF2goYPrZtxuA\nna55vtDCoUKL3npxcWciuSZmSha1IFQOR8q77SCqmaOSDhaUKMQ0zFXonMdaPwVe\n1tXorIBVVr3XNeoM//M6HA2l0AkDx6eVqQaTuN59a8ivJxloZH9J4fetOJyE3dCF\nvQIDAQAB\n-----END PUBLIC KEY-----\n",
+      "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCdA1Wjsf9FoQ4p\n1m10Kl38LZX1cbsMEBA+e/ZVY2n8Gje2KXx+OKYGTohmdnyUK/KQL+WM/g5DAXQl\nlxixGlZ+27jRF4QibpYwIfGs6fSgtDP3BYuVCnEVhFsK1lI7tS0rWkmFMK3oe4M9\nefOEA0x8OJfNpGc4WOIyIVRrXSIdaajLBc6on6Th3ippSXISifOPU0/+xtYXaChg\n+tm3G4Cdrnm+0MKhQoveenFxZyK5JmZKFrUgVA5HyrvtIKqZo5IOFpQoxDTMVeic\nx1o/BV7W1eisgFVWvdc16gz/8zocDaXQCQPHp5WpBpO43n1ryK8nGWhkf0nh9604\nnITd0IW9AgMBAAECggEAJEagcyUNQuOOd6kUebnOJBTOKDqCCivt7NnMFHdXBcly\n5LHaEvl4lk1voyit6Lfsn1aJlRUfa2i7EnJB4K0incWbAigKPcBKD83P3fDhtX1c\n4i4UTTdv4BZHyI2yyxu1V2ZRRSX1kBh1Pm9eDTqL4clbfUYGGRUkEYv0yqdmWd/y\nRNkXjMEDWVYhZ/WBj37kHjckugy0KKGrDlFwoPqExB34Hw/uQMZRLWHmtksROF14\nP/IoiN9xJoTuWK+iV2VGJ7xc3T3KpTw761BKEi6WOn0ojgBT3BGmqow68c+fjrA1\n2UG8C5l8Pu5YcCvkaDDZSpNKxLT8m+ihveDmfVUzewKBgQDRsu/1tGqe+inj7Ugj\nwdIB7Qm9yOw9BaNXhzgT9ozwq1Gsr6CFb1exOtBliP8mfqnP6NsnpDc5pGkqEh83\nBmMlGzVtP/PvhtKMI78uqx6WFqvg5RLbDPhOhi4dUEz+qg5y6CniBuQc4dm8FMXu\nMWQZvszuQNz0VZ5ZAXroP/TgFwKBgQC/rl370bLRtOyBJpmY00BOiX0Ub0NtZqVQ\niKpm1AXjlZBBBEP5DBHKxuoUsj9u5OHm161qFKZJGpvxrMgiu6hpjNx+DBigc5Qq\nElnicjyUxtYCaq9xgbNLqkQzJSLbcxU2HDb+SwErLxf0q5sH5Kkmpli+85ANWzrC\nHKB8Rxh5SwKBgQDNlLl/jqLAvMx4sdV5iLjUPojAUMyZfn+GfgBSQfImuC5YN84N\nQv0buWc5Q7exC5h7RfQkxu+FSVP4dM+5aD+mzyfvtTT27JxZ22nA3O4dgph64Nk9\ne1er1Aw9nM3/FMUZjdYRy2OzlQ+bPlpVjIJwYwgRw/FacN3OsI7IRntRfQKBgA31\nwAiIBDL7r0HUstkLgaJ2pvJnDA0ara2I1og4ptklWmUxz1WDCISxKfkp5i7IYp9y\nU8HnERk/492dDNJiwmg1hxVzAhQldsP9pCg206yuMoXoiTCGFq3LD7591OUQo5nW\nQjcQ9VvUyTTbjqXrhFo5QTte973RSB09An8qmmCzAoGADsTk492eWTgvzI1lj0yF\njCvN14v8qMc7kOcsGRxIeVREG7HoQLElEtepZntb/vHG2CHaMUAJ18WnR+87i2fz\nUlNtUUpkU3PstgUN+geubyaAQdquNvkVcYzuP+77b3PMQModHNKzaNVKeP+snXl0\nA0H+VM4Ogb9SYh1n/FE/ZUk=\n-----END PRIVATE KEY-----\n",
+      "fingerprintSha256": "9E3C08F2D4BE93AD5230D589C0BD6A9B0D53C156D37BD0329D87A56DC29A3127",
+      "issuerDn": "CN=EPSS National Health Logistics Root CA, O=Ethiopian Pharmaceutical Supply Service, C=ET",
+      "subjectDn": "CN=Bereket Tadesse, OU=Internal Audit & Compliance Directorate, TITLE=SystemAuditor, O=EPSS, C=ET",
+      "issuedAt": "2026-11-15T22:35:03.331Z",
+      "expiresAt": "2028-11-14T22:35:03.331Z",
       "status": "Active"
     }
   ],
@@ -6175,5 +6391,2105 @@
       "createdByName": "Hiwot Tadesse",
       "createdAt": "2026-11-14T14:59:56.780Z"
     }
-  ]
+  ],
+  "permissionCatalogue": [
+    {
+      "id": "perm-doc-create",
+      "key": "document.create",
+      "category": "Document",
+      "nameEn": "Create / Register Correspondence",
+      "nameAm": "ደብዳቤ መመዝገብ / መፍጠር",
+      "descriptionEn": "Register incoming, outgoing, internal memos, and regulatory applications.",
+      "descriptionAm": "ገቢ፣ ወጪ፣ የውስጥ ማስታወሻዎችንና ማመልከቻዎችን መመዝገብ።",
+      "legacyAlias": "create:documents",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-read",
+      "key": "document.read",
+      "category": "Document",
+      "nameEn": "Read Correspondence & Dossiers",
+      "nameAm": "ደብዳቤዎችንና ማህደሮችን ማንበብ",
+      "descriptionEn": "View correspondence metadata, summaries, and authorized dossiers.",
+      "descriptionAm": "የደብዳቤ ዝርዝሮችንና የተፈቀዱ ማህደሮችን መመልከት።",
+      "legacyAlias": "read:documents",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-update",
+      "key": "document.update",
+      "category": "Document",
+      "nameEn": "Update Correspondence Metadata",
+      "nameAm": "የደብዳቤ መረጃ ማሻሻል",
+      "descriptionEn": "Modify correspondence fields, links, and attachments.",
+      "descriptionAm": "የደብዳቤ መረጃዎችንና አባሪዎችን ማሻሻል።",
+      "legacyAlias": "edit:documents",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-delete",
+      "key": "document.delete",
+      "category": "Document",
+      "nameEn": "Cancel / Delete Correspondence",
+      "nameAm": "ደብዳቤ መሰረዝ",
+      "descriptionEn": "Soft-delete or permanently purge non-locked records.",
+      "descriptionAm": "ያልተቆለፉ ሰነዶችን መሰረዝ።",
+      "legacyAlias": "delete:documents",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-download",
+      "key": "document.download",
+      "category": "Document",
+      "nameEn": "Download Attachments & Files",
+      "nameAm": "አባሪ ፋይሎችን ማውረድ",
+      "descriptionEn": "Download scanned PDFs and digital attachment files.",
+      "descriptionAm": "የተቃኙ ፋይሎችንና አባሪዎችን ማውረድ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-print",
+      "key": "document.print",
+      "category": "Document",
+      "nameEn": "Print Official Records & QR Labels",
+      "nameAm": "ይፋዊ ሰነዶችንና QR መለያ ማተም",
+      "descriptionEn": "Print verification sheets, manifests, and QR tracking labels.",
+      "descriptionAm": "የማረጋገጫ ቅጾችንና QR መለያዎችን ማተም።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-share",
+      "key": "document.share",
+      "category": "Document",
+      "nameEn": "Share Correspondence Dossiers",
+      "nameAm": "የደብዳቤ ማህደር ማጋራት",
+      "descriptionEn": "Cross-link and route dossiers between directorates and branches.",
+      "descriptionAm": "ማህደሮችን በዳይሬክቶሬቶችና ቅርንጫፎች መካከል ማጋራት።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-doc-archive",
+      "key": "document.archive",
+      "category": "Document",
+      "nameEn": "Archive Mature Correspondence",
+      "nameAm": "የተጠናቀቁ ደብዳቤዎችን ማህደር ማስገባት",
+      "descriptionEn": "Move completed records into institutional archival custody.",
+      "descriptionAm": "የተጠናቀቁ ሰነዶችን ወደ ማህደር ማስገባት።",
+      "legacyAlias": "manage:archives",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-view",
+      "key": "workflow.view",
+      "category": "Workflow",
+      "nameEn": "View Workflow Tasks",
+      "nameAm": "የሥራ ፍሰት ተግባራትን ማየት",
+      "descriptionEn": "Inspect workflow inbox queues and SLA timers.",
+      "descriptionAm": "የሥራ ፍሰት ተግባራትንና የቀነ-ገደብ ሰዓቶችን ማየት።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-claim",
+      "key": "workflow.claim",
+      "category": "Workflow",
+      "nameEn": "Claim & Start Workflow Tasks",
+      "nameAm": "የሥራ ፍሰት ተግባር መውሰድ",
+      "descriptionEn": "Claim pooled directorate or branch tasks for action.",
+      "descriptionAm": "የመምሪያ ወይም የቅርንጫፍ ተግባራትን ለሥራ መውሰድ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-approve",
+      "key": "workflow.approve",
+      "category": "Workflow",
+      "nameEn": "Approve & Sign Workflows",
+      "nameAm": "የሥራ ፍሰት ማጽደቅ እና መፈረም",
+      "descriptionEn": "Issue formal workflow approval and RSA-SHA256 attestation.",
+      "descriptionAm": "ይፋዊ የሥራ ፍሰት ማጽደቂያና ዲጂታል ፊርማ መስጠት።",
+      "legacyAlias": "approve:workflows",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-reject",
+      "key": "workflow.reject",
+      "category": "Workflow",
+      "nameEn": "Reject Workflow Submissions",
+      "nameAm": "የሥራ ፍሰት ውድቅ ማድረግ",
+      "descriptionEn": "Reject correspondence or tender submissions with audit justification.",
+      "descriptionAm": "የቀረቡ ደብዳቤዎችን በምክንያት ውድቅ ማድረግ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-return",
+      "key": "workflow.return",
+      "category": "Workflow",
+      "nameEn": "Return for Correction",
+      "nameAm": "ለማስተካከያ መመለስ",
+      "descriptionEn": "Return submissions to prior stage officers for correction.",
+      "descriptionAm": "ሰነዶችን ለማስተካከያ ወደ ቀድሞው ደረጃ መመለስ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-delegate",
+      "key": "workflow.delegate",
+      "category": "Workflow",
+      "nameEn": "Delegate Signing Authority",
+      "nameAm": "የማጽደቅ ሥልጣን መወከል",
+      "descriptionEn": "Configure acting delegation during travel or leave.",
+      "descriptionAm": "በጉዞ ወይም በፈቃድ ጊዜ ተወካይ መመደብ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-escalate",
+      "key": "workflow.escalate",
+      "category": "Workflow",
+      "nameEn": "Escalate Overdue Tasks",
+      "nameAm": "የዘገዩ ተግባራትን ከፍ ማድረግ",
+      "descriptionEn": "Escalate SLA-breached tasks to executive oversight.",
+      "descriptionAm": "ቀነ-ገደባቸው ያለፉ ተግባራትን ወደ ከፍተኛ ኃላፊ ማሳለፍ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-wf-configure",
+      "key": "workflow.configure",
+      "category": "Workflow",
+      "nameEn": "Configure Workflow Definitions",
+      "nameAm": "የሥራ ፍሰት ቅጾችን ማዋቀር",
+      "descriptionEn": "Create and edit multi-stage approval definitions.",
+      "descriptionAm": "ባለብዙ ደረጃ የሥራ ፍሰቶችን ማዋቀር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-phy-register",
+      "key": "physical.register",
+      "category": "Physical",
+      "nameEn": "Register Physical Binders",
+      "nameAm": "አካላዊ ማህደሮችን መመዝገብ",
+      "descriptionEn": "Create physical binder tracking codes and custody entries.",
+      "descriptionAm": "የአካላዊ ማህደር መለያ ቁጥሮችን መመዝገብ።",
+      "legacyAlias": "track:physical",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-phy-handover",
+      "key": "physical.handover",
+      "category": "Physical",
+      "nameEn": "Initiate Physical Handover",
+      "nameAm": "የአካላዊ ማህደር ርክክብ መጀመር",
+      "descriptionEn": "Transfer custody of physical binders across officers.",
+      "descriptionAm": "የአካላዊ ማህደሮችን ርክክብ በባለሙያዎች መካከል ማስጀመር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-phy-ack",
+      "key": "physical.acknowledge",
+      "category": "Physical",
+      "nameEn": "Acknowledge Physical Receipt",
+      "nameAm": "የአካላዊ ማህደር መድረሱን ማረጋገጥ",
+      "descriptionEn": "Confirm receipt of physical files in transit.",
+      "descriptionAm": "በመጓጓዝ ላይ ያለ አካላዊ ማህደር መድረሱን ማረጋገጥ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-phy-missing",
+      "key": "physical.report_missing",
+      "category": "Physical",
+      "nameEn": "Report Missing Physical Files",
+      "nameAm": "የጠፋ አካላዊ ማህደር ሪፖርት ማድረግ",
+      "descriptionEn": "Log and investigate missing physical binder incidents.",
+      "descriptionAm": "የጠፉ አካላዊ ማህደሮችን ሪፖርት ማድረግ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-phy-locations",
+      "key": "physical.manage_locations",
+      "category": "Physical",
+      "nameEn": "Manage Archive Locations",
+      "nameAm": "የማህደር ቦታዎችን ማስተዳደር",
+      "descriptionEn": "Configure vault rooms, cabinets, shelves, and archive boxes.",
+      "descriptionAm": "የማህደር ክፍሎችን፣ መደርደሪያዎችንና ሳጥኖችን ማስተዳደር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rec-hold",
+      "key": "records.legal_hold",
+      "category": "Records",
+      "nameEn": "Apply / Release Legal Hold",
+      "nameAm": "የሕግ እገዳ መጣል / ማንሳት",
+      "descriptionEn": "Freeze records from edits or disposal during audits/litigation.",
+      "descriptionAm": "ሰነዶችን በኦዲት ወይም በሕግ ጉዳይ ወቅት ከለውጥ ማገድ።",
+      "legacyAlias": "apply:legal_hold",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rec-req-disp",
+      "key": "records.request_disposal",
+      "category": "Records",
+      "nameEn": "Request Record Disposal",
+      "nameAm": "የመዝገብ ማስወገድ ጥያቄ ማቅረብ",
+      "descriptionEn": "Submit matured archival records for certified disposal review.",
+      "descriptionAm": "ጊዜያቸው ያለፈባቸውን መዛግብት ለማስወገድ ጥያቄ ማቅረብ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rec-app-disp",
+      "key": "records.approve_disposal",
+      "category": "Records",
+      "nameEn": "Approve & Execute Disposal",
+      "nameAm": "የመዝገብ ማስወገድ ማጽደቅ",
+      "descriptionEn": "Approve multi-signature destruction certificates and execute disposal.",
+      "descriptionAm": "የማስወገጃ የምስክር ወረቀቶችን ማጽደቅ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rec-ret",
+      "key": "records.configure_retention",
+      "category": "Records",
+      "nameEn": "Configure Retention Schedules",
+      "nameAm": "የቆይታ ጊዜ ሰንጠረዥ ማዋቀር",
+      "descriptionEn": "Define statutory retention schedules and disposal rules.",
+      "descriptionAm": "የሕግ የቆይታ ጊዜ ሰንጠረዦችን ማዋቀር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-adm-users",
+      "key": "admin.manage_users",
+      "category": "Administration",
+      "nameEn": "Manage Staff Users & Lockouts",
+      "nameAm": "የሠራተኞች መለያዎችን ማስተዳደር",
+      "descriptionEn": "Create users, reset passwords, lock/unlock accounts, and assign roles.",
+      "descriptionAm": "ተጠቃሚዎችን መፍጠር፣ የይለፍ ቃል ዳግም ማስጀመር እና መለያ መቆለፍ።",
+      "legacyAlias": "manage:users",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-adm-roles",
+      "key": "admin.manage_roles",
+      "category": "Administration",
+      "nameEn": "Manage Enterprise Roles & SoD",
+      "nameAm": "የድርጅት ሚናዎችንና SoD ማስተዳደር",
+      "descriptionEn": "Design custom roles, ABAC rules, SoD policies, and access reviews.",
+      "descriptionAm": "ሚናዎችን፣ የABAC ደንቦችን፣ SoD ፖሊሲዎችንና የፈቃድ ግምገማን ማስተዳደር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-adm-branches",
+      "key": "admin.manage_branches",
+      "category": "Administration",
+      "nameEn": "Manage Branches & Directorates",
+      "nameAm": "ቅርንጫፎችንና ዳይሬክቶሬቶችን ማስተዳደር",
+      "descriptionEn": "Configure Head Office, 19 regional hubs, and directorates.",
+      "descriptionAm": "ዋና መሥሪያ ቤትን፣ 19 ቅርንጫፎችንና ዳይሬክቶሬቶችን ማስተዳደር።",
+      "legacyAlias": "manage:organizations",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-adm-audit",
+      "key": "admin.view_audit",
+      "category": "Administration",
+      "nameEn": "View Audit Trail & Security Logs",
+      "nameAm": "የኦዲትና የደህንነት መዝገቦችን ማየት",
+      "descriptionEn": "Inspect immutable security, login, PKI, and RBAC audit trails.",
+      "descriptionAm": "የደህንነት፣ የመግቢያ እና የፈቃድ ለውጥ መዝገቦችን መመልከት።",
+      "legacyAlias": "read:audit",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-adm-integ",
+      "key": "admin.manage_integrations",
+      "category": "Administration",
+      "nameEn": "Manage Integrations & Backups",
+      "nameAm": "ውህደቶችንና ምትኬዎችን ማስተዳደር",
+      "descriptionEn": "Configure ERP/EFDA/SMS connectors, webhooks, API keys, and backups.",
+      "descriptionAm": "የውጭ ሲስተም ግንኙነቶችን፣ API ቁልፎችንና ምትኬዎችን ማስተዳደር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-ws-folder",
+      "key": "workspace.create_folder",
+      "category": "Workspace",
+      "nameEn": "Create Workspace Folders",
+      "nameAm": "የመሥሪያ ቦታ አቃፊ መፍጠር",
+      "descriptionEn": "Create shared or departmental repository folders.",
+      "descriptionAm": "የጋራ ወይም የመምሪያ አቃፊዎችን መፍጠር።",
+      "legacyAlias": "manage:workspace",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-ws-upload",
+      "key": "workspace.upload",
+      "category": "Workspace",
+      "nameEn": "Upload & Version Workspace Files",
+      "nameAm": "ፋይሎችን መስቀል እና ማሻሻል",
+      "descriptionEn": "Upload new files and manage document version history.",
+      "descriptionAm": "አዳዲስ ፋይሎችን መስቀልና የቅጂ ታሪክ ማስተዳደር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-ws-share",
+      "key": "workspace.share",
+      "category": "Workspace",
+      "nameEn": "Share Workspace Items",
+      "nameAm": "የመሥሪያ ቦታ ፋይሎችን ማጋራት",
+      "descriptionEn": "Grant Viewer/Editor shares or internal link access.",
+      "descriptionAm": "ለተጠቃሚዎች ወይም ሚናዎች የማየት/ማስተካከል ፈቃድ ማጋራት።",
+      "legacyAlias": "share:workspace",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-ws-perm",
+      "key": "workspace.manage_permissions",
+      "category": "Workspace",
+      "nameEn": "Manage Workspace Access Controls",
+      "nameAm": "የመሥሪያ ቦታ ፈቃዶችን ማስተዳደር",
+      "descriptionEn": "Revoke shares, restore versions, and permanently purge trashed items.",
+      "descriptionAm": "የተጋሩ ፈቃዶችን መሻርና የተጣሉ ፋይሎችን ማስተዳደር።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rep-view",
+      "key": "reporting.view",
+      "category": "Reporting",
+      "nameEn": "View Executive Analytics",
+      "nameAm": "የአፈጻጸም ትንተና ማየት",
+      "descriptionEn": "Access executive KPIs, SLA dashboards, and branch turnaround metrics.",
+      "descriptionAm": "ዋና ዋና መለኪያዎችንና የቅርንጫፍ አፈጻጸም ዳሽቦርዶችን ማየት።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rep-export",
+      "key": "reporting.export",
+      "category": "Reporting",
+      "nameEn": "Export Analytical Reports",
+      "nameAm": "ሪፖርቶችን ማውጣት (CSV/PDF)",
+      "descriptionEn": "Export management registers, SLA compliance, and audit packs.",
+      "descriptionAm": "የአስተዳደር ሪፖርቶችን በCSV እና PDF ማውጣት።",
+      "legacyAlias": "export:reports",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "perm-rep-sched",
+      "key": "reporting.schedule",
+      "category": "Reporting",
+      "nameEn": "Schedule Automated Reports",
+      "nameAm": "ተደጋጋሚ ሪፖርቶችን ማቀድ",
+      "descriptionEn": "Configure saved report templates and scheduled executive briefs.",
+      "descriptionAm": "የተቀመጡ ሪፖርቶችንና መደበኛ ማጠቃለያዎችን ማቀድ።",
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "permissionSets": [
+    {
+      "id": "pset-registry-core",
+      "nameEn": "Central Registry Intake Bundle",
+      "nameAm": "የማዕከላዊ መዝገብ ቤት ጥቅል",
+      "descriptionEn": "Standard intake, metadata editing, QR printing, and physical file custody.",
+      "isSystem": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "grants": {
+        "document.create": "Organization",
+        "document.read": "Organization",
+        "document.update": "Organization",
+        "document.download": "Organization",
+        "document.print": "Organization",
+        "physical.register": "Organization",
+        "physical.handover": "Organization",
+        "physical.acknowledge": "Organization"
+      }
+    },
+    {
+      "id": "pset-exec-approval",
+      "nameEn": "Executive Workflow & PKI Sign-Off",
+      "nameAm": "የአመራር ማጽደቅ እና ዲጂታል ፊርማ",
+      "descriptionEn": "Workflow review, digital signature approval, delegation, and escalation.",
+      "isSystem": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "grants": {
+        "workflow.view": "Organization",
+        "workflow.claim": "Organization",
+        "workflow.approve": "Organization",
+        "workflow.reject": "Organization",
+        "workflow.return": "Organization",
+        "workflow.delegate": "Organization",
+        "workflow.escalate": "Organization"
+      }
+    },
+    {
+      "id": "pset-audit-readonly",
+      "nameEn": "Independent Compliance & Audit Read-Only",
+      "nameAm": "ገለልተኛ የኦዲት ምርመራ (ማንበብ ብቻ)",
+      "descriptionEn": "Organization-wide read-only inspection across documents, audit logs, and reports.",
+      "isSystem": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "grants": {
+        "document.read": "All",
+        "document.download": "All",
+        "workflow.view": "All",
+        "admin.view_audit": "All",
+        "reporting.view": "All",
+        "reporting.export": "All"
+      }
+    }
+  ],
+  "enterpriseRoles": [
+    {
+      "id": "role-superadmin",
+      "code": "SuperAdmin",
+      "nameEn": "Super Administrator",
+      "nameAm": "ዋና የሲስተም አስተዳዳሪ",
+      "descriptionEn": "Unrestricted system governance, RBAC administration, and security enforcement.",
+      "descriptionAm": "Unrestricted system governance, RBAC administration, and security enforcement.",
+      "isSystemRole": true,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.create": "All",
+        "document.read": "All",
+        "document.update": "All",
+        "document.delete": "All",
+        "document.download": "All",
+        "document.print": "All",
+        "document.share": "All",
+        "document.archive": "All",
+        "workflow.view": "All",
+        "workflow.claim": "All",
+        "workflow.approve": "All",
+        "workflow.reject": "All",
+        "workflow.return": "All",
+        "workflow.delegate": "All",
+        "workflow.escalate": "All",
+        "workflow.configure": "All",
+        "physical.register": "All",
+        "physical.handover": "All",
+        "physical.acknowledge": "All",
+        "physical.report_missing": "All",
+        "physical.manage_locations": "All",
+        "records.legal_hold": "All",
+        "records.request_disposal": "All",
+        "records.approve_disposal": "All",
+        "records.configure_retention": "All",
+        "admin.manage_users": "All",
+        "admin.manage_roles": "All",
+        "admin.manage_branches": "All",
+        "admin.view_audit": "All",
+        "admin.manage_integrations": "All",
+        "workspace.create_folder": "All",
+        "workspace.upload": "All",
+        "workspace.share": "All",
+        "workspace.manage_permissions": "All",
+        "reporting.view": "All",
+        "reporting.export": "All",
+        "reporting.schedule": "All"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.create": "All",
+              "document.read": "All",
+              "document.update": "All",
+              "document.delete": "All",
+              "document.download": "All",
+              "document.print": "All",
+              "document.share": "All",
+              "document.archive": "All",
+              "workflow.view": "All",
+              "workflow.claim": "All",
+              "workflow.approve": "All",
+              "workflow.reject": "All",
+              "workflow.return": "All",
+              "workflow.delegate": "All",
+              "workflow.escalate": "All",
+              "workflow.configure": "All",
+              "physical.register": "All",
+              "physical.handover": "All",
+              "physical.acknowledge": "All",
+              "physical.report_missing": "All",
+              "physical.manage_locations": "All",
+              "records.legal_hold": "All",
+              "records.request_disposal": "All",
+              "records.approve_disposal": "All",
+              "records.configure_retention": "All",
+              "admin.manage_users": "All",
+              "admin.manage_roles": "All",
+              "admin.manage_branches": "All",
+              "admin.view_audit": "All",
+              "admin.manage_integrations": "All",
+              "workspace.create_folder": "All",
+              "workspace.upload": "All",
+              "workspace.share": "All",
+              "workspace.manage_permissions": "All",
+              "reporting.view": "All",
+              "reporting.export": "All",
+              "reporting.schedule": "All"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-system-auditor",
+      "code": "SystemAuditor",
+      "nameEn": "System Compliance Auditor",
+      "nameAm": "የሲስተም ኦዲተር",
+      "descriptionEn": "Immutable read-only audit oversight across all branches, security events, and compliance exports.",
+      "descriptionAm": "Immutable read-only audit oversight across all branches, security events, and compliance exports.",
+      "isSystemRole": true,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "All",
+        "document.download": "All",
+        "workflow.view": "All",
+        "admin.view_audit": "All",
+        "reporting.view": "All",
+        "reporting.export": "All"
+      },
+      "denies": [
+        "document.delete",
+        "admin.manage_roles"
+      ],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "All",
+              "document.download": "All",
+              "workflow.view": "All",
+              "admin.view_audit": "All",
+              "reporting.view": "All",
+              "reporting.export": "All"
+            },
+            "denies": [
+              "document.delete",
+              "admin.manage_roles"
+            ],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-security-officer",
+      "code": "SecurityOfficer",
+      "nameEn": "Information Security Officer",
+      "nameAm": "የመረጃ ደህንነት ኃላፊ",
+      "descriptionEn": "Manages user lockouts, active sessions, role governance, SoD policies, and Break-Glass oversight.",
+      "descriptionAm": "Manages user lockouts, active sessions, role governance, SoD policies, and Break-Glass oversight.",
+      "isSystemRole": true,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "admin.manage_users": "All",
+        "admin.manage_roles": "All",
+        "admin.view_audit": "All",
+        "reporting.view": "All",
+        "reporting.export": "All"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "admin.manage_users": "All",
+              "admin.manage_roles": "All",
+              "admin.view_audit": "All",
+              "reporting.view": "All",
+              "reporting.export": "All"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-dg",
+      "code": "DirectorGeneral",
+      "nameEn": "Director General",
+      "nameAm": "ዋና ዳይሬክተር",
+      "descriptionEn": "Executive institutional authority across Head Office and 19 regional hubs.",
+      "descriptionAm": "Executive institutional authority across Head Office and 19 regional hubs.",
+      "isSystemRole": false,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "All",
+        "document.create": "All",
+        "document.update": "All",
+        "document.delete": "All",
+        "document.download": "All",
+        "document.print": "All",
+        "document.share": "All",
+        "document.archive": "All",
+        "workflow.view": "All",
+        "workflow.claim": "All",
+        "workflow.approve": "All",
+        "workflow.reject": "All",
+        "workflow.return": "All",
+        "workflow.delegate": "All",
+        "workflow.escalate": "All",
+        "workflow.configure": "All",
+        "records.legal_hold": "All",
+        "records.approve_disposal": "All",
+        "admin.manage_users": "All",
+        "admin.manage_branches": "All",
+        "admin.view_audit": "All",
+        "workspace.create_folder": "All",
+        "workspace.upload": "All",
+        "workspace.share": "All",
+        "reporting.view": "All",
+        "reporting.export": "All",
+        "reporting.schedule": "All"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "All",
+              "document.create": "All",
+              "document.update": "All",
+              "document.delete": "All",
+              "document.download": "All",
+              "document.print": "All",
+              "document.share": "All",
+              "document.archive": "All",
+              "workflow.view": "All",
+              "workflow.claim": "All",
+              "workflow.approve": "All",
+              "workflow.reject": "All",
+              "workflow.return": "All",
+              "workflow.delegate": "All",
+              "workflow.escalate": "All",
+              "workflow.configure": "All",
+              "records.legal_hold": "All",
+              "records.approve_disposal": "All",
+              "admin.manage_users": "All",
+              "admin.manage_branches": "All",
+              "admin.view_audit": "All",
+              "workspace.create_folder": "All",
+              "workspace.upload": "All",
+              "workspace.share": "All",
+              "reporting.view": "All",
+              "reporting.export": "All",
+              "reporting.schedule": "All"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-deputy-dg",
+      "code": "DeputyDG",
+      "nameEn": "Deputy Director General",
+      "nameAm": "ምክትል ዋና ዳይሬክተር",
+      "descriptionEn": "Deputy executive oversight, escalations, and sector-wide workflow approvals.",
+      "descriptionAm": "Deputy executive oversight, escalations, and sector-wide workflow approvals.",
+      "isSystemRole": false,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [
+        "role-directorate-director"
+      ],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "document.download": "Organization",
+        "workflow.approve": "Organization",
+        "workflow.reject": "Organization",
+        "workflow.escalate": "Organization",
+        "records.legal_hold": "Organization",
+        "reporting.view": "Organization",
+        "reporting.export": "Organization"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.download": "Organization",
+              "workflow.approve": "Organization",
+              "workflow.reject": "Organization",
+              "workflow.escalate": "Organization",
+              "records.legal_hold": "Organization",
+              "reporting.view": "Organization",
+              "reporting.export": "Organization"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [
+              "role-directorate-director"
+            ],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-directorate-director",
+      "code": "DirectorateDirector",
+      "nameEn": "Directorate Director",
+      "nameAm": "የዳይሬክቶሬት ዳይሬክተር",
+      "descriptionEn": "Senior directorate leadership managing workflow sign-offs and departmental dossiers.",
+      "descriptionAm": "Senior directorate leadership managing workflow sign-offs and departmental dossiers.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [
+        "role-dept-head"
+      ],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "document.create": "Organization",
+        "document.update": "Department",
+        "document.download": "Department",
+        "document.print": "Department",
+        "workflow.approve": "Department",
+        "workflow.reject": "Department",
+        "workflow.return": "Department",
+        "workflow.delegate": "Department",
+        "workflow.escalate": "Department",
+        "workspace.create_folder": "Department",
+        "workspace.upload": "Department",
+        "workspace.share": "Department",
+        "reporting.view": "Department",
+        "reporting.export": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.create": "Organization",
+              "document.update": "Department",
+              "document.download": "Department",
+              "document.print": "Department",
+              "workflow.approve": "Department",
+              "workflow.reject": "Department",
+              "workflow.return": "Department",
+              "workflow.delegate": "Department",
+              "workflow.escalate": "Department",
+              "workspace.create_folder": "Department",
+              "workspace.upload": "Department",
+              "workspace.share": "Department",
+              "reporting.view": "Department",
+              "reporting.export": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [
+              "role-dept-head"
+            ],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-director",
+      "code": "Director",
+      "nameEn": "Director",
+      "nameAm": "ዳይሬክተር",
+      "descriptionEn": "Directorate-level correspondence routing, workflow approval, and file sharing.",
+      "descriptionAm": "Directorate-level correspondence routing, workflow approval, and file sharing.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "document.create": "Organization",
+        "document.update": "Department",
+        "document.download": "Organization",
+        "document.print": "Department",
+        "document.archive": "Department",
+        "workflow.view": "Department",
+        "workflow.claim": "Department",
+        "workflow.approve": "Department",
+        "workflow.reject": "Department",
+        "workflow.return": "Department",
+        "workflow.delegate": "Department",
+        "workspace.create_folder": "Department",
+        "workspace.upload": "Department",
+        "workspace.share": "Department",
+        "reporting.view": "Department",
+        "reporting.export": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.create": "Organization",
+              "document.update": "Department",
+              "document.download": "Organization",
+              "document.print": "Department",
+              "document.archive": "Department",
+              "workflow.view": "Department",
+              "workflow.claim": "Department",
+              "workflow.approve": "Department",
+              "workflow.reject": "Department",
+              "workflow.return": "Department",
+              "workflow.delegate": "Department",
+              "workspace.create_folder": "Department",
+              "workspace.upload": "Department",
+              "workspace.share": "Department",
+              "reporting.view": "Department",
+              "reporting.export": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-dept-head",
+      "code": "DepartmentHead",
+      "nameEn": "Department Head",
+      "nameAm": "የመምሪያ ኃላፊ",
+      "descriptionEn": "Departmental correspondence assignment, internal approvals, and team oversight.",
+      "descriptionAm": "Departmental correspondence assignment, internal approvals, and team oversight.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [
+        "role-team-leader"
+      ],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "document.create": "Department",
+        "document.update": "Department",
+        "document.download": "Department",
+        "workflow.view": "Department",
+        "workflow.approve": "Department",
+        "workflow.return": "Department",
+        "workflow.delegate": "Department",
+        "workspace.create_folder": "Department",
+        "workspace.upload": "Department",
+        "workspace.share": "Department",
+        "reporting.view": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "document.create": "Department",
+              "document.update": "Department",
+              "document.download": "Department",
+              "workflow.view": "Department",
+              "workflow.approve": "Department",
+              "workflow.return": "Department",
+              "workflow.delegate": "Department",
+              "workspace.create_folder": "Department",
+              "workspace.upload": "Department",
+              "workspace.share": "Department",
+              "reporting.view": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [
+              "role-team-leader"
+            ],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-team-leader",
+      "code": "TeamLeader",
+      "nameEn": "Team Leader",
+      "nameAm": "የቡድን መሪ",
+      "descriptionEn": "Operational task review, physical file request, and team dossier collaboration.",
+      "descriptionAm": "Operational task review, physical file request, and team dossier collaboration.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [
+        "role-viewer"
+      ],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "document.create": "Department",
+        "document.update": "Own",
+        "document.download": "Department",
+        "workflow.view": "Department",
+        "workflow.claim": "Department",
+        "workflow.return": "Department",
+        "workspace.create_folder": "Department",
+        "workspace.upload": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "document.create": "Department",
+              "document.update": "Own",
+              "document.download": "Department",
+              "workflow.view": "Department",
+              "workflow.claim": "Department",
+              "workflow.return": "Department",
+              "workspace.create_folder": "Department",
+              "workspace.upload": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [
+              "role-viewer"
+            ],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-registry-officer",
+      "code": "RegistryOfficer",
+      "nameEn": "Registry Officer",
+      "nameAm": "የመዝገብ ቤት ባለሙያ",
+      "descriptionEn": "Central intake registration, numbering control, and physical file custody.",
+      "descriptionAm": "Central intake registration, numbering control, and physical file custody.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Organization",
+        "document.create": "Organization",
+        "document.update": "Organization",
+        "document.download": "Organization",
+        "document.print": "Organization",
+        "document.share": "Organization",
+        "document.archive": "Organization",
+        "workflow.view": "Organization",
+        "physical.register": "Organization",
+        "physical.handover": "Organization",
+        "physical.acknowledge": "Organization",
+        "physical.report_missing": "Organization",
+        "workspace.create_folder": "Organization",
+        "workspace.upload": "Organization",
+        "workspace.share": "Organization",
+        "reporting.view": "Organization",
+        "reporting.export": "Organization"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.create": "Organization",
+              "document.update": "Organization",
+              "document.download": "Organization",
+              "document.print": "Organization",
+              "document.share": "Organization",
+              "document.archive": "Organization",
+              "workflow.view": "Organization",
+              "physical.register": "Organization",
+              "physical.handover": "Organization",
+              "physical.acknowledge": "Organization",
+              "physical.report_missing": "Organization",
+              "workspace.create_folder": "Organization",
+              "workspace.upload": "Organization",
+              "workspace.share": "Organization",
+              "reporting.view": "Organization",
+              "reporting.export": "Organization"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-branch-manager",
+      "code": "BranchManager",
+      "nameEn": "Branch Hub Manager",
+      "nameAm": "የቅርንጫፍ ሥራ አስኪያጅ",
+      "descriptionEn": "Regional hub operations, branch correspondence registration, and physical tracking.",
+      "descriptionAm": "Regional hub operations, branch correspondence registration, and physical tracking.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Branch",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Branch",
+        "document.create": "Branch",
+        "document.update": "Branch",
+        "document.download": "Branch",
+        "document.print": "Branch",
+        "workflow.view": "Branch",
+        "workflow.claim": "Branch",
+        "workflow.approve": "Branch",
+        "physical.register": "Branch",
+        "physical.handover": "Branch",
+        "physical.acknowledge": "Branch",
+        "workspace.create_folder": "Branch",
+        "workspace.upload": "Branch",
+        "reporting.view": "Branch",
+        "reporting.export": "Branch"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Branch",
+              "document.create": "Branch",
+              "document.update": "Branch",
+              "document.download": "Branch",
+              "document.print": "Branch",
+              "workflow.view": "Branch",
+              "workflow.claim": "Branch",
+              "workflow.approve": "Branch",
+              "physical.register": "Branch",
+              "physical.handover": "Branch",
+              "physical.acknowledge": "Branch",
+              "workspace.create_folder": "Branch",
+              "workspace.upload": "Branch",
+              "reporting.view": "Branch",
+              "reporting.export": "Branch"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-branch-registry",
+      "code": "BranchRegistry",
+      "nameEn": "Branch Registry Clerk",
+      "nameAm": "የቅርንጫፍ መዝገብ ቤት ባለሙያ",
+      "descriptionEn": "Regional branch correspondence intake, scanning, and courier handover receipt.",
+      "descriptionAm": "Regional branch correspondence intake, scanning, and courier handover receipt.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Branch",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Branch",
+        "document.create": "Branch",
+        "document.update": "Branch",
+        "document.download": "Branch",
+        "document.print": "Branch",
+        "physical.register": "Branch",
+        "physical.handover": "Branch",
+        "physical.acknowledge": "Branch"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Branch",
+              "document.create": "Branch",
+              "document.update": "Branch",
+              "document.download": "Branch",
+              "document.print": "Branch",
+              "physical.register": "Branch",
+              "physical.handover": "Branch",
+              "physical.acknowledge": "Branch"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-procurement-officer",
+      "code": "ProcurementOfficer",
+      "nameEn": "Procurement Officer",
+      "nameAm": "የግዥ ባለሙያ",
+      "descriptionEn": "Tender documentation handling, vendor correspondence, and workspace collaboration.",
+      "descriptionAm": "Tender documentation handling, vendor correspondence, and workspace collaboration.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "document.create": "Department",
+        "document.update": "Own",
+        "document.download": "Department",
+        "workflow.view": "Department",
+        "workflow.claim": "Department",
+        "workspace.create_folder": "Department",
+        "workspace.upload": "Department",
+        "workspace.share": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "document.create": "Department",
+              "document.update": "Own",
+              "document.download": "Department",
+              "workflow.view": "Department",
+              "workflow.claim": "Department",
+              "workspace.create_folder": "Department",
+              "workspace.upload": "Department",
+              "workspace.share": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-quality-officer",
+      "code": "QualityOfficer",
+      "nameEn": "Quality Assurance & EFDA Officer",
+      "nameAm": "የጥራት ማረጋገጫ ባለሙያ",
+      "descriptionEn": "Cold-chain quality inspection reports, batch clearance dossiers, and lab attestations.",
+      "descriptionAm": "Cold-chain quality inspection reports, batch clearance dossiers, and lab attestations.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "document.create": "Department",
+        "document.update": "Department",
+        "document.download": "Department",
+        "workflow.view": "Department",
+        "workflow.claim": "Department",
+        "workflow.approve": "Department",
+        "workspace.upload": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [
+        {
+          "id": "abac-qa-internal",
+          "permissionKey": "workflow.approve",
+          "effect": "Allow",
+          "description": "Can approve workflow only if Confidentiality <= Confidential and same Department",
+          "conditions": [
+            {
+              "id": "c1",
+              "field": "confidentiality",
+              "operator": "lte",
+              "value": "Confidential"
+            },
+            {
+              "id": "c2",
+              "field": "departmentId",
+              "operator": "eq",
+              "value": "$user.departmentId"
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "document.create": "Department",
+              "document.update": "Department",
+              "document.download": "Department",
+              "workflow.view": "Department",
+              "workflow.claim": "Department",
+              "workflow.approve": "Department",
+              "workspace.upload": "Department"
+            },
+            "denies": [],
+            "abacRules": [
+              {
+                "id": "abac-qa-internal",
+                "permissionKey": "workflow.approve",
+                "effect": "Allow",
+                "description": "Can approve workflow only if Confidentiality <= Confidential and same Department",
+                "conditions": [
+                  {
+                    "id": "c1",
+                    "field": "confidentiality",
+                    "operator": "lte",
+                    "value": "Confidential"
+                  },
+                  {
+                    "id": "c2",
+                    "field": "departmentId",
+                    "operator": "eq",
+                    "value": "$user.departmentId"
+                  }
+                ]
+              }
+            ],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-legal-officer",
+      "code": "LegalOfficer",
+      "nameEn": "Legal & Regulatory Officer",
+      "nameAm": "የሕግ አገልግሎት ባለሙያ",
+      "descriptionEn": "Legal holds, litigation review, contract compliance, and disposal clearance.",
+      "descriptionAm": "Legal holds, litigation review, contract compliance, and disposal clearance.",
+      "isSystemRole": false,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "document.download": "Organization",
+        "workflow.view": "Organization",
+        "records.legal_hold": "Organization",
+        "records.approve_disposal": "Organization",
+        "reporting.view": "Organization"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.download": "Organization",
+              "workflow.view": "Organization",
+              "records.legal_hold": "Organization",
+              "records.approve_disposal": "Organization",
+              "reporting.view": "Organization"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-finance-officer",
+      "code": "FinanceOfficer",
+      "nameEn": "Finance & Disbursement Officer",
+      "nameAm": "የፋይናንስ ባለሙያ",
+      "descriptionEn": "Financial vouchers, LC correspondence, and vendor payment clearances.",
+      "descriptionAm": "Financial vouchers, LC correspondence, and vendor payment clearances.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "document.create": "Department",
+        "document.download": "Department",
+        "workflow.view": "Department",
+        "workflow.claim": "Department",
+        "reporting.view": "Department"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "document.create": "Department",
+              "document.download": "Department",
+              "workflow.view": "Department",
+              "workflow.claim": "Department",
+              "reporting.view": "Department"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-auditor",
+      "code": "Auditor",
+      "nameEn": "Internal Auditor",
+      "nameAm": "የውስጥ ኦዲተር",
+      "descriptionEn": "Read-only compliance inspection across audit trails, records, and security logs.",
+      "descriptionAm": "Read-only compliance inspection across audit trails, records, and security logs.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "All",
+        "document.download": "All",
+        "workflow.view": "All",
+        "admin.view_audit": "All",
+        "reporting.view": "All",
+        "reporting.export": "All"
+      },
+      "denies": [
+        "document.create",
+        "document.update",
+        "document.delete",
+        "workflow.approve"
+      ],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "All",
+              "document.download": "All",
+              "workflow.view": "All",
+              "admin.view_audit": "All",
+              "reporting.view": "All",
+              "reporting.export": "All"
+            },
+            "denies": [
+              "document.create",
+              "document.update",
+              "document.delete",
+              "workflow.approve"
+            ],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-records-manager",
+      "code": "RecordsManager",
+      "nameEn": "Records & Retention Manager",
+      "nameAm": "የመዛግብት እና ማህደር አስተዳዳሪ",
+      "descriptionEn": "Archival classification, retention schedules, physical vault locations, and disposal governance.",
+      "descriptionAm": "Archival classification, retention schedules, physical vault locations, and disposal governance.",
+      "isSystemRole": false,
+      "isSensitiveRole": true,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": true,
+      "grants": {
+        "document.read": "Organization",
+        "document.archive": "All",
+        "physical.register": "All",
+        "physical.handover": "All",
+        "physical.acknowledge": "All",
+        "physical.manage_locations": "All",
+        "records.request_disposal": "All",
+        "records.configure_retention": "All",
+        "reporting.view": "Organization",
+        "reporting.export": "Organization"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Organization",
+              "document.archive": "All",
+              "physical.register": "All",
+              "physical.handover": "All",
+              "physical.acknowledge": "All",
+              "physical.manage_locations": "All",
+              "records.request_disposal": "All",
+              "records.configure_retention": "All",
+              "reporting.view": "Organization",
+              "reporting.export": "Organization"
+            },
+            "denies": [],
+            "abacRules": [],
+            "parentRoleIds": [],
+            "requiresMfa": true
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    },
+    {
+      "id": "role-viewer",
+      "code": "Viewer",
+      "nameEn": "Read-Only Staff Viewer",
+      "nameAm": "መደበኛ አንባቢ ተጠቃሚ",
+      "descriptionEn": "Basic read-only access to public and internal departmental correspondence.",
+      "descriptionAm": "Basic read-only access to public and internal departmental correspondence.",
+      "isSystemRole": false,
+      "isSensitiveRole": false,
+      "status": "Active",
+      "scopeType": "Global",
+      "parentRoleIds": [],
+      "requiresMfa": false,
+      "grants": {
+        "document.read": "Department",
+        "workflow.view": "Own"
+      },
+      "denies": [],
+      "permissionSetIds": [],
+      "abacRules": [
+        {
+          "id": "abac-viewer-internal",
+          "permissionKey": "document.read",
+          "effect": "Allow",
+          "description": "Viewer may only read Public or Internal records",
+          "conditions": [
+            {
+              "id": "c-v1",
+              "field": "confidentiality",
+              "operator": "lte",
+              "value": "Internal"
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "versionHistory": [
+        {
+          "version": 1,
+          "changedAt": "2026-01-01T00:00:00Z",
+          "changedById": "usr-admin",
+          "changedByName": "System Security Administrator",
+          "versionNote": "Initial EPSS enterprise baseline",
+          "reason": "Institutional system bootstrap",
+          "status": "Active",
+          "snapshot": {
+            "grants": {
+              "document.read": "Department",
+              "workflow.view": "Own"
+            },
+            "denies": [],
+            "abacRules": [
+              {
+                "id": "abac-viewer-internal",
+                "permissionKey": "document.read",
+                "effect": "Allow",
+                "description": "Viewer may only read Public or Internal records",
+                "conditions": [
+                  {
+                    "id": "c-v1",
+                    "field": "confidentiality",
+                    "operator": "lte",
+                    "value": "Internal"
+                  }
+                ]
+              }
+            ],
+            "parentRoleIds": [],
+            "requiresMfa": false
+          }
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "updatedByName": "System Security Administrator"
+    }
+  ],
+  "sodRules": [
+    {
+      "id": "sod-1",
+      "nameEn": "Registry Creator vs Independent Auditor",
+      "nameAm": "መዝጋቢ እና ገለልተኛ ኦዲተር መለያየት",
+      "description": "Same officer cannot simultaneously hold RegistryOfficer and Auditor / SystemAuditor roles.",
+      "ruleType": "RolePair",
+      "leftItem": "RegistryOfficer",
+      "rightItem": "Auditor",
+      "severity": "Blocking",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "sod-2",
+      "nameEn": "Procurement Officer vs Finance Disbursement",
+      "nameAm": "የግዥ ባለሙያ እና የፋይናንስ ባለሙያ መለያየት",
+      "description": "Prevents tender procurement originators from simultaneously approving finance disbursements.",
+      "ruleType": "RolePair",
+      "leftItem": "ProcurementOfficer",
+      "rightItem": "FinanceOfficer",
+      "severity": "Blocking",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "sod-3",
+      "nameEn": "Disposal Requester vs Disposal Approver",
+      "nameAm": "የማስወገድ ጠያቂ እና አጽዳቂ መለያየት",
+      "description": "Same user cannot hold both records.request_disposal and records.approve_disposal permissions.",
+      "ruleType": "PermissionPair",
+      "leftItem": "records.request_disposal",
+      "rightItem": "records.approve_disposal",
+      "severity": "Blocking",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "sod-4",
+      "nameEn": "Workflow Requester vs Final Approver",
+      "nameAm": "የሥራ ፍሰት አስጀማሪ እና የመጨረሻ አጽዳቂ መለያየት",
+      "description": "Document registrant/creator cannot act as final approver on their own submitted workflow.",
+      "ruleType": "WorkflowConflict",
+      "leftItem": "workflow.initiator",
+      "rightItem": "workflow.final_approver",
+      "severity": "Blocking",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "autoAssignmentRules": [
+    {
+      "id": "auto-rule-1",
+      "nameEn": "Regional Hub Managers -> BranchManager Role",
+      "nameAm": "የቅርንጫፍ ኃላፊዎች -> BranchManager ሚና",
+      "matchField": "position",
+      "matchOperator": "contains",
+      "matchValue": "Branch Manager",
+      "targetRoleId": "role-branch-manager",
+      "targetRoleCode": "BranchManager",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "auto-rule-2",
+      "nameEn": "Internal Audit Directorate -> Auditor Role",
+      "nameAm": "የውስጥ ኦዲት ዳይሬክቶሬት -> Auditor ሚና",
+      "matchField": "departmentId",
+      "matchOperator": "equals",
+      "matchValue": "dept-audit",
+      "targetRoleId": "role-auditor",
+      "targetRoleCode": "Auditor",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "accessReviewCampaigns": [
+    {
+      "id": "arc-2026-q4",
+      "titleEn": "Q4 2026 National Executive & Sensitive Role Certification",
+      "titleAm": "የ2026 ሩብ ዓመት የከፍተኛ ኃላፊዎችና ሚስጥራዊ ሚናዎች ማረጋገጫ ዘመቻ",
+      "description": "Periodic certification of SuperAdmin, DirectorGeneral, Director, and Auditor privileges across EPSS Head Office and regional hubs.",
+      "reviewerIds": [
+        "usr-admin",
+        "usr-dg"
+      ],
+      "reviewerNames": [
+        "System Security Administrator",
+        "Dr. Abdulkadir Gelgelo"
+      ],
+      "status": "Active",
+      "dueDate": "2026-11-29T22:34:58.610Z",
+      "createdAt": "2026-11-01T08:00:00Z",
+      "createdByName": "System Security Administrator",
+      "items": [
+        {
+          "id": "ari-1",
+          "userId": "usr-proc",
+          "userName": "Dawit Tefera",
+          "username": "dawit.t",
+          "roleId": "role-director",
+          "roleCode": "Director",
+          "roleNameEn": "Director",
+          "scopeLabel": "Department: Procurement Directorate",
+          "status": "Pending"
+        },
+        {
+          "id": "ari-2",
+          "userId": "usr-audit",
+          "userName": "Tigist Haile",
+          "username": "tigist.h",
+          "roleId": "role-auditor",
+          "roleCode": "Auditor",
+          "roleNameEn": "Internal Auditor",
+          "scopeLabel": "Global (Read-Only Compliance)",
+          "status": "Pending"
+        },
+        {
+          "id": "ari-3",
+          "userId": "usr-bm-haw",
+          "userName": "Yonas Alemu",
+          "username": "yonas.a",
+          "roleId": "role-branch-manager",
+          "roleCode": "BranchManager",
+          "roleNameEn": "Branch Hub Manager",
+          "scopeLabel": "Branch: Hawassa Branch Hub",
+          "status": "Approved",
+          "reviewerComment": "Confirmed active regional hub directorate mandate.",
+          "reviewedAt": "2026-11-05T10:00:00Z",
+          "reviewedByName": "Dr. Abdulkadir Gelgelo"
+        }
+      ]
+    }
+  ],
+  "userRoleAssignments": [
+    {
+      "id": "ura-seed-usr-admin",
+      "userId": "usr-admin",
+      "roleId": "role-superadmin",
+      "roleCode": "SuperAdmin",
+      "roleNameEn": "Super Administrator",
+      "roleNameAm": "ዋና የሲስተም አስተዳዳሪ",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-dg",
+      "userId": "usr-dg",
+      "roleId": "role-dg",
+      "roleCode": "DirectorGeneral",
+      "roleNameEn": "Director General",
+      "roleNameAm": "ዋና ዳይሬክተር",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-reg",
+      "userId": "usr-reg",
+      "roleId": "role-registry-officer",
+      "roleCode": "RegistryOfficer",
+      "roleNameEn": "Registry Officer",
+      "roleNameAm": "የመዝገብ ቤት ባለሙያ",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-proc",
+      "userId": "usr-proc",
+      "roleId": "role-director",
+      "roleCode": "Director",
+      "roleNameEn": "Director",
+      "roleNameAm": "ዳይሬክተር",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-store",
+      "userId": "usr-store",
+      "roleId": "role-director",
+      "roleCode": "Director",
+      "roleNameEn": "Director",
+      "roleNameAm": "ዳይሬክተር",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-bm-haw",
+      "userId": "usr-bm-haw",
+      "roleId": "role-branch-manager",
+      "roleCode": "BranchManager",
+      "roleNameEn": "Branch Hub Manager",
+      "roleNameAm": "የቅርንጫፍ ሥራ አስኪያጅ",
+      "scopeType": "Branch",
+      "scopeTargetId": "br-04",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-audit",
+      "userId": "usr-audit",
+      "roleId": "role-auditor",
+      "roleCode": "Auditor",
+      "roleNameEn": "Internal Auditor",
+      "roleNameAm": "የውስጥ ኦዲተር",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-sec-officer",
+      "userId": "usr-sec-officer",
+      "roleId": "role-security-officer",
+      "roleCode": "SecurityOfficer",
+      "roleNameEn": "Information Security Officer",
+      "roleNameAm": "የመረጃ ደህንነት ኃላፊ",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": "ura-seed-usr-sys-audit",
+      "userId": "usr-sys-audit",
+      "roleId": "role-system-auditor",
+      "roleCode": "SystemAuditor",
+      "roleNameEn": "System Compliance Auditor",
+      "roleNameAm": "የሲስተም ኦዲተር",
+      "scopeType": "Global",
+      "startDate": "2026-01-15T08:00:00Z",
+      "justification": "Initial institutional organizational chart baseline assignment",
+      "ticketRef": "EPSS-IAM-2026-001",
+      "status": "Active",
+      "approvedById": "usr-admin",
+      "approvedByName": "System Security Administrator",
+      "approvedAt": "2026-01-15T08:00:00Z",
+      "assignedById": "usr-admin",
+      "assignedByName": "System Security Administrator",
+      "createdAt": "2026-01-15T08:00:00Z"
+    }
+  ],
+  "breakGlassElevations": []
 }
